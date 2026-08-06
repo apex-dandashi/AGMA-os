@@ -7,8 +7,8 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | Phase | Deliverable | Status |
 |---|---|---|
 | 0 | Scaffold + CI/CD + migrate current site | ✅ Done (2026-08-06) |
-| 1 | Schema / RLS / seeds / auth / audit | ⬜ Next |
-| 2 | CRM + Sales + website sync | ⬜ |
+| 1 | Schema / RLS / seeds / auth / audit | ✅ Done (2026-08-07) |
+| 2 | CRM + Sales + website sync | ⬜ Next |
 | 3 | Legal generators | ⬜ |
 | 4 | Projects + playbooks + HR | ⬜ |
 | 5 | Finance KSA | ⬜ |
@@ -17,6 +17,46 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 8 | Content Engine | ⬜ |
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
+
+## Phase 1 log (2026-08-07)
+
+**Built (3 migrations + packages/db):**
+- `20260807010000_roles_profiles`: user_role enum (admin/strategist/executor/client),
+  `profiles` on auth.users with auto-create trigger, security-definer RLS helpers
+  (`app_role`, `is_admin`, `is_strategist_plus`, `is_team`, `current_client_id`,
+  `is_project_member`), `role_profiles` (5 seeded incl. Key Accounts Manager)
+- `20260807010100_core_schema`: full docs/02 §2 model — service_categories,
+  services_catalog, clients, leads, scopes, roadmaps, projects, sprints, tasks,
+  metrics, reports, approvals (with server-side decision stamping), messages +
+  docs/03 playbook engine (playbooks, playbook_stages, task_templates,
+  kpi_definitions). RLS + audit trigger on every table; explicit table grants.
+- `20260807010200_catalog_seeds`: 8 categories · 32 services (AR names from live
+  site) · 8 playbooks · 36 stages · 113 task templates (26 client-approval
+  gates) · 31 KPI definitions · 5 role_profiles
+- `packages/db`: generated Database types, typed client factory, stage/phase constants
+
+**Verified locally (db reset from zero + persona tests):**
+- RLS matrix matches docs/02 §4 exactly: client sees only own rows (draft scopes
+  hidden); executor sees only assigned projects, no leads; strategist sees all;
+  audit_log denied to everyone below service_role.
+- Found + fixed: this Postgres image's default privileges give `authenticated`
+  no DML — every table needs explicit grants alongside policies. **Rule for all
+  future migrations: policy + grant, always both.** (Phase 0's flags read policy
+  had the same latent gap; grant added here.)
+
+**Decisions/notes for owner:**
+1. Catalog divergence: site's AI page shows 4 services (incl. LLM Integration);
+   docs/03 canon is 5 (AI agents, workflow automation, chatbots, GEO, predictive
+   analytics) — seeded per docs/03. Reconcile when Phase 2 wires website sync.
+2. Playbook modes: ai-automation=milestone, pr-media=recurring (docs/03 leaves
+   these two unassigned) — flip in `playbooks.mode` if wrong.
+3. task_template default_days are starting estimates — tune in ops UI later.
+4. First admin user: after signing up in the portal/ops app, promote via
+   `update profiles set role='admin' where email='...'` (service role).
+
+**Phase 2 will:** CRM + Sales pipeline UI in apps/ops (Kanban per docs/02 §3.1),
+lead intake from the site contact form, scope builder → SoW draft, website
+live-sync (website_clients + consent_public kill switch per docs/05 §B1).
 
 ## Phase 0 log (2026-08-06)
 
