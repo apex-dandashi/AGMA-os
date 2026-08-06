@@ -3,3 +3,8 @@
 # Migrations are proven on the local stack (supabase start + db reset) before
 # any `supabase db push` to production — see supabase/README.md.
 project_id = "agma-os"
+
+# Local-stack log analytics (Logflare) — not needed for migration testing and
+# flaky on some Docker setups; keep disabled.
+[analytics]
+enabled = false
