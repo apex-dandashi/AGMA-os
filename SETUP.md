@@ -53,14 +53,21 @@ started immediately.
 
 ## 5. Twilio WhatsApp (⏳ LONGEST LEAD TIME — start today)
 
+**Owner decision (2026-08-06):** a dedicated Saudi number will be purchased for the
+platform; sender goes live only after the OS build is finished. Until then Phase 6
+develops against the **Twilio WhatsApp sandbox** (no registered sender needed).
+
 - [ ] Twilio account → note `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`
-- [ ] Start **WhatsApp Business sender registration** for the business number
-      (Meta business verification can take days–weeks)
-- [ ] Submit the first template batch for Meta approval (each needs AR + EN body):
+- [ ] **Meta Business verification** for the AGMA business — start this early anyway;
+      it is independent of the phone number and is the actual long lead time
+- [ ] Nearer launch: purchase the dedicated Saudi number → WhatsApp Business sender
+      registration on it
+- [ ] Then submit the first template batch for Meta approval (each needs AR + EN body):
       invoice issued · invoice due reminder · invoice overdue · approval pending
       nudge · project phase changed · report published · contract expiring ·
       onboarding incomplete · welcome sequence · task overdue
-- [ ] Record sender as `TWILIO_WHATSAPP_FROM` (format `whatsapp:+9665XXXXXXXX`)
+- [ ] Record sender as `TWILIO_WHATSAPP_FROM` (format `whatsapp:+9665XXXXXXXX`);
+      until then the sandbox number fills this variable in staging only
 
 ## 6. SendGrid
 

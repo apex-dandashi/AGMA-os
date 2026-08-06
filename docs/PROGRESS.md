@@ -54,7 +54,13 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
    sample from reference PDFs before Phase 3 generators.
 3. EN toggle for marketing site: CLAUDE.md rule 8 requires AR+EN; site is AR-only
    today. Propose scheduling with Phase 2 website-sync work.
-4. Supabase region choice + PDPL data-residency note — document when creating projects.
+4. Supabase region choice + PDPL data-residency note — Mumbai `ap-south-1`
+   recommended (no Middle East region offered); confirm once projects are created.
+
+**Decisions made (owner, 2026-08-06):**
+- Twilio WhatsApp: dedicated Saudi number purchased later; sender activation deferred
+  until the OS build completes. Phase 6 develops against the Twilio sandbox; only
+  Meta Business verification starts early (it is the true lead-time item).
 
 **Phase 1 will:** full schema + RLS for CRM/projects/finance domains, auth with roles
 (admin/staff/client), seeds (32 services, 8 playbooks, roles, role_profiles),
