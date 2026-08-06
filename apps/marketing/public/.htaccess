@@ -1,0 +1,4 @@
+# Static export served by LiteSpeed/Apache.
+# This file intentionally replaces the legacy Node-app proxy .htaccess
+# left in the web root by the pre-monorepo deployment.
+ErrorDocument 404 /404.html
