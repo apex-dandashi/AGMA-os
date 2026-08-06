@@ -62,6 +62,12 @@ team user + promote to admin.
    disappears and publish toggle clears.
 
 **Decisions/notes:**
+- **Supabase GitHub integration is NOT applying migrations** (discovered
+  2026-08-07: Phase 1+2 migrations reached production only via manual
+  `supabase db push`; an earlier check that reported the integration working
+  was faulty). Until proven otherwise: db push manually after every merge to
+  main, local `db reset` verification first as always. Owner: inspect
+  dashboard → Integrations → GitHub for failed runs / working-dir config.
 - Logos are URL-based v1 (paste a URL in ops). Proper upload to R2/Storage
   lands with the DAM (docs/04 §3.4). R2 bucket still pending in SETUP §4.
 - Rate limiting on lead-intake is honeypot-only v1; add per-IP limits when
