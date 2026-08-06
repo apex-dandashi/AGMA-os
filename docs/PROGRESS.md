@@ -65,6 +65,11 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
   CLAUDE.md rule 7 amended: migrations proven on the local Supabase stack before
   `db push`; destructive migrations need explicit owner OK; feature flags isolate
   the staging site from client-visible changes. Region: Mumbai `ap-south-1`.
+- PITR add-on declined (cost). Daily Pro backups (7-day retention) are the current
+  recovery layer; weekly logical dump + R2→B2 mirror scheduled for a later phase.
+- Supabase GitHub integration ON (merge to `main` → auto `db push`); automatic
+  preview branching OFF. Consequence: local `supabase db reset` verification must
+  pass BEFORE the first push of `main` to GitHub.
 
 **Phase 1 will:** full schema + RLS for CRM/projects/finance domains, auth with roles
 (admin/staff/client), seeds (32 services, 8 playbooks, roles, role_profiles),

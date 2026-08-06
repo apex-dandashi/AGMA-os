@@ -44,7 +44,12 @@ the local stack (Docker), never on a second hosted project — see supabase/READ
 - [ ] Create project **`agma-os-production`** — region **Mumbai `ap-south-1`**
       (no Middle East region offered; document as the PDPL data-residency note,
       docs/05 §B3)
-- [ ] Enable the **Point-in-Time Recovery** add-on (backup requirement, docs/05 §B11.3)
+- [x] ~~Point-in-Time Recovery add-on~~ — **declined (owner, 2026-08-06; cost)**.
+      Coverage instead: Pro plan daily backups (7-day retention, automatic) now +
+      weekly logical dump & R2→B2 mirror when the backup jobs phase lands
+- [x] **Supabase GitHub integration enabled**: merge to `main` auto-applies
+      `supabase/migrations` to production (working dir `.`); automatic preview
+      branching OFF (uncovered compute cost; local stack is the test layer)
 - [ ] Note: Project ref · URL · anon key · service_role key · DB password
 - [ ] Install Docker Desktop (needed for the local Supabase stack)
 - [ ] Apply the Phase 0 migration after local verification:

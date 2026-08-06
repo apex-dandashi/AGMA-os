@@ -19,9 +19,9 @@ supabase migration new <name>
 supabase start
 supabase db reset
 
-# 3. Only then apply to production
-supabase link --project-ref <PRODUCTION_PROJECT_REF>
-supabase db push
+# 3. Only then let it reach production: merge to main — the Supabase GitHub
+#    integration auto-applies supabase/migrations on merge.
+#    Manual fallback: supabase link --project-ref <PROD_REF> && supabase db push
 ```
 
 Destructive migrations (drop/alter with data loss potential) additionally require
