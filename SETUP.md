@@ -10,7 +10,7 @@ started immediately.
 
 - [x] Repo exists: `https://github.com/apex-dandashi/AGMA-os` — `main` + `staging` pushed
 - [x] Collaborator access granted to the local dev credential (`aelibrahim-a11y`)
-- [ ] **Repo secrets for the Migrate workflow** (repo → Settings → Secrets and
+- [x] **Repo secrets for the Migrate workflow** — added, run verified green (Migrate #2, 2026-08-07) (repo → Settings → Secrets and
       variables → Actions → New repository secret):
 
   | Secret | Value |

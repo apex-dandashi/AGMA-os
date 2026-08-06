@@ -66,9 +66,9 @@ team user + promote to admin.
   2026-08-07; Phase 1+2 reached production via manual `supabase db push`).
   **Resolved:** `.github/workflows/migrate.yml` now runs `db push` on every
   merge to main touching supabase/ (idempotent via migration tracker; also
-  manually triggerable via workflow_dispatch). Needs repo secrets
-  SUPABASE_ACCESS_TOKEN + SUPABASE_DB_PASSWORD (SETUP.md §1); owner should
-  disconnect the Supabase GitHub integration. Local `db reset` verification
+  manually triggerable via workflow_dispatch). Secrets configured; verified
+  green end-to-end (run Migrate #2, 2026-08-07). Owner still to disconnect
+  the defunct Supabase GitHub integration. Local `db reset` verification
   before merge remains mandatory (CLAUDE.md rule 7).
 - Logos are URL-based v1 (paste a URL in ops). Proper upload to R2/Storage
   lands with the DAM (docs/04 §3.4). R2 bucket still pending in SETUP §4.
