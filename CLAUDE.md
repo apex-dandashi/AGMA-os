@@ -1,0 +1,58 @@
+# CLAUDE.md — AGMA OS
+
+## What this is
+AGMA OS is the complete operations ecosystem for AGMA (وكالة جيل الذكاء الاصطناعي) — a Saudi Native-AI marketing agency in Riyadh. One monorepo, three apps (marketing site, internal ops, client portal), one Supabase brain. The system runs the agency end-to-end: CRM → contracts → projects → finance → content engine → notifications.
+
+## Read before building
+All specifications live in `/docs` — read the relevant one before touching its domain:
+- `docs/01-workflow.md` — company workflow, AGMA Method™, client lifecycle
+- `docs/02-system-spec.md` — v1 modules, data model, roles
+- `docs/03-service-playbooks.md` — 8 category playbooks, task templates, KPIs (seed data source)
+- `docs/04-module-architecture.md` — full module map, cross-module flows
+- `docs/05-master-blueprint.md` — infrastructure, AI routing, costs, compliance, build phases (THE master reference)
+- `docs/06-brand-standards.md` — entity constants, payment accounts, document anatomy, visual tokens (design contract for ALL generated documents/emails)
+- `docs/references/` — real quotation/invoice PDFs + CR certificate = visual ground truth for generator QA
+
+## Stack
+- **Frontend:** Next.js (App Router, static/SSG export) + Tailwind, Arabic-first RTL with EN toggle
+- **Backend:** Supabase — Postgres + RLS, Auth, Realtime, Edge Functions, pg_cron, pgvector, Vault
+- **Storage:** Cloudflare R2 (binaries) + Supabase Storage (hot files <100GB); metadata always in Postgres
+- **Hosting:** Hostinger via GitHub Actions (`staging` branch → staging, `main` → production)
+- **Messaging:** Twilio WhatsApp + SendGrid — ONLY through the notifications package, never direct sends
+- **AI:** all calls through `packages/ai-router` — Gemini Flash (volume), Claude API (quality Arabic + agentic), Gemini image aka nano banana (default images), Higgsfield (premium creative)
+
+## Repo structure
+```
+apps/marketing | apps/ops | apps/portal
+packages/ui | packages/db | packages/ai-router | packages/notifications | packages/legal-templates | packages/zatca
+supabase/migrations | supabase/functions
+docs/ | .github/workflows/
+```
+
+## Non-negotiable rules
+1. **Every table ships with RLS policies + audit trigger.** No exceptions. Clients see only `client_id`-scoped rows.
+2. **Every AI output passes a human approval gate** before reaching any external surface (articles, images, documents, chatbot escalations).
+3. **Money and legal documents are immutable** — corrections via credit notes / new versions. Sequential gapless numbering: `Q-`, `INV-`, `CN-` prefixed counters (continue from current: next quote Q-00055).
+4. **Finance = VAT-off mode** at launch (establishment not VAT-registered); 15% VAT + ZATCA fields behind `config.vat_enabled` flag. Invoice layout reserves the VAT row.
+5. **Payment accounts:** 3 IBANs in `payment_accounts`, all rendering the establishment beneficiary name; `internal_label` is admin-only and must never appear in any rendered output or the portal. Main account is default.
+6. **All cross-module side effects go through events → notifications engine.** WhatsApp templates require Meta pre-approval — flag any new template need immediately.
+7. **Feature-flag everything client-visible.** Deploy to staging first, always. Never test against production data.
+8. **Bilingual by design:** every client-facing string AR + EN; documents Arabic-primary. Follow `docs/06-brand-standards.md` for anything rendered — colors, layout anatomy, «بإذن الله إلى تعاونٍ مثمر» closing on client documents.
+9. **Secrets** only in GitHub Actions secrets / Supabase Vault / `.env.local` (gitignored). Credentials vault entries encrypted, access-logged.
+10. **PDPL:** consent records on client PII, right-to-deletion workflow, data-processing register, no PII in logs.
+
+## Conventions
+- TypeScript strict everywhere; Zod validation at every boundary (forms, edge functions, webhooks).
+- DB: snake_case tables/columns; migrations via `supabase migration new <name>`; seed files in `packages/db/seed/` (32 services, 8 playbooks, roles, payment accounts, role_profiles).
+- UI: shared components from `packages/ui` only; design tokens from brand standards; no one-off styling in apps.
+- Commits: conventional (`feat:`, `fix:`, `chore:`); one phase = one PR to `staging`.
+- Tests: unit tests on generators (documents, signatures, ZATCA QR/XML) — these produce legal artifacts, they must be deterministic.
+
+## Build phases (track in docs/PROGRESS.md — update after every session)
+0. Scaffold + CI/CD + migrate current site → 1. Schema/RLS/seeds/auth/audit → 2. CRM + Sales + website sync → 3. Legal generators → 4. Projects + playbooks + HR → 5. Finance KSA → 6. Notifications → 7. Portal + onboarding + Drop Forms → 8. Content Engine → 9. Help Centre/RAG + chatbots → 10. Employee portal + Analytics + digests
+
+## Environment variables (names only — values from owner)
+`SUPABASE_URL` `SUPABASE_ANON_KEY` `SUPABASE_SERVICE_ROLE_KEY` (staging + prod pairs) · `R2_ACCOUNT_ID` `R2_ACCESS_KEY_ID` `R2_SECRET_ACCESS_KEY` `R2_BUCKET` · `TWILIO_ACCOUNT_SID` `TWILIO_AUTH_TOKEN` `TWILIO_WHATSAPP_FROM` · `SENDGRID_API_KEY` · `GEMINI_API_KEY` `ANTHROPIC_API_KEY` `HIGGSFIELD_API_KEY` · `HOSTINGER_DEPLOY_*`
+
+## When unsure
+Prefer the spec docs over assumptions. If a decision isn't covered, implement the smallest reversible version behind a flag and note it in PROGRESS.md under "Decisions needed".
