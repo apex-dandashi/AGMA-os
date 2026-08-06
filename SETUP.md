@@ -46,7 +46,8 @@ the local stack (Docker), never on a second hosted project — see supabase/READ
       branching OFF (uncovered compute cost; local stack is the test layer)
 - [ ] Note: Project ref · URL · anon key · service_role key · DB password
 - [ ] Install Docker Desktop (needed for the local Supabase stack)
-- [ ] Apply the Phase 0 migration after local verification:
+- [x] Phase 0 migration applied to production (2026-08-06) — tables, seeds, and
+      audit trail verified via data dump. Original instruction:
       `supabase db reset` (local) → `supabase link --project-ref <PROD_REF> && supabase db push`
 - [ ] Personal access token for CI: account → Access Tokens → `SUPABASE_ACCESS_TOKEN`
 
