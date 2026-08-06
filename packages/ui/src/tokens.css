@@ -1,0 +1,21 @@
+/*
+ * AGMA shared theme — Tailwind CSS v4 token layer.
+ * Import in each app's globals.css:  @import "@agma/ui/tokens.css";
+ * Values mirror src/tokens.ts (keep the two in sync — tokens.ts is canonical).
+ */
+@theme {
+  --color-pulse-orange: #F44D2B;
+  --color-pure-ink: #0A0A0A;
+  --color-snow: #FAFAFA;
+  --color-gray-dark: #262626;
+  --color-gray-medium: #737373;
+  --color-gray-light: #D4D4D4;
+
+  /* Document palette (provisional — see tokens.ts TODO) */
+  --color-doc-paper: #F5F0E8;
+  --color-doc-ink-brown: #1C1512;
+
+  --font-heading: var(--font-tajawal), sans-serif;
+  --font-body: var(--font-ibm-plex), -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, sans-serif;
+}
