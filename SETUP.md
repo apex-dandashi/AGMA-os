@@ -10,8 +10,19 @@ started immediately.
 
 - [x] Repo exists: `https://github.com/apex-dandashi/AGMA-os` — `main` + `staging` pushed
 - [x] Collaborator access granted to the local dev credential (`aelibrahim-a11y`)
+- [ ] **Repo secrets for the Migrate workflow** (repo → Settings → Secrets and
+      variables → Actions → New repository secret):
+
+  | Secret | Value |
+  |---|---|
+  | `SUPABASE_ACCESS_TOKEN` | New personal token: supabase.com/dashboard/account/tokens → Generate (name: `github-actions`) |
+  | `SUPABASE_DB_PASSWORD` | The database password you saved when creating `agma-os-production` (reset if lost: project → Settings → Database → Reset password) |
+
+- [ ] **Disable the Supabase GitHub integration** (project → Settings →
+      Integrations → GitHub → disconnect) — it never applied a migration;
+      the Migrate workflow replaces it. Leaving it on is harmless but noisy.
 - [ ] Later phases add repo secrets: `SUPABASE_URL`, `SUPABASE_ANON_KEY`,
-      `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`
+      `SUPABASE_SERVICE_ROLE_KEY`
 
 GitHub Actions runs a **build check only** (`.github/workflows/ci.yml`) — no
 deploy secrets needed; deploys are Hostinger's Git integration (below).
