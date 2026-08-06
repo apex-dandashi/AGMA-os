@@ -151,6 +151,60 @@ export type Database = {
         }
         Relationships: []
       }
+      contacts: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          email: string | null
+          id: string
+          is_primary: boolean
+          lead_id: string | null
+          name: string
+          phone: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_primary?: boolean
+          lead_id?: string | null
+          name: string
+          phone?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_primary?: boolean
+          lead_id?: string | null
+          name?: string
+          phone?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contacts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contacts_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       flags: {
         Row: {
           created_at: string
@@ -177,6 +231,71 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      interactions: {
+        Row: {
+          client_id: string | null
+          contact_id: string | null
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["interaction_kind"]
+          lead_id: string | null
+          logged_by: string | null
+          occurred_at: string
+          summary: string
+        }
+        Insert: {
+          client_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["interaction_kind"]
+          lead_id?: string | null
+          logged_by?: string | null
+          occurred_at?: string
+          summary: string
+        }
+        Update: {
+          client_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["interaction_kind"]
+          lead_id?: string | null
+          logged_by?: string | null
+          occurred_at?: string
+          summary?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interactions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interactions_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interactions_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interactions_logged_by_fkey"
+            columns: ["logged_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       kpi_definitions: {
         Row: {
@@ -959,6 +1078,53 @@ export type Database = {
           },
         ]
       }
+      website_clients: {
+        Row: {
+          client_id: string
+          consent_public: boolean
+          created_at: string
+          display_name_ar: string
+          display_name_en: string | null
+          id: string
+          logo_url: string | null
+          published: boolean
+          sort: number
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          consent_public?: boolean
+          created_at?: string
+          display_name_ar: string
+          display_name_en?: string | null
+          id?: string
+          logo_url?: string | null
+          published?: boolean
+          sort?: number
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          consent_public?: boolean
+          created_at?: string
+          display_name_ar?: string
+          display_name_en?: string | null
+          id?: string
+          logo_url?: string | null
+          published?: boolean
+          sort?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_clients_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -983,6 +1149,7 @@ export type Database = {
         | "task"
       approval_status: "pending" | "approved" | "rejected"
       client_status: "active" | "paused" | "archived"
+      interaction_kind: "call" | "whatsapp" | "email" | "meeting" | "note"
       kpi_direction: "up" | "down"
       lead_source: "call" | "whatsapp" | "email" | "site"
       lead_stage:
@@ -1137,6 +1304,7 @@ export const Constants = {
       approval_item_type: ["scope", "roadmap", "deliverable", "report", "task"],
       approval_status: ["pending", "approved", "rejected"],
       client_status: ["active", "paused", "archived"],
+      interaction_kind: ["call", "whatsapp", "email", "meeting", "note"],
       kpi_direction: ["up", "down"],
       lead_source: ["call", "whatsapp", "email", "site"],
       lead_stage: [

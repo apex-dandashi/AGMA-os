@@ -8,3 +8,8 @@ project_id = "agma-os"
 # flaky on some Docker setups; keep disabled.
 [analytics]
 enabled = false
+
+# Public form endpoint — validates input itself; no user JWT exists on the
+# marketing site.
+[functions.lead-intake]
+verify_jwt = false

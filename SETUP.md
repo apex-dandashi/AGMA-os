@@ -33,6 +33,25 @@ Deploys pull straight from GitHub; no SSH keys or GitHub secrets involved.
       NEXT_PUBLIC_* vars (Google AI Studio → API keys) — nothing uses it now
 - [ ] Enable auto-deploy on push for both (hPanel toggle), if not on by default
 
+### Phase 2 additions (site ↔ Supabase wiring)
+
+- [ ] Add these env vars to BOTH marketing deployments (staging + production)
+      in hPanel deployment settings, then redeploy (values are public by design;
+      RLS is the security layer):
+
+  | Key | Value |
+  |---|---|
+  | `NEXT_PUBLIC_SUPABASE_URL` | `https://gjaheqlgheizvebvakfd.supabase.co` |
+  | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `sb_publishable_4skzKO7V1tBiFuuTfjKofw_9eIYq8gq` |
+
+- [ ] Create subdomain **ops.agma.com.sa** with its own web root
+- [ ] Git deploy for ops.agma.com.sa ← repo AGMA-os, branch `main`:
+      Framework Other · Node 22.x · Root `apps/ops` · Build `pnpm run build` ·
+      pnpm · Output `out` · Entry empty · **same two env vars as above**
+- [ ] First team login: Supabase dashboard → Authentication → Add user
+      (email + password). Then promote to admin (SQL editor):
+      `update public.profiles set role = 'admin' where email = '<your email>';`
+
 ## 3. Supabase (⏳ do before Phase 1)
 
 **Owner decision (2026-08-06): single hosted project.** Migration testing happens on

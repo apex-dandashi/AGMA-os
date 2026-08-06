@@ -248,10 +248,38 @@ export default function MultiStepLeadForm() {
     e.preventDefault();
     if (!validateStep(3)) return;
     setIsSubmitting(true);
-    // Simulate API
-    await new Promise(r => setTimeout(r, 2000));
-    setIsSubmitting(false);
-    setIsSuccess(true);
+
+    const selectedServiceTitles = formData.services
+      .map(id => id === 'other' ? `أخرى: ${formData.otherServiceText}` : services.find(s => s.id === id)?.title)
+      .filter(Boolean)
+      .join('، ');
+
+    try {
+      const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      if (!base) throw new Error('lead intake not configured');
+      const res = await fetch(`${base}/functions/v1/lead-intake`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          company: formData.company,
+          phone: formData.phone,
+          email: formData.email,
+          services: [selectedServiceTitles, ...formData.subServices].filter(Boolean).join('، '),
+          budget: `${formData.budget} — ${formData.urgency}`,
+          message: [formData.details, formData.sector && `القطاع: ${formData.sector}`, formData.jobTitle && `المسمى: ${formData.jobTitle}`]
+            .filter(Boolean)
+            .join('\n'),
+        }),
+      });
+      if (!res.ok) throw new Error('intake failed');
+      setIsSuccess(true);
+    } catch {
+      setErrors(['تعذر إرسال الطلب آلياً — يمكنك الإرسال مباشرة عبر واتساب من الزر أدناه']);
+      scrollToTop();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const variants = {

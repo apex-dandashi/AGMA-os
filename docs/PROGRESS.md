@@ -8,7 +8,7 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 |---|---|---|
 | 0 | Scaffold + CI/CD + migrate current site | ✅ Done (2026-08-06) |
 | 1 | Schema / RLS / seeds / auth / audit | ✅ Done (2026-08-07) |
-| 2 | CRM + Sales + website sync | ⬜ Next |
+| 2 | CRM + Sales + website sync | ✅ Done (2026-08-07) |
 | 3 | Legal generators | ⬜ |
 | 4 | Projects + playbooks + HR | ⬜ |
 | 5 | Finance KSA | ⬜ |
@@ -17,6 +17,56 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 8 | Content Engine | ⬜ |
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
+
+## Phase 2 log (2026-08-07)
+
+**Built:**
+- Migration `20260807030000_crm_website_sync`: `contacts`, `interactions`
+  (docs/04 §2.1) + `website_clients` (docs/05 §B1) with the consent kill
+  switch — anon read policy requires `published AND consent_public`, and
+  withdrawing consent force-unpublishes in the ops UI. Also: service_role
+  DML grants across all public tables (same image gap as Phase 1's
+  authenticated grants, surfaced as 42501 in the edge function).
+- Edge function **lead-intake** (deployed to production): validates + honeypot,
+  CORS locked to agma.com.sa/staging/localhost, inserts leads with source=site.
+  `verify_jwt=false` (public form endpoint).
+- **apps/ops** (ops.agma.com.sa, static export SPA): Supabase auth gate (team
+  roles only — client accounts blocked), 6-stage pipeline Kanban with lead
+  create/stage moves/convert-to-client, clients workspace (contacts +
+  interactions log), scope builder over the 32-service catalog with SoW draft
+  preview (docs/06 §3.5 default terms) + send-for-approval (creates approvals
+  row), website sync manager.
+- **apps/marketing**: lead form now posts to lead-intake (WhatsApp path kept as
+  fallback on failure); `ClientLogos` section on homepage renders published
+  clients — invisible while empty, so zero visual change until first publish.
+
+**Verified locally:** full db reset replay · anon RLS on website_clients
+(kill switch confirmed) · lead-intake end-to-end (insert, honeypot, validation)
+· production function smoke-tested (honeypot + CORS, no junk data) · all
+builds + typechecks green.
+
+**Owner to-do (SETUP.md Phase 2 additions):** env vars on both marketing
+deployments + redeploy · create ops.agma.com.sa deployment · create first
+team user + promote to admin.
+
+**Manual test list (after owner to-do):**
+1. Submit the contact form on agma.com.sa → lead appears in ops pipeline
+   (stage: مكالمة استكشافية, source: الموقع).
+2. Log in to ops.agma.com.sa with the admin account; client account should be
+   rejected.
+3. Move a lead across stages; convert at خارطة الطريق stage → client created.
+4. Client detail: add contact + log interaction; build a scope (services from
+   catalog), check SoW preview, save draft, send for approval.
+5. Website page: enable a client, toggle consent + publish → logo/name appears
+   on agma.com.sa homepage (section auto-appears); withdraw consent →
+   disappears and publish toggle clears.
+
+**Decisions/notes:**
+- Logos are URL-based v1 (paste a URL in ops). Proper upload to R2/Storage
+  lands with the DAM (docs/04 §3.4). R2 bucket still pending in SETUP §4.
+- Rate limiting on lead-intake is honeypot-only v1; add per-IP limits when
+  the notifications phase introduces infra for it.
+- WhatsApp webhook intake (docs/02 §3.1) deferred to Phase 6 (needs Twilio).
 
 ## Phase 1 log (2026-08-07)
 

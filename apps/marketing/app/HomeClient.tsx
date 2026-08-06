@@ -28,6 +28,7 @@ import {
 import Link from 'next/link';
 import Magnetic from '@/components/ui/Magnetic';
 import Tilt from '@/components/ui/Tilt';
+import ClientLogos from '@/components/ClientLogos';
 import ScrollFocus from '@/components/ui/ScrollFocus';
 
 // Component to animate numerical statistics from 0 upwards on scroll viewport entrance
@@ -677,6 +678,10 @@ export default function HomeClient() {
           </motion.div>
         </div>
       </section>
+
+      {/* CLIENT LOGOS — live-synced from AGMA OS; renders nothing until the
+          first client is published with consent (docs/05 §B1) */}
+      <ClientLogos />
 
       {/* INTERACTIVE AI ROI OPTIMIZATION SANDBOX */}
       <section className="py-24 px-6 relative bg-gradient-to-b from-pure-ink via-[#0d0d0d] to-pure-ink border-t border-b border-white/[0.03]">
