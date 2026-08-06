@@ -521,8 +521,8 @@ export default function BrandingCreativeClient() {
                     className="w-20 h-20 relative z-10 transition-all duration-300"
                     style={{
                       backgroundColor: selectedPalette.primaryColor,
-                      maskImage: 'url("/favicon AGMA.webp")',
-                      WebkitMaskImage: 'url("/favicon AGMA.webp")',
+                      maskImage: 'url("/favicon-agma.webp")',
+                      WebkitMaskImage: 'url("/favicon-agma.webp")',
                       maskSize: 'contain',
                       WebkitMaskSize: 'contain',
                       maskPosition: 'center',

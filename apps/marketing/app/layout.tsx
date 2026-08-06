@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   },
   description: 'وكالتك الكاملة في عصر الذكاء الاصطناعي. AGMA هي وكالة سعودية Native-AI مبنية بالذكاء الاصطناعي من الداخل لخدمة العلامات الطموحة والمستقبلية.',
   icons: {
-    icon: '/favicon AGMA.webp',
+    icon: '/favicon-agma.webp',
   },
 };
 

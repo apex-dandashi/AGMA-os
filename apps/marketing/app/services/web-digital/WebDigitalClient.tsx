@@ -457,7 +457,7 @@ ${baseMsg}
                       <div className="bg-black/40 border border-white/5 rounded-xl p-3.5 h-28 overflow-hidden text-right text-[10px] font-mono text-gray-medium/80 space-y-1.5 scrollbar-none shadow-inner">
                         {assembleProgress >= 5 && <div className="text-emerald-400 font-bold">✓ Detected framework setup (Next.js v15.1.0 + Tailwind v4)</div>}
                         {assembleProgress >= 20 && <div className="text-cyan-400">⚡ Initialized physical motion engine preset [stiffness: 100, damping: 15]</div>}
-                        {assembleProgress >= 40 && <div className="text-white">⌬ Synchronized true branding assets (`/favicon AGMA.webp`)</div>}
+                        {assembleProgress >= 40 && <div className="text-white">⌬ Synchronized true branding assets (`/favicon-agma.webp`)</div>}
                         {assembleProgress >= 65 && <div className="text-purple-400">⎎ Injected conversion rate optimized schema matrices</div>}
                         {assembleProgress >= 80 && <div className="text-amber-400">✺ Compiling client-side visual layout layers...</div>}
                         {assembleProgress >= 95 && <div className="text-green-400 font-bold">✓ Production payload assembled successfully! Launching LIVE.</div>}
@@ -504,7 +504,7 @@ ${baseMsg}
                       }}
                     >
                       <img 
-                        src="/favicon AGMA.webp" 
+                        src="/favicon-agma.webp" 
                         alt="AGMA" 
                         className={`w-full h-full object-contain transition-all duration-700 ${!isLive ? 'opacity-30 grayscale brightness-95' : 'opacity-100'}`}
                         style={{

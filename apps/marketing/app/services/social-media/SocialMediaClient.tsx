@@ -438,7 +438,7 @@ export default function SocialMediaClient() {
                       <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-pulse-orange to-amber-500 p-[1.5px] shadow-[0_0_8px_rgba(244,77,43,0.3)] flex items-center justify-center">
                         <div className="w-full h-full rounded-full bg-pure-ink p-1 flex items-center justify-center relative overflow-hidden">
                           <Image
-                            src="/favicon AGMA.webp"
+                            src="/favicon-agma.webp"
                             alt="AGMA Logo"
                             width={32}
                             height={32}
