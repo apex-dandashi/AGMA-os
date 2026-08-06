@@ -1,6 +1,5 @@
 # Supabase CLI configuration — local development.
-# Two hosted projects exist (staging + production); linking is per-environment:
-#   supabase link --project-ref <STAGING_REF>     (day-to-day)
-#   supabase db push                              (applies migrations to linked project)
-# See supabase/README.md for the full environment workflow.
+# One hosted project: agma-os-production (owner decision 2026-08-06).
+# Migrations are proven on the local stack (supabase start + db reset) before
+# any `supabase db push` to production — see supabase/README.md.
 project_id = "agma-os"

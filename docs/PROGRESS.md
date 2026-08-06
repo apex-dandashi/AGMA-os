@@ -61,6 +61,10 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 - Twilio WhatsApp: dedicated Saudi number purchased later; sender activation deferred
   until the OS build completes. Phase 6 develops against the Twilio sandbox; only
   Meta Business verification starts early (it is the true lead-time item).
+- **Single Supabase project** (`agma-os-production`) instead of staging+production.
+  CLAUDE.md rule 7 amended: migrations proven on the local Supabase stack before
+  `db push`; destructive migrations need explicit owner OK; feature flags isolate
+  the staging site from client-visible changes. Region: Mumbai `ap-south-1`.
 
 **Phase 1 will:** full schema + RLS for CRM/projects/finance domains, auth with roles
 (admin/staff/client), seeds (32 services, 8 playbooks, roles, role_profiles),

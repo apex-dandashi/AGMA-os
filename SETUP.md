@@ -25,8 +25,9 @@ started immediately.
   | `HOSTINGER_DEPLOY_SSH_KEY` | Private key (generate: `ssh-keygen -t ed25519 -f agma_deploy`; paste the **private** file) |
   | `HOSTINGER_DEPLOY_PATH` | Web root: production `~/domains/agma.com.sa/public_html`, staging e.g. `~/domains/staging.agma.com.sa/public_html` |
 
-- [ ] Later phases add (also per environment): `SUPABASE_URL`, `SUPABASE_ANON_KEY`,
-      `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`
+- [ ] Later phases add: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`,
+      `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD` — same values in both GitHub
+      environments (single Supabase project serves both site deploys)
 
 ## 2. Hostinger
 
@@ -37,12 +38,17 @@ started immediately.
 
 ## 3. Supabase (⏳ do before Phase 1)
 
-- [ ] Create project `agma-os-staging` — region: closest with acceptable PDPL
-      posture (document the choice — data-residency note required by docs/05 §B3)
-- [ ] Create project `agma-os-production` — same region, **Pro plan** (PITR backups)
-- [ ] Note per project: Project ref · URL · anon key · service_role key · DB password
-- [ ] Apply the Phase 0 migration to staging:
-      `supabase link --project-ref <STAGING_REF> && supabase db push`
+**Owner decision (2026-08-06): single hosted project.** Migration testing happens on
+the local stack (Docker), never on a second hosted project — see supabase/README.md.
+
+- [ ] Create project **`agma-os-production`** — region **Mumbai `ap-south-1`**
+      (no Middle East region offered; document as the PDPL data-residency note,
+      docs/05 §B3)
+- [ ] Enable the **Point-in-Time Recovery** add-on (backup requirement, docs/05 §B11.3)
+- [ ] Note: Project ref · URL · anon key · service_role key · DB password
+- [ ] Install Docker Desktop (needed for the local Supabase stack)
+- [ ] Apply the Phase 0 migration after local verification:
+      `supabase db reset` (local) → `supabase link --project-ref <PROD_REF> && supabase db push`
 - [ ] Personal access token for CI: account → Access Tokens → `SUPABASE_ACCESS_TOKEN`
 
 ## 4. Cloudflare R2

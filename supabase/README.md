@@ -1,38 +1,38 @@
 # Supabase — environment workflow
 
-AGMA OS uses **two hosted Supabase projects** (docs/05 §B11.2 — never test on client data):
+**Owner decision (2026-08-06): one hosted project only — `agma-os-production`.**
+There is no hosted staging database. The safety layer is the **local Supabase
+stack**: every migration is proven locally before it touches production.
 
-| Environment | Project name | Used by |
+| Environment | What it is | Used for |
 |---|---|---|
-| Staging | `agma-os-staging` | `staging` branch deploys, all development |
-| Production | `agma-os-production` | `main` branch deploys only |
+| Local | `supabase start` (Docker) | All development + migration testing |
+| Production | `agma-os-production` (hosted) | The live system; both site deploys point here |
 
-## Applying migrations
+## Migration workflow (binding)
 
 ```bash
-# staging (default day-to-day)
-supabase link --project-ref <STAGING_PROJECT_REF>
-supabase db push
+# 1. Write the migration
+supabase migration new <name>
 
-# production (only after staging verification)
+# 2. Prove it locally — full replay from zero must succeed
+supabase start
+supabase db reset
+
+# 3. Only then apply to production
 supabase link --project-ref <PRODUCTION_PROJECT_REF>
 supabase db push
 ```
 
-CI applies migrations automatically on deploy (see `.github/workflows/deploy.yml`);
-manual `db push` is the fallback.
+Destructive migrations (drop/alter with data loss potential) additionally require
+an explicit owner OK before step 3 — no exceptions.
 
 ## Rules (from CLAUDE.md — binding)
 
 1. Every table ships with RLS policies + the `audit_trigger()` function attached.
-2. New migrations via `supabase migration new <name>` — never edit an applied migration.
+2. Never edit an applied migration — corrections are new migrations.
 3. `payment_accounts.internal_label` is admin-only: column-level grants exclude it
    from `anon`/`authenticated`; never add it to any view, document, or portal query.
-4. Secrets live in Supabase Vault / GitHub Actions secrets — never in migrations.
-
-## Local development
-
-```bash
-supabase start   # local stack (Docker)
-supabase db reset  # replay all migrations + seeds locally
-```
+4. Client-visible features ship dark behind `flags` rows — with one shared database,
+   feature flags are the isolation between the staging site and the production site.
+5. Secrets live in Supabase Vault / GitHub Actions secrets — never in migrations.

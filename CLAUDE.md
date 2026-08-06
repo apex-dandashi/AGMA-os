@@ -36,7 +36,7 @@ docs/ | .github/workflows/
 4. **Finance = VAT-off mode** at launch (establishment not VAT-registered); 15% VAT + ZATCA fields behind `config.vat_enabled` flag. Invoice layout reserves the VAT row.
 5. **Payment accounts:** 3 IBANs in `payment_accounts`, all rendering the establishment beneficiary name; `internal_label` is admin-only and must never appear in any rendered output or the portal. Main account is default.
 6. **All cross-module side effects go through events → notifications engine.** WhatsApp templates require Meta pre-approval — flag any new template need immediately.
-7. **Feature-flag everything client-visible.** Deploy to staging first, always. Never test against production data.
+7. **Feature-flag everything client-visible.** Deploy the site to staging first, always. **Single Supabase project** (`agma-os-production`, owner decision 2026-08-06): every migration must be verified on the local Supabase stack (`supabase start` + `supabase db reset`) before `db push`; destructive migrations additionally require an explicit owner OK. Never develop features directly against production data.
 8. **Bilingual by design:** every client-facing string AR + EN; documents Arabic-primary. Follow `docs/06-brand-standards.md` for anything rendered — colors, layout anatomy, «بإذن الله إلى تعاونٍ مثمر» closing on client documents.
 9. **Secrets** only in GitHub Actions secrets / Supabase Vault / `.env.local` (gitignored). Credentials vault entries encrypted, access-logged.
 10. **PDPL:** consent records on client PII, right-to-deletion workflow, data-processing register, no PII in logs.
@@ -52,7 +52,7 @@ docs/ | .github/workflows/
 0. Scaffold + CI/CD + migrate current site → 1. Schema/RLS/seeds/auth/audit → 2. CRM + Sales + website sync → 3. Legal generators → 4. Projects + playbooks + HR → 5. Finance KSA → 6. Notifications → 7. Portal + onboarding + Drop Forms → 8. Content Engine → 9. Help Centre/RAG + chatbots → 10. Employee portal + Analytics + digests
 
 ## Environment variables (names only — values from owner)
-`SUPABASE_URL` `SUPABASE_ANON_KEY` `SUPABASE_SERVICE_ROLE_KEY` (staging + prod pairs) · `R2_ACCOUNT_ID` `R2_ACCESS_KEY_ID` `R2_SECRET_ACCESS_KEY` `R2_BUCKET` · `TWILIO_ACCOUNT_SID` `TWILIO_AUTH_TOKEN` `TWILIO_WHATSAPP_FROM` · `SENDGRID_API_KEY` · `GEMINI_API_KEY` `ANTHROPIC_API_KEY` `HIGGSFIELD_API_KEY` · `HOSTINGER_DEPLOY_*`
+`SUPABASE_URL` `SUPABASE_ANON_KEY` `SUPABASE_SERVICE_ROLE_KEY` (single production project — both site environments point at it) · `R2_ACCOUNT_ID` `R2_ACCESS_KEY_ID` `R2_SECRET_ACCESS_KEY` `R2_BUCKET` · `TWILIO_ACCOUNT_SID` `TWILIO_AUTH_TOKEN` `TWILIO_WHATSAPP_FROM` · `SENDGRID_API_KEY` · `GEMINI_API_KEY` `ANTHROPIC_API_KEY` `HIGGSFIELD_API_KEY` · `HOSTINGER_DEPLOY_*`
 
 ## When unsure
 Prefer the spec docs over assumptions. If a decision isn't covered, implement the smallest reversible version behind a flag and note it in PROGRESS.md under "Decisions needed".
