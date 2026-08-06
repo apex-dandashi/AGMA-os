@@ -1,0 +1,52 @@
+# Deploys apps/marketing (static export) to Hostinger.
+#   staging branch → staging environment
+#   main branch    → production environment
+# Secrets are defined per GitHub *environment* (staging / production) so the
+# same names work for both targets — see SETUP.md for the full checklist.
+name: Deploy
+
+on:
+  push:
+    branches: [staging, main]
+
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build marketing site (static export)
+        run: pnpm build --filter @agma/marketing
+
+      - name: Deploy to Hostinger over SSH
+        env:
+          SSH_KEY: ${{ secrets.HOSTINGER_DEPLOY_SSH_KEY }}
+          SSH_HOST: ${{ secrets.HOSTINGER_DEPLOY_HOST }}
+          SSH_PORT: ${{ secrets.HOSTINGER_DEPLOY_PORT }}
+          SSH_USER: ${{ secrets.HOSTINGER_DEPLOY_USER }}
+          TARGET_PATH: ${{ secrets.HOSTINGER_DEPLOY_PATH }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/deploy_key -p ${SSH_PORT:-22} -o StrictHostKeyChecking=accept-new" \
+            apps/marketing/out/ \
+            "$SSH_USER@$SSH_HOST:$TARGET_PATH/"
