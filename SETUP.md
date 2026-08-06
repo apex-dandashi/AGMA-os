@@ -22,12 +22,12 @@ Deploys pull straight from GitHub; no SSH keys or GitHub secrets involved.
 
 - [x] Staging: hPanel Git deploy on `staging.agma.com.sa` ← repo **AGMA-os**,
       branch `staging`
-- [ ] Verify staging build settings: Framework **Other** · Node **22.x** ·
-      Root `./` · Build `pnpm run build` · Package manager pnpm ·
-      Output `apps/marketing/out` · Entry file empty
-- [ ] After staging is verified visually: create the same Git deploy for
-      **agma.com.sa** ← branch `main` (this is the production cutover — the old
-      AGMA-Web repo retires at that moment)
+- [x] Staging verified (2026-08-06): Node **22.x** · Root `apps/marketing` ·
+      Build `pnpm run build` · pnpm · Output `out` · Entry empty. Homepage,
+      inner pages, deep links (301→trailing slash), 404s all confirmed live.
+- [ ] Production cutover (when ready): same Git deploy wizard for **agma.com.sa**
+      ← repo AGMA-os, branch `main`, identical settings — the old AGMA-Web repo
+      retires at that moment
 - [ ] Enable auto-deploy on push for both (hPanel toggle), if not on by default
 
 ## 3. Supabase (⏳ do before Phase 1)
