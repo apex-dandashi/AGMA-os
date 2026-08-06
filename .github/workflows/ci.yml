@@ -1,0 +1,33 @@
+# Build check — deploys are handled by Hostinger's Git integration
+# (staging branch → staging.agma.com.sa, main → agma.com.sa), and database
+# migrations by the Supabase GitHub integration on merge to main.
+# This workflow only proves the workspace builds and typechecks.
+name: CI
+
+on:
+  push:
+    branches: [staging, main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Version read from the packageManager field in package.json.
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Typecheck
+        run: pnpm typecheck

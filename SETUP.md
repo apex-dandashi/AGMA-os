@@ -8,33 +8,27 @@ started immediately.
 
 ## 1. GitHub
 
-- [ ] Repo exists: `https://github.com/apex-dandashi/AGMA-os` ✓ (created)
-- [ ] Grant push access to the machine account/collaborator that develops locally
-      (current local credential: `aelibrahim-a11y` → add as collaborator, or
-      re-login the keychain credential as the repo owner)
-- [ ] Create branch `staging` (CI deploys it to the staging site)
-- [ ] Create two **GitHub environments** (repo → Settings → Environments):
-      `staging` and `production`
-- [ ] In **each** environment, add these secrets (same names, per-target values):
+- [x] Repo exists: `https://github.com/apex-dandashi/AGMA-os` — `main` + `staging` pushed
+- [x] Collaborator access granted to the local dev credential (`aelibrahim-a11y`)
+- [ ] Later phases add repo secrets: `SUPABASE_URL`, `SUPABASE_ANON_KEY`,
+      `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`
 
-  | Secret | Value |
-  |---|---|
-  | `HOSTINGER_DEPLOY_HOST` | SSH host from hPanel (e.g. `ssh.agma.com.sa` or server IP) |
-  | `HOSTINGER_DEPLOY_PORT` | SSH port (Hostinger default: `65002`) |
-  | `HOSTINGER_DEPLOY_USER` | SSH username from hPanel |
-  | `HOSTINGER_DEPLOY_SSH_KEY` | Private key (generate: `ssh-keygen -t ed25519 -f agma_deploy`; paste the **private** file) |
-  | `HOSTINGER_DEPLOY_PATH` | Web root: production `~/domains/agma.com.sa/public_html`, staging e.g. `~/domains/staging.agma.com.sa/public_html` |
+GitHub Actions runs a **build check only** (`.github/workflows/ci.yml`) — no
+deploy secrets needed; deploys are Hostinger's Git integration (below).
 
-- [ ] Later phases add: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`,
-      `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD` — same values in both GitHub
-      environments (single Supabase project serves both site deploys)
+## 2. Hostinger (Git integration — replaces the old SSH/rsync plan)
 
-## 2. Hostinger
+Deploys pull straight from GitHub; no SSH keys or GitHub secrets involved.
 
-- [ ] hPanel → Advanced → **SSH Access**: enable, note host/port/user
-- [ ] Add the **public** half of the deploy key to SSH keys
-- [ ] Create subdomain `staging.agma.com.sa` with its own web root (staging target)
-- [ ] Verify: `ssh -p <port> <user>@<host>` from your machine works with the key
+- [x] Staging: hPanel Git deploy on `staging.agma.com.sa` ← repo **AGMA-os**,
+      branch `staging`
+- [ ] Verify staging build settings: Framework **Other** · Node **22.x** ·
+      Root `./` · Build `pnpm run build` · Package manager pnpm ·
+      Output `apps/marketing/out` · Entry file empty
+- [ ] After staging is verified visually: create the same Git deploy for
+      **agma.com.sa** ← branch `main` (this is the production cutover — the old
+      AGMA-Web repo retires at that moment)
+- [ ] Enable auto-deploy on push for both (hPanel toggle), if not on by default
 
 ## 3. Supabase (⏳ do before Phase 1)
 

@@ -69,7 +69,16 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
   recovery layer; weekly logical dump + R2→B2 mirror scheduled for a later phase.
 - Supabase GitHub integration ON (merge to `main` → auto `db push`); automatic
   preview branching OFF. Consequence: local `supabase db reset` verification must
-  pass BEFORE the first push of `main` to GitHub.
+  pass BEFORE the first push of `main` to GitHub. (Verified 2026-08-06: replay
+  clean, seeds + audit trigger + internal_label column denial all confirmed;
+  main + staging pushed.)
+- Website deploys via **Hostinger Git integration** (not GitHub Actions):
+  `staging` branch → staging.agma.com.sa now; `main` → agma.com.sa at cutover,
+  after visual verification of staging. Old AGMA-Web repo keeps serving
+  production until then. deploy.yml replaced by ci.yml (build check only).
+- pnpm pinned to **11.20.0** (Hostinger's Node 22 builder ships pnpm 11 and
+  ignores older pins). Lockfile rebuilt under pnpm 11's release-age policy;
+  sharp + unrs-resolver allowlisted in allowBuilds.
 
 **Phase 1 will:** full schema + RLS for CRM/projects/finance domains, auth with roles
 (admin/staff/client), seeds (32 services, 8 playbooks, roles, role_profiles),
