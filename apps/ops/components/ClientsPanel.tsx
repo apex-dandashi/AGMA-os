@@ -294,6 +294,15 @@ function ClientProfileCard({ client }: { client: Client }) {
           fact('الحد الائتماني', `SAR ${Number(client.credit_limit).toLocaleString('en-US')}`, true)}
         {client.collections_hold && <CollectionsHoldBadge clientId={client.id} />}
         {(client.tags ?? []).map((t) => <Badge key={t} variant="outline">{t}</Badge>)}
+        {(!client.cr_number || !client.vat_number) && (
+          <button type="button" onClick={() => setEditing(true)}
+            className="rounded-full border border-pulse-orange/60 px-2.5 py-0.5 text-xs text-pulse-orange hover:bg-pulse-orange/10">
+            بيانات رسمية ناقصة: {[
+              !client.cr_number && 'السجل التجاري',
+              !client.vat_number && 'الرقم الضريبي',
+            ].filter(Boolean).join(' و')} — أدخلها هنا لتظهر في العقود والفواتير
+          </button>
+        )}
         <Button variant="ghost" size="xs" className="ms-auto" onClick={() => setEditing(true)}>
           <Pencil className="h-3.5 w-3.5" aria-hidden /> تعديل البيانات
         </Button>

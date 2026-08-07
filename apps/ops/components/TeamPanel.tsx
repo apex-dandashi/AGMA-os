@@ -4,8 +4,10 @@ import { useState, type FormEvent } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Badge, Button, Hint, Input, Select, SkeletonList, Table, Td, Tr, useToast } from '@agma/ui';
 import type { Enums, Tables } from '@agma/db';
+import { PenLine } from 'lucide-react';
 import { getSupabase } from '../lib/supabase';
 import { keys, useAppMutation } from '../lib/queries';
+import { readImageAsDataUri } from '../lib/images';
 
 /**
  * الأدوار هنا «مستويات صلاحية» أمنية ثلاثية (كلٌّ يشمل ما تحته) — أما
@@ -155,6 +157,8 @@ export default function TeamPanel({ me }: { me: Tables<'profiles'> }) {
     <div>
       <h1 className="mb-4 text-xl font-black">الفريق</h1>
 
+      <MySignatureCard me={me} />
+
       {isAdmin && (
         <form onSubmit={invite} className="mb-5 flex flex-wrap items-end gap-2 rounded-sm border border-gray-dark p-3">
           <Input label="البريد الإلكتروني" dir="ltr" type="email" required
@@ -299,6 +303,46 @@ export default function TeamPanel({ me }: { me: Tables<'profiles'> }) {
 }
 
 /** «ماذا يستطيع كل مستوى؟» — الصلاحيات كما تفرضها قاعدة البيانات فعلاً. */
+/** توقيعي الشخصي — يظهر في خانة الطرف الأول بالعقود التي أنشئها. */
+function MySignatureCard({ me }: { me: Tables<'profiles'> }) {
+  const save = useAppMutation(
+    async (file: File | null) => {
+      const data = file ? await readImageAsDataUri(file) : null;
+      // null = إزالة التوقيع؛ توليد الأنواع لا يعلّم معامل الدالة nullable
+      const { error } = await getSupabase().rpc('set_my_signature',
+        { p_data: data as unknown as string });
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [['profiles']], successMessage: 'حُفظ توقيعك — سيظهر في العقود الجديدة التي تنشئها' }
+  );
+  if (me.role === 'client') return null;
+  return (
+    <div className="mb-5 flex flex-wrap items-center gap-3 rounded-sm border border-gray-dark p-3">
+      <PenLine className="h-4 w-4 text-pulse-orange" aria-hidden />
+      <span className="text-sm font-bold">توقيعي</span>
+      <Hint text="يُضمَّن في خانة توقيع الطرف الأول بكل عقد تنشئه من «المستندات». صورة PNG بخلفية شفافة، بحد ٥٠٠ كيلوبايت. تغييره لا يمس عقوداً محفوظة." />
+      {me.signature_data ? (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={me.signature_data} alt="توقيعي" className="h-12 w-auto rounded-sm bg-white p-1" />
+          <Button variant="ghost" size="xs" loading={save.isPending}
+            onClick={() => save.mutate(null as never)}>
+            إزالة
+          </Button>
+        </>
+      ) : (
+        <input type="file" accept="image/*" aria-label="رفع توقيعي"
+          className="text-xs text-gray-light file:me-2 file:rounded-sm file:border file:border-gray-dark file:bg-transparent file:px-2 file:py-1 file:text-xs file:text-gray-light"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) save.mutate(f as never);
+            e.target.value = '';
+          }} />
+      )}
+    </div>
+  );
+}
+
 function RoleMatrixCard() {
   const [open, setOpen] = useState(false);
   return (

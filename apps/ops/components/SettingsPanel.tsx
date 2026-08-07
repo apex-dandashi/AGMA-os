@@ -19,6 +19,7 @@ import { Building2, Landmark, ListChecks, ScrollText, Settings as SettingsIcon }
 import type { Tables } from '@agma/db';
 import { getSupabase } from '../lib/supabase';
 import { useAppMutation } from '../lib/queries';
+import { readImageAsDataUri } from '../lib/images';
 import { useProfile } from './AppShell';
 
 /**
@@ -153,7 +154,58 @@ function OrgTab() {
         onClick={() => save.mutate(undefined as never)}>
         حفظ
       </Button>
+      <div className="mt-5 border-t border-gray-dark pt-4">
+        <p className="mb-1 text-sm font-bold text-gray-light">الختم والتوقيع الرسمي</p>
+        <p className="mb-3 text-xs text-gray-medium">
+          يظهران في خانة توقيع الطرف الأول بكل عقد جديد. العقود المحفوظة لا تتأثر
+          (صورتها مجمّدة داخلها). PNG بخلفية شفافة هو الأفضل، بحد ٥٠٠ كيلوبايت.
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <StampField label="ختم المنشأة" column="stamp_data"
+            value={(data as never)['stamp_data']} invalidate={key} />
+          <StampField label="التوقيع الرسمي للمنشأة" column="signature_data"
+            value={(data as never)['signature_data']} invalidate={key} />
+        </div>
+      </div>
     </Card>
+  );
+}
+
+/** حقل صورة ختم/توقيع على org_settings — رفع ومعاينة وإزالة. */
+function StampField({ label, column, value, invalidate }:
+  { label: string; column: 'stamp_data' | 'signature_data';
+    value: string | null; invalidate: unknown[] }) {
+  const save = useAppMutation(
+    async (file: File | null) => {
+      const data = file ? await readImageAsDataUri(file) : null;
+      const { error } = await getSupabase().from('org_settings')
+        .update({ [column]: data } as never).eq('id', true);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [invalidate], successMessage: 'حُفظ — سيظهر في العقود الجديدة' }
+  );
+  return (
+    <div className="rounded-sm border border-gray-dark p-3">
+      <p className="mb-2 text-xs font-bold text-gray-light">{label}</p>
+      {value ? (
+        <div className="flex items-center gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={value} alt={label} className="h-16 w-auto rounded-sm bg-white p-1" />
+          <Button variant="ghost" size="xs" loading={save.isPending}
+            onClick={() => save.mutate(null as never)}>
+            إزالة
+          </Button>
+        </div>
+      ) : (
+        <input type="file" accept="image/*" aria-label={label}
+          className="text-xs text-gray-light file:me-2 file:rounded-sm file:border file:border-gray-dark file:bg-transparent file:px-2 file:py-1 file:text-xs file:text-gray-light"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) save.mutate(f as never);
+            e.target.value = '';
+          }} />
+      )}
+    </div>
   );
 }
 

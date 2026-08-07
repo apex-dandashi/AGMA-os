@@ -42,7 +42,9 @@ export function renderContract(payload: ContractPayload): string {
   .clause p { font-size: 12px; line-height: 1.9; }
   .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 12mm; margin-top: 14mm; }
   .sig span { font-size: 11px; color: ${c.muted}; }
-  .sig i { display: block; border-bottom: 1.5px solid ${c.ink}; height: 14mm; }
+  .sig i { display: flex; align-items: flex-end; justify-content: center; gap: 6mm;
+           border-bottom: 1.5px solid ${c.ink}; height: 18mm; }
+  .sig i img { max-height: 16mm; max-width: 40mm; }
   .sig small { font-size: 10px; color: ${c.muted}; }
   .closing { text-align: center; margin-top: 12mm; font-size: 15px; font-weight: 700; color: ${c.accent}; }
   .footer { position: absolute; bottom: 0; left: 0; right: 0; padding: 5mm 14mm 6mm;
@@ -72,7 +74,12 @@ export function renderContract(payload: ContractPayload): string {
         )
         .join('')}
       <div class="signatures">
-        <div class="sig"><span>الطرف الأول</span><i></i><small>${esc(payload.firstParty.name)}</small></div>
+        <div class="sig"><span>الطرف الأول</span><i>${
+          payload.firstPartySignatureDataUri
+            ? `<img src="${payload.firstPartySignatureDataUri}" alt="التوقيع" />` : ''
+        }${
+          payload.stampDataUri ? `<img src="${payload.stampDataUri}" alt="الختم" />` : ''
+        }</i><small>${esc(payload.firstParty.name)}</small></div>
         <div class="sig"><span>الطرف الثاني</span><i></i><small>${esc(payload.secondParty.name)}</small></div>
       </div>
       <p class="closing">«${COMPANY.closingLine}»</p>

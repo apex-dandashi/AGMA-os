@@ -1657,6 +1657,8 @@ export type Database = {
           phone: string | null
           representative_name: string | null
           representative_title: string | null
+          signature_data: string | null
+          stamp_data: string | null
           unified_number: string | null
           updated_at: string
           vat_number: string | null
@@ -1673,6 +1675,8 @@ export type Database = {
           phone?: string | null
           representative_name?: string | null
           representative_title?: string | null
+          signature_data?: string | null
+          stamp_data?: string | null
           unified_number?: string | null
           updated_at?: string
           vat_number?: string | null
@@ -1689,6 +1693,8 @@ export type Database = {
           phone?: string | null
           representative_name?: string | null
           representative_title?: string | null
+          signature_data?: string | null
+          stamp_data?: string | null
           unified_number?: string | null
           updated_at?: string
           vat_number?: string | null
@@ -2170,6 +2176,7 @@ export type Database = {
           job_title: string | null
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
+          signature_data: string | null
           skills: string[]
           updated_at: string
         }
@@ -2185,6 +2192,7 @@ export type Database = {
           job_title?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          signature_data?: string | null
           skills?: string[]
           updated_at?: string
         }
@@ -2200,6 +2208,7 @@ export type Database = {
           job_title?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          signature_data?: string | null
           skills?: string[]
           updated_at?: string
         }
@@ -3737,8 +3746,10 @@ export type Database = {
       send_contract_renewals: { Args: never; Returns: undefined }
       send_overdue_reminders: { Args: never; Returns: undefined }
       send_tax_reminders: { Args: never; Returns: undefined }
+      set_my_signature: { Args: { p_data: string }; Returns: undefined }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      valid_signature_image: { Args: { p_data: string }; Returns: boolean }
     }
     Enums: {
       activity_kind: "call" | "meeting" | "task" | "deadline" | "followup"

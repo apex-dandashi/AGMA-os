@@ -1,11 +1,14 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Button, Input, Select, Textarea } from '@agma/ui';
+import { SquarePen } from 'lucide-react';
 import type { Enums, Tables } from '@agma/db';
 import { COMPANY, renderContract, type ContractPayload } from '@agma/legal-templates';
 import { getSupabase } from '../lib/supabase';
 import { keys, useAppMutation, useClauses, useOrgSettings } from '../lib/queries';
+import { useProfile } from './AppShell';
 
 type Client = Tables<'clients'>;
 
@@ -134,12 +137,46 @@ export default function ContractBuilder({ clients, onDone }:
   { clients: Client[]; onDone: () => void }) {
   const { data: clauses } = useClauses();
   const { data: org } = useOrgSettings();
+  const me = useProfile();
   const [templateKey, setTemplateKey] = useState('nda_mutual');
   const [clientId, setClientId] = useState('');
   const [secondPartyRep, setSecondPartyRep] = useState('');
+  const [newRep, setNewRep] = useState<{ name: string; title: string } | null>(null);
   const [preamble, setPreamble] = useState('');
   const [expiresOn, setExpiresOn] = useState('');
   const [picked, setPicked] = useState<Set<string> | null>(null);
+  // تعديل بند لهذا العقد وحده — نسخة المكتبة لا تُمس (docs/14: Instance لا Template)
+  const [overrides, setOverrides] = useState<Record<string, { title: string; body: string }>>({});
+  const [editingClause, setEditingClause] = useState<string | null>(null);
+  const [draft, setDraft] = useState({ title: '', body: '' });
+
+  // ممثلو العميل من جهات الاتصال — قابلة لإعادة الاستخدام في كل عقد
+  const { data: reps } = useQuery({
+    queryKey: ['contacts', clientId],
+    enabled: !!clientId,
+    queryFn: async () => {
+      const { data, error } = await getSupabase()
+        .from('contacts').select('id, name, title, is_primary')
+        .eq('client_id', clientId).order('is_primary', { ascending: false });
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
+  });
+
+  const addRep = useAppMutation(
+    async () => {
+      if (!newRep || newRep.name.trim().length < 2) throw new Error('اكتب اسم الممثل');
+      const { error } = await getSupabase().from('contacts').insert({
+        client_id: clientId,
+        name: newRep.name.trim(),
+        title: newRep.title.trim() || null,
+      });
+      if (error) throw new Error(error.message);
+      setSecondPartyRep(newRep.name.trim());
+      setNewRep(null);
+    },
+    { invalidate: [['contacts', clientId]], successMessage: 'حُفظ الممثل في جهات اتصال العميل' }
+  );
   const [extraTitle, setExtraTitle] = useState('');
   const [extraBody, setExtraBody] = useState('');
   const [extras, setExtras] = useState<{ title: string; body: string }[]>([]);
@@ -187,11 +224,14 @@ export default function ContractBuilder({ clients, onDone }:
       preamble: preamble || meta.preamble,
       clauses: [
         ...available.filter((c) => effective.has(c.id))
-          .map((c) => ({ title: c.title_ar, body: c.body_ar })),
+          .map((c) => overrides[c.id] ?? { title: c.title_ar, body: c.body_ar }),
         ...extras,
       ],
+      // يُجمَّدان مع اللقطة — تغييرهما لاحقاً في الإعدادات لا يمس هذا العقد
+      stampDataUri: org?.stamp_data ?? undefined,
+      firstPartySignatureDataUri: me.signature_data ?? org?.signature_data ?? undefined,
     };
-  }, [client, org, meta, secondPartyRep, preamble, available, effective, extras]);
+  }, [client, org, me, meta, secondPartyRep, preamble, available, effective, extras, overrides]);
 
   const save = useAppMutation(
     async () => {
@@ -225,18 +265,44 @@ export default function ContractBuilder({ clients, onDone }:
         <Select label="العميل (الطرف الثاني)" value={clientId}
           onChange={(e) => {
             setClientId(e.target.value);
-            const c = clients.find((x) => x.id === e.target.value);
-            if (c?.decision_maker && !secondPartyRep) setSecondPartyRep(c.decision_maker);
+            setSecondPartyRep('');
+            setNewRep(null);
           }}>
           <option value="">— اختر —</option>
           {clients.map((c) => <option key={c.id} value={c.id}>{c.company}</option>)}
         </Select>
-        <Input label="ممثل الطرف الثاني (اختياري)" value={secondPartyRep}
-          onChange={(e) => setSecondPartyRep(e.target.value)} />
+        <Select label="ممثل الطرف الثاني (من جهات الاتصال)" value={newRep ? '+' : secondPartyRep}
+          disabled={!clientId}
+          onChange={(e) => {
+            if (e.target.value === '+') setNewRep({ name: '', title: '' });
+            else { setNewRep(null); setSecondPartyRep(e.target.value); }
+          }}>
+          <option value="">— بدون —</option>
+          {(reps ?? []).map((r) => (
+            <option key={r.id} value={r.name}>
+              {r.name}{r.title ? ` — ${r.title}` : ''}{r.is_primary ? ' (رئيسي)' : ''}
+            </option>
+          ))}
+          <option value="+">+ ممثل جديد (يُحفظ لإعادة الاستخدام)</option>
+        </Select>
         <Input label="تاريخ انتهاء العقد (تنبيه تجديد قبل ٦٠ و٣٠ يوماً)"
           type="date" dir="ltr" value={expiresOn}
           onChange={(e) => setExpiresOn(e.target.value)} />
       </div>
+      {newRep && (
+        <div className="flex flex-wrap items-end gap-2 rounded-sm border border-gray-dark p-3">
+          <Input label="اسم الممثل" value={newRep.name}
+            onChange={(e) => setNewRep({ ...newRep, name: e.target.value })} />
+          <Input label="صفته (اختياري)" value={newRep.title}
+            onChange={(e) => setNewRep({ ...newRep, title: e.target.value })} />
+          <Button size="xs" loading={addRep.isPending}
+            disabled={newRep.name.trim().length < 2}
+            onClick={() => addRep.mutate(undefined as never)}>
+            حفظ في جهات الاتصال
+          </Button>
+          <Button variant="ghost" size="xs" onClick={() => setNewRep(null)}>إلغاء</Button>
+        </div>
+      )}
       {meta.bundleHint && (
         <p className="text-xs text-pulse-orange/90">{meta.bundleHint}</p>
       )}
@@ -250,22 +316,69 @@ export default function ContractBuilder({ clients, onDone }:
 
       <div className="flex flex-wrap gap-1.5" role="group" aria-label="بنود العقد">
         {available.map((c) => (
-          <button key={c.id} type="button" aria-pressed={effective.has(c.id)}
-            onClick={() => {
-              const next = new Set(effective);
-              if (next.has(c.id)) next.delete(c.id);
-              else next.add(c.id);
-              setPicked(next);
-            }}
-            className={`rounded-full border px-2.5 py-1 text-xs transition-colors focus-visible:ring-2 focus-visible:ring-pulse-orange/60 focus:outline-none ${
-              effective.has(c.id)
-                ? 'border-pulse-orange bg-pulse-orange/15 text-pulse-orange'
-                : 'border-gray-dark text-gray-light'
-            }`}>
-            {c.title_ar}
-          </button>
+          <span key={c.id} className={`inline-flex items-center rounded-full border transition-colors ${
+            effective.has(c.id)
+              ? 'border-pulse-orange bg-pulse-orange/15 text-pulse-orange'
+              : 'border-gray-dark text-gray-light'
+          }`}>
+            <button type="button" aria-pressed={effective.has(c.id)}
+              onClick={() => {
+                const next = new Set(effective);
+                if (next.has(c.id)) next.delete(c.id);
+                else next.add(c.id);
+                setPicked(next);
+              }}
+              className="px-2.5 py-1 text-xs focus-visible:ring-2 focus-visible:ring-pulse-orange/60 focus:outline-none">
+              {overrides[c.id]?.title ?? c.title_ar}
+              {overrides[c.id] && ' *'}
+            </button>
+            {effective.has(c.id) && (
+              <button type="button" aria-label={`تعديل بند ${c.title_ar} لهذا العقد`}
+                onClick={() => {
+                  const cur = overrides[c.id] ?? { title: c.title_ar, body: c.body_ar };
+                  setDraft(cur);
+                  setEditingClause(c.id);
+                }}
+                className="pe-2 ps-0.5 opacity-70 hover:opacity-100">
+                <SquarePen className="h-3 w-3" aria-hidden />
+              </button>
+            )}
+          </span>
         ))}
       </div>
+
+      {editingClause && (
+        <div className="space-y-2 rounded-sm border border-pulse-orange/50 p-3">
+          <p className="text-xs text-gray-medium">
+            التعديل على هذا العقد فقط — نسخة المكتبة في «الإعدادات ← البنود القانونية» لا تتغير.
+          </p>
+          <Input label="عنوان البند" value={draft.title}
+            onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))} />
+          <Textarea label="نص البند" rows={4} value={draft.body}
+            onChange={(e) => setDraft((d) => ({ ...d, body: e.target.value }))} />
+          <div className="flex gap-2">
+            <Button size="xs"
+              disabled={draft.title.trim().length < 2 || draft.body.trim().length < 10}
+              onClick={() => {
+                setOverrides((o) => ({ ...o, [editingClause]: {
+                  title: draft.title.trim(), body: draft.body.trim() } }));
+                setEditingClause(null);
+              }}>
+              حفظ التعديل
+            </Button>
+            {overrides[editingClause] && (
+              <Button variant="outline" size="xs"
+                onClick={() => {
+                  setOverrides(({ [editingClause]: _drop, ...rest }) => rest);
+                  setEditingClause(null);
+                }}>
+                استعادة نص المكتبة
+              </Button>
+            )}
+            <Button variant="ghost" size="xs" onClick={() => setEditingClause(null)}>إلغاء</Button>
+          </div>
+        </div>
+      )}
 
       <details className="rounded-sm border border-gray-dark p-3">
         <summary className="cursor-pointer text-xs text-gray-light">بند مخصص إضافي</summary>

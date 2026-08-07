@@ -168,6 +168,19 @@ describe('renderContract', () => {
     expect(html).toContain('الطرف الثاني');
     expect(html).toContain(COMPANY.closingLine);
   });
+
+  it('embeds stamp + signature only when provided', () => {
+    expect(html).not.toContain('alt="الختم"');
+    const stamped = renderContract({
+      docTitleAr: 'اتفاقية', number: null, issueDateAr: '8 أغسطس 2026', city: 'الرياض',
+      firstParty: { name: 'أجما' }, secondParty: { name: 'عميل' },
+      clauses: [{ title: 'بند', body: 'نص.' }],
+      stampDataUri: 'data:image/png;base64,AAA',
+      firstPartySignatureDataUri: 'data:image/png;base64,BBB',
+    });
+    expect(stamped).toContain('alt="الختم"');
+    expect(stamped).toContain('alt="التوقيع"');
+  });
 });
 
 describe('formatting helpers', () => {

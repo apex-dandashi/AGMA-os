@@ -51,6 +51,29 @@ Verdicts in docs/14: 13 types already existed; this round closes the real gaps.
 - Gauntlet green (typecheck, build, tests, RLS harness, e2e); both migrations
   pushed to production.
 
+## Contract Library 2.1 log (2026-08-08) — owner UX round on the builder
+
+Owner asks: edit a clause inline, reuse client representatives, company
+stamp/signature + per-user signatures, and «أين أدخل السجل التجاري للعميل».
+
+- `20260808110000_stamp_signatures.sql` — org_settings.stamp_data/signature_data
+  (data URIs ≤500KB, image-check constraint) + profiles.signature_data updated
+  ONLY via `set_my_signature` security-definer RPC (fixture-proved: executor
+  sets own signature, direct UPDATE on another profile hits 0 rows, non-image
+  data rejected with Arabic message). No self-update policy on profiles opened.
+- ContractBuilder: per-clause instance editor (`overrides` — library copy
+  untouched, edited chips marked *), representative dropdown fed from the
+  client's contacts with «+ ممثل جديد» persisting to contacts for reuse,
+  stamp + issuer signature embedded into the frozen payload snapshot.
+- renderContract: signature/stamp images render inside the first-party
+  signature line when present (new unit test; 40 total).
+- Settings ← بيانات المنشأة: الختم والتوقيع الرسمي uploaders with preview/remove.
+- Team page: «توقيعي» card for every staff member (upload/remove via RPC).
+- Clients: بطاقة العميل الآن تعرض تنبيهاً برتقالياً عندما ينقص السجل التجاري
+  أو الرقم الضريبي، ينقر فيفتح «تعديل البيانات» مباشرة (owner couldn't find
+  where to enter client CR/VAT — discoverability fix).
+- Gauntlet green; migration pushed to production.
+
 ## Roles 2.1 log (2026-08-07) — the full set, derived from docs/11–13
 
 Owner: «إلخ = افترض باقي الأدوار المهمة بالمنطق والمراجع». Five more roles,

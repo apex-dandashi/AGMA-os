@@ -62,6 +62,9 @@ export interface ContractPayload {
   secondParty: ContractParty;
   preamble?: string;
   clauses: { title: string; body: string }[];
+  /** ختم المنشأة وتوقيعها/توقيع المُصدِر — data URIs تُجمَّد مع اللقطة. */
+  stampDataUri?: string;
+  firstPartySignatureDataUri?: string;
 }
 
 export interface QuoteTotals {
