@@ -1,4 +1,5 @@
 import { COMPANY, DOC_COLORS, formatSAR } from './company';
+import { LOGO_DATA_URI } from './logo';
 
 const esc = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -83,7 +84,7 @@ export function renderStatement(payload: StatementPayload): string {
 <body>
   <section class="page">
     <div class="band">
-      <span class="ag">AG</span>
+      <img src="${LOGO_DATA_URI}" alt="AGMA" style="height:12mm;width:auto" />
       <h1>كشف حساب</h1>
       <div class="meta">${esc(payload.clientName)} · حتى تاريخ ${esc(payload.issueDateAr)} · ${COMPANY.city}</div>
     </div>

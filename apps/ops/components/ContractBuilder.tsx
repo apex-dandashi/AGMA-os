@@ -15,14 +15,54 @@ const todayAr = () => {
   return `${d.getDate()} ${AR_MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 };
 
-/** Contract types this builder produces; NDA ships with a full clause set. */
-const CONTRACT_TYPES: { type: Enums<'document_type'>; title: string; clauseCategory: string }[] = [
-  { type: 'nda', title: 'اتفاقية عدم إفصاح', clauseCategory: 'nda' },
-  { type: 'sow', title: 'اتفاقية نطاق عمل', clauseCategory: 'legal' },
-  { type: 'sla', title: 'اتفاقية مستوى الخدمة', clauseCategory: 'legal' },
-  { type: 'msa', title: 'اتفاقية خدمات رئيسية', clauseCategory: 'legal' },
-  { type: 'amc', title: 'عقد صيانة سنوي', clauseCategory: 'legal' },
-  { type: 'coc', title: 'ميثاق التعاون', clauseCategory: 'legal' },
+/**
+ * مكتبة القوالب (docs/13): فئة ← نوع ← بنوده الجاهزة من مكتبة البنود.
+ * كل قالب يعرّف بنوده وتلميح «الحزمة المقترحة» معه.
+ */
+type TemplateDef = {
+  key: string;
+  type: Enums<'document_type'>;
+  title: string;
+  clauseCategories: string[];
+  preamble?: string;
+  bundleHint?: string;
+};
+
+const TEMPLATE_GROUPS: { group: string; templates: TemplateDef[] }[] = [
+  {
+    group: 'اتفاقيات العملاء الأساسية',
+    templates: [
+      { key: 'msa', type: 'msa', title: 'اتفاقية خدمات رئيسية (الإطار)', clauseCategories: ['legal', 'commercial'],
+        bundleHint: 'الحزمة المعتادة: رئيسية + بيان نطاق لكل خدمة + معالجة بيانات عند الحاجة.' },
+      { key: 'sow', type: 'sow', title: 'بيان نطاق عمل (SOW)', clauseCategories: ['sow'],
+        bundleHint: 'يُبنى تحت الاتفاقية الرئيسية — بيان لكل مشروع أو خدمة.' },
+      { key: 'change_order', type: 'change_order', title: 'أمر تغيير', clauseCategories: ['change_order'],
+        bundleHint: 'يعدل بيان نطاق قائماً — اذكر مرجعه في اسم المشروع.' },
+      { key: 'sla', type: 'sla', title: 'اتفاقية مستوى الخدمة', clauseCategories: ['legal'] },
+      { key: 'amc', type: 'amc', title: 'عقد صيانة سنوي', clauseCategories: ['legal'] },
+      { key: 'coc', type: 'coc', title: 'ميثاق التعاون', clauseCategories: ['legal'] },
+    ],
+  },
+  {
+    group: 'السرية',
+    templates: [
+      { key: 'nda_mutual', type: 'nda', title: 'اتفاقية سرية متبادلة', clauseCategories: ['nda'],
+        preamble: 'حيث إن الطرفين بصدد تبادل معلومات ذات طبيعة سرية لغرض بحث أو تنفيذ تعاون تجاري بينهما، فقد اتفقا على ما يلي:' },
+      { key: 'nda_oneway', type: 'nda', title: 'اتفاقية سرية أحادية الاتجاه', clauseCategories: ['nda_oneway', 'nda'],
+        preamble: 'حيث إن الطرف الأول (المفصح) سيكشف للطرف الثاني (المتلقي) معلومات ذات طبيعة سرية لغرض محدد، فقد اتفق الطرفان على ما يلي:' },
+    ],
+  },
+  {
+    group: 'البيانات والإعلانات والمؤثرون',
+    templates: [
+      { key: 'dpa', type: 'dpa', title: 'اتفاقية معالجة بيانات (PDPL)', clauseCategories: ['dpa'],
+        bundleHint: 'إلزامية عندما نعالج بيانات عملاء العميل (تحليلات، حملات، CRM).' },
+      { key: 'media_auth', type: 'media_auth', title: 'تفويض الميزانية الإعلانية', clauseCategories: ['media_auth'],
+        bundleHint: 'لا تُدار حملة مدفوعة بدون هذا التفويض — يحدد السقف ومسار الدفع والأتعاب.' },
+      { key: 'influencer', type: 'influencer', title: 'اتفاقية مؤثر / صانع محتوى', clauseCategories: ['influencer'],
+        bundleHint: 'هذه بين أجما والمؤثر — عقد العميل لإدارة الحملة مستقل عنها.' },
+    ],
+  },
 ];
 
 /**
@@ -33,7 +73,7 @@ const CONTRACT_TYPES: { type: Enums<'document_type'>; title: string; clauseCateg
 export default function ContractBuilder({ clients, onDone }:
   { clients: Client[]; onDone: () => void }) {
   const { data: clauses } = useClauses();
-  const [docType, setDocType] = useState<Enums<'document_type'>>('nda');
+  const [templateKey, setTemplateKey] = useState('nda_mutual');
   const [clientId, setClientId] = useState('');
   const [secondPartyRep, setSecondPartyRep] = useState('');
   const [preamble, setPreamble] = useState('');
@@ -44,16 +84,18 @@ export default function ContractBuilder({ clients, onDone }:
   const [extras, setExtras] = useState<{ title: string; body: string }[]>([]);
   const [preview, setPreview] = useState(false);
 
-  const meta = CONTRACT_TYPES.find((t) => t.type === docType)!;
+  const meta = TEMPLATE_GROUPS.flatMap((g) => g.templates)
+    .find((t) => t.key === templateKey)!;
   const client = clients.find((c) => c.id === clientId);
   const available = useMemo(
     () => (clauses ?? []).filter((c) => c.approved &&
-      (c.category === meta.clauseCategory || (meta.clauseCategory !== 'nda' && c.category === 'commercial'))),
-    [clauses, meta.clauseCategory]
+      (meta.clauseCategories.includes(c.category)
+        || (meta.type !== 'nda' && c.category === 'commercial'))),
+    [clauses, meta]
   );
-  // Default: NDA picks its whole set; other types start with legal clauses.
+  // القالب يحدد بنوده الافتراضية كاملة؛ التجاري إضافة اختيارية.
   const effective = picked ?? new Set(
-    available.filter((c) => c.category === meta.clauseCategory).map((c) => c.id)
+    available.filter((c) => meta.clauseCategories.includes(c.category)).map((c) => c.id)
   );
 
   const payload = useMemo<ContractPayload | null>(() => {
@@ -75,24 +117,21 @@ export default function ContractBuilder({ clients, onDone }:
           secondPartyRep && `يمثلها: ${secondPartyRep}`,
         ].filter(Boolean).join(' — ') || undefined,
       },
-      preamble: preamble ||
-        (docType === 'nda'
-          ? 'حيث إن الطرفين بصدد تبادل معلومات ذات طبيعة سرية لغرض بحث أو تنفيذ تعاون تجاري بينهما، فقد اتفقا على ما يلي:'
-          : undefined),
+      preamble: preamble || meta.preamble,
       clauses: [
         ...available.filter((c) => effective.has(c.id))
           .map((c) => ({ title: c.title_ar, body: c.body_ar })),
         ...extras,
       ],
     };
-  }, [client, meta.title, docType, secondPartyRep, preamble, available, effective, extras]);
+  }, [client, meta, secondPartyRep, preamble, available, effective, extras]);
 
   const save = useAppMutation(
     async () => {
       if (!payload) throw new Error('اختر العميل أولاً');
       if (payload.clauses.length === 0) throw new Error('اختر بنداً واحداً على الأقل');
       const { error } = await getSupabase().from('documents').insert({
-        type: docType,
+        type: meta.type,
         client_id: clientId,
         payload: payload as never,
         valid_until: expiresOn || null,
@@ -105,12 +144,16 @@ export default function ContractBuilder({ clients, onDone }:
   return (
     <div className="mb-4 space-y-3 rounded-sm border border-gray-dark p-4">
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-        <Select label="نوع العقد" value={docType}
+        <Select label="القالب (فئة ← نوع)" value={templateKey}
           onChange={(e) => {
-            setDocType(e.target.value as Enums<'document_type'>);
+            setTemplateKey(e.target.value);
             setPicked(null);
           }}>
-          {CONTRACT_TYPES.map((t) => <option key={t.type} value={t.type}>{t.title}</option>)}
+          {TEMPLATE_GROUPS.map((g) => (
+            <optgroup key={g.group} label={g.group}>
+              {g.templates.map((t) => <option key={t.key} value={t.key}>{t.title}</option>)}
+            </optgroup>
+          ))}
         </Select>
         <Select label="العميل (الطرف الثاني)" value={clientId}
           onChange={(e) => setClientId(e.target.value)}>
@@ -123,6 +166,9 @@ export default function ContractBuilder({ clients, onDone }:
           type="date" dir="ltr" value={expiresOn}
           onChange={(e) => setExpiresOn(e.target.value)} />
       </div>
+      {meta.bundleHint && (
+        <p className="text-xs text-pulse-orange/90">{meta.bundleHint}</p>
+      )}
       {client && !client.cr_number && (
         <p className="text-xs text-gray-medium">
           تلميح: أضف السجل التجاري في بيانات العميل ليظهر في ديباجة العقد.

@@ -3649,6 +3649,10 @@ export type Database = {
         | "coc"
         | "invoice"
         | "credit_note"
+        | "change_order"
+        | "dpa"
+        | "media_auth"
+        | "influencer"
       documentation_grade: "A" | "B" | "C"
       emt_class: "entrepreneur" | "manager" | "technician"
       experiment_status: "proposed" | "running" | "won" | "lost"
@@ -3835,6 +3839,10 @@ export const Constants = {
         "coc",
         "invoice",
         "credit_note",
+        "change_order",
+        "dpa",
+        "media_auth",
+        "influencer",
       ],
       documentation_grade: ["A", "B", "C"],
       emt_class: ["entrepreneur", "manager", "technician"],

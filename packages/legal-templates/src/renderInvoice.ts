@@ -1,4 +1,5 @@
 import { COMPANY, DOC_COLORS, formatIBAN, formatSAR, toArabicDigits } from './company';
+import { LOGO_DATA_URI } from './logo';
 import { zatcaQrSvg } from './zatca';
 import type { PaymentAccountInfo, QuoteItem } from './types';
 
@@ -65,12 +66,12 @@ export function renderInvoice(payload: InvoicePayload): string {
     .map(
       (item, i) => `
       <div class="item">
-        <div class="amt"><b>${sign}${formatSAR(item.amount)}</b> <span>SAR</span></div>
+        <div class="num">${String(i + 1).padStart(2, '0')}</div>
         <div class="body">
           <h4>${esc(item.title)}</h4>
           ${item.description ? `<p>${esc(item.description)}</p>` : ''}
         </div>
-        <div class="num">${String(i + 1).padStart(2, '0')}</div>
+        <div class="amt"><b>${sign}${formatSAR(item.amount)}</b> <span>SAR</span></div>
       </div>`
     )
     .join('');
@@ -110,12 +111,12 @@ export function renderInvoice(payload: InvoicePayload): string {
           border-bottom: 1px solid #d8cfc2; padding-bottom: 5mm; flex-wrap: wrap; }
   .meta .no { font-size: 20px; color: ${c.ink}; font-weight: 800; }
   .meta .no i { font-style: normal; font-size: 24px; }
-  .thead { display: grid; grid-template-columns: 1fr 20mm; gap: 4mm;
+  .thead { display: grid; grid-template-columns: 1fr 30mm; gap: 4mm;
           background: linear-gradient(270deg, ${c.accent}, #f2703f); color: #fff;
           border-radius: 2mm; padding: 3mm 5mm; font-size: 12px; font-weight: 700;
           margin-top: 6mm; }
   .thead .left { text-align: left; }
-  .item { display: grid; grid-template-columns: 30mm 1fr 16mm; gap: 4mm; align-items: center;
+  .item { display: grid; grid-template-columns: 12mm 1fr 30mm; gap: 4mm; align-items: center; break-inside: avoid;
           background: ${c.card}; border-radius: 2mm; padding: 5mm; margin-top: 3mm; }
   .item .num { font-size: 24px; font-weight: 300; text-align: center; }
   .item h4 { font-size: 14px; }
@@ -147,7 +148,7 @@ export function renderInvoice(payload: InvoicePayload): string {
   <section class="page">
     <div class="ring"></div>
     <aside class="sidebar">
-      <div class="brand"><span class="ag">AG</span><b>${COMPANY.brandAr}</b></div>
+      <div class="brand"><img src="${LOGO_DATA_URI}" alt="AGMA" style="height:11mm;width:auto" /></div>
       <h5>موجَّهة إلى</h5>
       <div class="kv"><b>${esc(payload.recipientName)}</b>
         ${payload.recipientCompany ? `<label>${esc(payload.recipientCompany)}</label>` : ''}</div>

@@ -1,4 +1,5 @@
 import { COMPANY, DOC_COLORS, formatIBAN, formatSAR, toArabicDigits } from './company';
+import { LOGO_DATA_URI } from './logo';
 import { computeQuoteTotals } from './totals';
 import type { QuotePayload } from './types';
 
@@ -21,7 +22,7 @@ export function renderQuote(payload: QuotePayload): string {
     .map(
       (item, i) => `
       <div class="item">
-        <div class="amt"><b>${formatSAR(item.amount)}</b> <span>SAR</span></div>
+        <div class="num">${String(i + 1).padStart(2, '0')}</div>
         <div class="body">
           <h4>${esc(item.title)}</h4>
           ${item.description ? `<p>${esc(item.description)}</p>` : ''}
@@ -31,7 +32,7 @@ export function renderQuote(payload: QuotePayload): string {
               : ''
           }
         </div>
-        <div class="num">${String(i + 1).padStart(2, '0')}</div>
+        <div class="amt"><b>${formatSAR(item.amount)}</b> <span>SAR</span></div>
       </div>`
     )
     .join('');
@@ -113,13 +114,14 @@ export function renderQuote(payload: QuotePayload): string {
   .meta .no i { font-style: normal; font-size: 26px; }
   .intro { background: #faf6ef; border-right: 3px solid ${c.accent}; padding: 5mm 6mm;
           margin: 6mm 0; font-size: 12.5px; line-height: 2; border-radius: 2mm; }
-  .thead { display: grid; grid-template-columns: 1fr 18mm; gap: 4mm;
+  .thead { display: grid; grid-template-columns: 1fr 30mm; gap: 4mm;
           background: linear-gradient(270deg, ${c.accent}, #f2703f); color: #fff;
           border-radius: 2mm; padding: 3mm 5mm; font-size: 12px; font-weight: 700; }
   .thead .left { text-align: left; }
-  .item { display: grid; grid-template-columns: 26mm 1fr 18mm; gap: 4mm; align-items: center;
-          background: ${c.card}; border-radius: 2mm; padding: 5mm; margin-top: 3mm; }
-  .item .num { font-size: 26px; color: ${c.ink}; font-weight: 300; text-align: center; }
+  .item { display: grid; grid-template-columns: 12mm 1fr 30mm; gap: 4mm; align-items: center;
+          background: ${c.card}; border-radius: 2mm; padding: 5mm; margin-top: 3mm;
+          break-inside: avoid; }
+  .item .num { font-size: 20px; color: ${c.muted}; font-weight: 300; text-align: center; }
   .item h4 { font-size: 14px; }
   .item p { font-size: 10.5px; color: ${c.muted}; margin-top: 1mm; }
   .item p.disc { color: ${c.accent}; font-weight: 600; }
@@ -158,7 +160,7 @@ export function renderQuote(payload: QuotePayload): string {
   <section class="page">
     <div class="ring"></div>
     <aside class="sidebar">
-      <div class="brand"><span class="ag">AG</span><b>${COMPANY.brandAr}</b></div>
+      <div class="brand"><img src="${LOGO_DATA_URI}" alt="AGMA" style="height:11mm;width:auto" /></div>
       <h5>موجَّهة إلى</h5>
       <div class="who"><b>${esc(payload.recipientName)}</b>
         ${payload.recipientCompany ? `<span>${esc(payload.recipientCompany)}</span>` : ''}</div>

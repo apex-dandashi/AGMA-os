@@ -22,6 +22,32 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
 
+## Print & contracts round log (2026-08-07) — owner PDF feedback + study 3
+
+**Print fixes (owner screenshot):**
+- Real AGMA logo (embedded base64 SVG, self-contained/deterministic) replaces
+  the «AG» text placeholder in all four renderers.
+- The flipped items table fixed: rows now match the header band — رقم البند
+  والعنوان يميناً تحت «الخدمات والمنتجات»، والمبلغ يساراً تحت «المبلغ» —
+  in both quote and invoice; header/amount column widths aligned (30mm);
+  item cards never split across pages.
+
+**Study 3 (contract library, docs/13) — sized P0 executed:**
+- ContractBuilder is now فئة ← نوع (grouped select) with per-template
+  «الحزمة المقترحة» hints — the study's tree instead of a flat dropdown.
+- 4 new document types (change_order, dpa, media_auth, influencer — enum in
+  its own migration) + NDA split into متبادلة/أحادية variants.
+- 29 new approved clause seeds (clause_library now 42): SOW ×5, DPA/PDPL ×6
+  (incl. 72-hour breach + SCC transfer + subprocessors), media-budget
+  authorization ×6 (spend≠revenue, caps, account ownership), influencer ×7
+  (موثوق licensing, usage rights, whitelisting, exclusivity), change order
+  ×4, one-way NDA. All flagged: final approval by a Saudi lawyer —
+  **قرار شركاء**.
+- Renewal alerts extended to the new types. Scheduled-with-triggers and
+  skipped items documented in docs/13 (e-signature → portal, SCC templates →
+  first cross-border transfer, vendor/HR+Qiwa → first hire, CLM
+  17-state lifecycle → skipped at this scale).
+
 ## Study-2 gap package log (2026-08-07) — docs/12 adopted items
 
 Second owner study («الهيكلية المرجعية للنظام المالي ودورة حياة العملاء»)

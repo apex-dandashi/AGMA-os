@@ -28,12 +28,16 @@ type Doc = Tables<'documents'>;
 
 const TYPE_LABELS: Record<Enums<'document_type'>, string> = {
   quote: 'عرض سعر',
-  sow: 'نطاق عمل',
+  sow: 'بيان نطاق عمل',
   nda: 'عدم إفصاح',
   sla: 'مستوى خدمة',
   msa: 'اتفاقية رئيسية',
   amc: 'عقد صيانة',
-  coc: 'مدونة سلوك',
+  coc: 'ميثاق تعاون',
+  change_order: 'أمر تغيير',
+  dpa: 'معالجة بيانات',
+  media_auth: 'تفويض ميزانية إعلانية',
+  influencer: 'اتفاقية مؤثر',
   invoice: 'فاتورة',
   credit_note: 'إشعار دائن',
 };

@@ -17,6 +17,7 @@ All specifications live in `/docs` — read the relevant one before touching its
 - `docs/10-operating-principles.md` — **THE operating system**: E-Myth × EOS × Checklist Manifesto × Profit First × Built to Sell, one flywheel (binding for phases 6.5+)
 - `docs/11-finance-platform-design.md` — owner-supplied corporate finance target-state (31-page PDF), ingested with adopt/defer/skip verdicts — «المالية ٢٫٠» package derives from section ب
 - `docs/12-finance-lifecycle-reference.md` — second owner study (client lifecycle depth), compared to docs/11 with verdicts; disputes/leakage/close/AR-normalize/renewals adopted
+- `docs/13-contract-library-reference.md` — third owner study (contract template library); P0 templates+clauses built, rest gated with triggers
 - `docs/references/` — real quotation/invoice PDFs + CR certificate = visual ground truth for generator QA
 
 ## Stack

@@ -1,4 +1,5 @@
 import { COMPANY, DOC_COLORS, toArabicDigits } from './company';
+import { LOGO_DATA_URI } from './logo';
 import type { ContractPayload } from './types';
 
 const esc = (s: string) =>
@@ -52,7 +53,7 @@ export function renderContract(payload: ContractPayload): string {
 <body>
   <section class="page">
     <div class="band">
-      <span class="ag">AG</span>
+      <img src="${LOGO_DATA_URI}" alt="AGMA" style="height:12mm;width:auto" />
       <h1>${esc(payload.docTitleAr)}</h1>
       <div class="meta">${payload.number ? `رقم ${esc(payload.number)} · ` : ''}تاريخ الإصدار: ${esc(payload.issueDateAr)} · ${esc(payload.city)}</div>
     </div>
