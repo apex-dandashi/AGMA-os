@@ -16,11 +16,43 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 6 | Notifications | ✅ Done (2026-08-07) |
 | 6.5a | **OS-core** (docs/10): vision/VTO, seats, primary_aims, rocks, issues+IDS, scorecard+digest, L10 meetings | ✅ Done (2026-08-07) |
 | 6.5b | **Safety+cash** (docs/10): pause checklists, Flag & Hold, huddles, Profit First allocations, Vault/drip, leak detection | ✅ Done (2026-08-07) |
-| 6.5c | **Sellable** (docs/10): TVR scores, service_packages, custom-reason mining, playbook versions+grades, experiments, EMT/independence gauges | ⬜ |
+| 6.5c | **Sellable** (docs/10): TVR scores, service_packages, custom-reason mining, playbook versions+grades, experiments, EMT/independence gauges | ✅ Done (2026-08-07) |
 | 7 | Portal + onboarding + Drop Forms | ⬜ |
 | 8 | Content Engine | ⬜ |
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
+
+## Phase 6.5c log (2026-08-07)
+
+**Built to Sell + E-Myth (docs/10 §2.1 + §2.5):**
+- **TVR filter**: services_catalog gains teachable/valuable/repeatable 1–5
+  scores, editable in the new الباقات tab — sum ≥12 flags «مرشّحة كباقة».
+- **service_packages** seeded from proven demand: Launch Kit (= quote 00054,
+  Option-1/Option-2 kept, 100% upfront), Growth Retainer (monthly-ahead),
+  AI Starter (upfront). All seeded **inactive**: a DB guard refuses activation
+  while any linked playbook is documentation-grade C or the price is unset
+  (both verified) — «grade C cannot be sold» enforced at the database.
+- **Say-no mechanism**: ScopeBuilder is package-first; a custom scope requires
+  why_no_package_fit (DB trigger blocks sending without it — verified) +
+  optional custom_premium_pct. Reasons mined in التحسين tab (90-day list) for
+  the quarterly «السوق يصمّم منتجاتك» review.
+- **Playbook versioning**: playbook_versions (semver) + documentation_grade
+  A/B/C + doc_gaps per playbook, grade editor + version history in UI.
+- **Experiments** (Innovation → Quantification → Orchestration): hypothesis →
+  running → won/lost. Won with a playbook auto-releases the next minor version
+  (verified 1.1.0 → 1.2.0) + notifies the team; lost documents the lesson and
+  releases nothing (verified). New notification template experiment_decided.
+- **Owner-independence**: tasks.executed_by auto-stamped on done;
+  task_templates.emt_class (entrepreneur/manager/technician). 3 new scorecard
+  metrics via compute_scorecard_v3 (cron repointed): package_revenue_pct ·
+  owner_technician_pct · delivery_by_team_pct — fixture-verified 100% for a
+  non-partner-executed task.
+- incentive_plans stub (admin-only RLS) for the first senior hire.
+
+Honest deferrals: package pages on the marketing site; AI Scope Drafter
+(sales-independence stage 1 tooling) — Phase 8 territory.
+
+All gates green; production migration applied.
 
 ## Phase 6.5b log (2026-08-07)
 

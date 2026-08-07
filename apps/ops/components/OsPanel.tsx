@@ -22,6 +22,7 @@ import type { Enums, Tables } from '@agma/db';
 import { getSupabase } from '../lib/supabase';
 import { useAppMutation } from '../lib/queries';
 import { useProfile } from './AppShell';
+import { ImproveTab, PackagesTab } from './SellableTabs';
 
 type Issue = Tables<'issues'>;
 type Rock = Tables<'rocks'>;
@@ -39,6 +40,8 @@ export default function OsPanel() {
           { key: 'rocks', label: 'الصخور' },
           { key: 'issues', label: 'القضايا' },
           { key: 'meeting', label: 'الاجتماع الأسبوعي' },
+          { key: 'packages', label: 'الباقات' },
+          { key: 'improve', label: 'التحسين' },
           { key: 'vision', label: 'الرؤية' },
         ]} />
       <div className="mt-4">
@@ -46,6 +49,8 @@ export default function OsPanel() {
         {tab === 'rocks' && <RocksTab />}
         {tab === 'issues' && <IssuesTab />}
         {tab === 'meeting' && <MeetingTab />}
+        {tab === 'packages' && <PackagesTab />}
+        {tab === 'improve' && <ImproveTab />}
         {tab === 'vision' && <VisionTab />}
       </div>
     </div>
@@ -77,7 +82,7 @@ function ScorecardTab() {
 
   const compute = useAppMutation(
     async () => {
-      const { error } = await getSupabase().rpc('compute_scorecard');
+      const { error } = await getSupabase().rpc('compute_scorecard_v3');
       if (error) throw new Error(error.message);
     },
     { invalidate: [['scorecard']], successMessage: 'حُسبت النتائج' }

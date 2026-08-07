@@ -31,10 +31,10 @@ insert into public.leads (id, name, source) values
   ('20000000-0000-0000-0000-0000000000aa', 'RLS Lead', 'site')
 on conflict (id) do nothing;
 
-insert into public.scopes (id, client_id, status) values
-  ('30000000-0000-0000-0000-0000000000aa', '10000000-0000-0000-0000-0000000000aa', 'draft'),
-  ('30000000-0000-0000-0000-0000000000bb', '10000000-0000-0000-0000-0000000000aa', 'sent'),
-  ('30000000-0000-0000-0000-0000000000cc', '10000000-0000-0000-0000-0000000000bb', 'sent')
+insert into public.scopes (id, client_id, status, why_no_package_fit) values
+  ('30000000-0000-0000-0000-0000000000aa', '10000000-0000-0000-0000-0000000000aa', 'draft', null),
+  ('30000000-0000-0000-0000-0000000000bb', '10000000-0000-0000-0000-0000000000aa', 'sent', 'RLS fixture custom scope'),
+  ('30000000-0000-0000-0000-0000000000cc', '10000000-0000-0000-0000-0000000000bb', 'sent', 'RLS fixture custom scope')
 on conflict (id) do nothing;
 
 insert into public.projects (id, client_id, playbook_id, name, mode)

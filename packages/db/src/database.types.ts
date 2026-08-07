@@ -616,6 +616,88 @@ export type Database = {
           },
         ]
       }
+      experiments: {
+        Row: {
+          baseline: number | null
+          created_at: string
+          created_by: string | null
+          decision_note: string | null
+          duration_weeks: number | null
+          ended_at: string | null
+          hypothesis: string
+          id: string
+          issue_id: string | null
+          metric_key: string | null
+          playbook_id: string | null
+          result: number | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["experiment_status"]
+          target: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          baseline?: number | null
+          created_at?: string
+          created_by?: string | null
+          decision_note?: string | null
+          duration_weeks?: number | null
+          ended_at?: string | null
+          hypothesis: string
+          id?: string
+          issue_id?: string | null
+          metric_key?: string | null
+          playbook_id?: string | null
+          result?: number | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["experiment_status"]
+          target?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          baseline?: number | null
+          created_at?: string
+          created_by?: string | null
+          decision_note?: string | null
+          duration_weeks?: number | null
+          ended_at?: string | null
+          hypothesis?: string
+          id?: string
+          issue_id?: string | null
+          metric_key?: string | null
+          playbook_id?: string | null
+          result?: number | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["experiment_status"]
+          target?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "experiments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "experiments_issue_id_fkey"
+            columns: ["issue_id"]
+            isOneToOne: false
+            referencedRelation: "issues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "experiments_playbook_id_fkey"
+            columns: ["playbook_id"]
+            isOneToOne: false
+            referencedRelation: "playbooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       flags: {
         Row: {
           created_at: string
@@ -642,6 +724,50 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      incentive_plans: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          notes: string | null
+          pool_pct: number
+          profile_id: string
+          starts_on: string | null
+          updated_at: string
+          vesting_years: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          notes?: string | null
+          pool_pct: number
+          profile_id: string
+          starts_on?: string | null
+          updated_at?: string
+          vesting_years?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          notes?: string | null
+          pool_pct?: number
+          profile_id?: string
+          starts_on?: string | null
+          updated_at?: string
+          vesting_years?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incentive_plans_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       interactions: {
         Row: {
@@ -1380,10 +1506,60 @@ export type Database = {
           },
         ]
       }
+      playbook_versions: {
+        Row: {
+          changelog: string
+          evidence_url: string | null
+          experiment_id: string | null
+          id: string
+          playbook_id: string
+          released_at: string
+          released_by: string | null
+          version: string
+        }
+        Insert: {
+          changelog: string
+          evidence_url?: string | null
+          experiment_id?: string | null
+          id?: string
+          playbook_id: string
+          released_at?: string
+          released_by?: string | null
+          version: string
+        }
+        Update: {
+          changelog?: string
+          evidence_url?: string | null
+          experiment_id?: string | null
+          id?: string
+          playbook_id?: string
+          released_at?: string
+          released_by?: string | null
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "playbook_versions_playbook_id_fkey"
+            columns: ["playbook_id"]
+            isOneToOne: false
+            referencedRelation: "playbooks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "playbook_versions_released_by_fkey"
+            columns: ["released_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       playbooks: {
         Row: {
           category_id: string
           created_at: string
+          doc_gaps: string | null
+          documentation_grade: Database["public"]["Enums"]["documentation_grade"]
           id: string
           mode: Database["public"]["Enums"]["project_mode"]
           name_ar: string
@@ -1393,6 +1569,8 @@ export type Database = {
         Insert: {
           category_id: string
           created_at?: string
+          doc_gaps?: string | null
+          documentation_grade?: Database["public"]["Enums"]["documentation_grade"]
           id?: string
           mode: Database["public"]["Enums"]["project_mode"]
           name_ar: string
@@ -1402,6 +1580,8 @@ export type Database = {
         Update: {
           category_id?: string
           created_at?: string
+          doc_gaps?: string | null
+          documentation_grade?: Database["public"]["Enums"]["documentation_grade"]
           id?: string
           mode?: Database["public"]["Enums"]["project_mode"]
           name_ar?: string
@@ -1847,32 +2027,41 @@ export type Database = {
         Row: {
           client_id: string
           created_at: string
+          custom_premium_pct: number
           id: string
+          package_id: string | null
           responsibilities: string | null
           service_ids: string[]
           status: Database["public"]["Enums"]["scope_status"]
           timeline: string | null
           updated_at: string
+          why_no_package_fit: string | null
         }
         Insert: {
           client_id: string
           created_at?: string
+          custom_premium_pct?: number
           id?: string
+          package_id?: string | null
           responsibilities?: string | null
           service_ids?: string[]
           status?: Database["public"]["Enums"]["scope_status"]
           timeline?: string | null
           updated_at?: string
+          why_no_package_fit?: string | null
         }
         Update: {
           client_id?: string
           created_at?: string
+          custom_premium_pct?: number
           id?: string
+          package_id?: string | null
           responsibilities?: string | null
           service_ids?: string[]
           status?: Database["public"]["Enums"]["scope_status"]
           timeline?: string | null
           updated_at?: string
+          why_no_package_fit?: string | null
         }
         Relationships: [
           {
@@ -1880,6 +2069,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scopes_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "service_packages"
             referencedColumns: ["id"]
           },
         ]
@@ -2035,6 +2231,63 @@ export type Database = {
         }
         Relationships: []
       }
+      service_packages: {
+        Row: {
+          active: boolean
+          base_price: number | null
+          created_at: string
+          description_ar: string | null
+          id: string
+          key: string
+          name_ar: string
+          name_en: string
+          options: Json
+          payment_terms: Database["public"]["Enums"]["package_terms"]
+          playbook_ids: string[]
+          service_ids: string[]
+          sort: number
+          tagline_ar: string | null
+          timeline_weeks: number | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          base_price?: number | null
+          created_at?: string
+          description_ar?: string | null
+          id?: string
+          key: string
+          name_ar: string
+          name_en: string
+          options?: Json
+          payment_terms?: Database["public"]["Enums"]["package_terms"]
+          playbook_ids?: string[]
+          service_ids?: string[]
+          sort?: number
+          tagline_ar?: string | null
+          timeline_weeks?: number | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          base_price?: number | null
+          created_at?: string
+          description_ar?: string | null
+          id?: string
+          key?: string
+          name_ar?: string
+          name_en?: string
+          options?: Json
+          payment_terms?: Database["public"]["Enums"]["package_terms"]
+          playbook_ids?: string[]
+          service_ids?: string[]
+          sort?: number
+          tagline_ar?: string | null
+          timeline_weeks?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       services_catalog: {
         Row: {
           active: boolean
@@ -2045,6 +2298,9 @@ export type Database = {
           name_en: string
           slug: string
           sort: number
+          tvr_repeatable: number | null
+          tvr_teachable: number | null
+          tvr_valuable: number | null
           updated_at: string
         }
         Insert: {
@@ -2056,6 +2312,9 @@ export type Database = {
           name_en: string
           slug: string
           sort?: number
+          tvr_repeatable?: number | null
+          tvr_teachable?: number | null
+          tvr_valuable?: number | null
           updated_at?: string
         }
         Update: {
@@ -2067,6 +2326,9 @@ export type Database = {
           name_en?: string
           slug?: string
           sort?: number
+          tvr_repeatable?: number | null
+          tvr_teachable?: number | null
+          tvr_valuable?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -2124,6 +2386,7 @@ export type Database = {
         Row: {
           checklist_key: string | null
           default_days: number
+          emt_class: Database["public"]["Enums"]["emt_class"]
           id: string
           needs_client_approval: boolean
           role: Database["public"]["Enums"]["user_role"]
@@ -2135,6 +2398,7 @@ export type Database = {
         Insert: {
           checklist_key?: string | null
           default_days?: number
+          emt_class?: Database["public"]["Enums"]["emt_class"]
           id?: string
           needs_client_approval?: boolean
           role?: Database["public"]["Enums"]["user_role"]
@@ -2146,6 +2410,7 @@ export type Database = {
         Update: {
           checklist_key?: string | null
           default_days?: number
+          emt_class?: Database["public"]["Enums"]["emt_class"]
           id?: string
           needs_client_approval?: boolean
           role?: Database["public"]["Enums"]["user_role"]
@@ -2178,6 +2443,7 @@ export type Database = {
           created_at: string
           deliverable_url: string | null
           due: string | null
+          executed_by: string | null
           id: string
           needs_client_approval: boolean
           project_id: string
@@ -2196,6 +2462,7 @@ export type Database = {
           created_at?: string
           deliverable_url?: string | null
           due?: string | null
+          executed_by?: string | null
           id?: string
           needs_client_approval?: boolean
           project_id: string
@@ -2214,6 +2481,7 @@ export type Database = {
           created_at?: string
           deliverable_url?: string | null
           due?: string | null
+          executed_by?: string | null
           id?: string
           needs_client_approval?: boolean
           project_id?: string
@@ -2239,6 +2507,13 @@ export type Database = {
             columns: ["blocked_by"]
             isOneToOne: false
             referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_executed_by_fkey"
+            columns: ["executed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -2510,7 +2785,12 @@ export type Database = {
       }
       compute_scorecard: { Args: never; Returns: undefined }
       compute_scorecard_extras: { Args: { v_week: string }; Returns: undefined }
+      compute_scorecard_sellable: {
+        Args: { v_week: string }
+        Returns: undefined
+      }
       compute_scorecard_v2: { Args: never; Returns: undefined }
+      compute_scorecard_v3: { Args: never; Returns: undefined }
       create_project_from_playbook: {
         Args: { p_client_id: string; p_name: string; p_playbook_slug: string }
         Returns: string
@@ -2582,6 +2862,9 @@ export type Database = {
         | "coc"
         | "invoice"
         | "credit_note"
+      documentation_grade: "A" | "B" | "C"
+      emt_class: "entrepreneur" | "manager" | "technician"
+      experiment_status: "proposed" | "running" | "won" | "lost"
       interaction_kind: "call" | "whatsapp" | "email" | "meeting" | "note"
       issue_status: "identified" | "discussing" | "solved" | "dropped"
       kpi_direction: "up" | "down"
@@ -2606,6 +2889,7 @@ export type Database = {
         | "failed"
         | "skipped"
         | "cancelled"
+      package_terms: "upfront_100" | "split_50_25_25" | "monthly"
       payment_method: "transfer" | "cash" | "card" | "other"
       project_mode: "recurring" | "milestone"
       project_status:
@@ -2765,6 +3049,9 @@ export const Constants = {
         "invoice",
         "credit_note",
       ],
+      documentation_grade: ["A", "B", "C"],
+      emt_class: ["entrepreneur", "manager", "technician"],
+      experiment_status: ["proposed", "running", "won", "lost"],
       interaction_kind: ["call", "whatsapp", "email", "meeting", "note"],
       issue_status: ["identified", "discussing", "solved", "dropped"],
       kpi_direction: ["up", "down"],
@@ -2785,6 +3072,7 @@ export const Constants = {
       metric_direction: ["up", "down"],
       notification_channel: ["inapp", "email", "whatsapp"],
       notification_status: ["queued", "sent", "failed", "skipped", "cancelled"],
+      package_terms: ["upfront_100", "split_50_25_25", "monthly"],
       payment_method: ["transfer", "cash", "card", "other"],
       project_mode: ["recurring", "milestone"],
       project_status: ["planning", "active", "paused", "completed", "archived"],
