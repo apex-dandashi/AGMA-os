@@ -26,6 +26,7 @@ import { Download, FileSpreadsheet, Pencil, Trash2, Users } from 'lucide-react';
 import { exportCsv } from '../lib/csv';
 import { fmtDate, fmtSAR } from '../lib/format';
 import { renderStatement } from '@agma/legal-templates';
+import { useProfile } from './AppShell';
 import ScopeBuilder from './ScopeBuilder';
 import AttachmentsBlock from './AttachmentsBlock';
 import QuoteBuilder from './QuoteBuilder';
@@ -191,6 +192,30 @@ const CLIENT_STATUS: Record<Enums<'client_status'>, string> = {
   active: 'نشط', paused: 'متوقف مؤقتاً', archived: 'مؤرشف',
 };
 
+/** تعليق التحصيل: يظهر السبب، والشريك يرفعه بعد التسوية. */
+function CollectionsHoldBadge({ clientId }: { clientId: string }) {
+  const me = useProfile();
+  const clear = useAppMutation(
+    async () => {
+      const { error } = await getSupabase().from('clients')
+        .update({ collections_hold: false }).eq('id', clientId);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [keys.clients], successMessage: 'رُفع تعليق الأعمال الجديدة' }
+  );
+  return (
+    <span className="flex items-center gap-1.5">
+      <Badge variant="accent">أعمال جديدة معلّقة — متأخرات +٣٠ يوماً</Badge>
+      {me.role === 'admin' && (
+        <Button variant="ghost" size="xs" loading={clear.isPending}
+          onClick={() => clear.mutate(undefined as never)}>
+          رفع التعليق
+        </Button>
+      )}
+    </span>
+  );
+}
+
 /** بيانات العميل — every field the record supports, editable in place. */
 function ClientProfileCard({ client }: { client: Client }) {
   const [editing, setEditing] = useState(false);
@@ -202,6 +227,8 @@ function ClientProfileCard({ client }: { client: Client }) {
     city: client.city ?? '',
     cr_number: client.cr_number ?? '',
     vat_number: client.vat_number ?? '',
+    credit_limit: client.credit_limit ? String(client.credit_limit) : '',
+    payment_terms_days: String(client.payment_terms_days ?? 14),
     tags: (client.tags ?? []).join('، '),
     status: client.status,
   });
@@ -216,6 +243,8 @@ function ClientProfileCard({ client }: { client: Client }) {
         city: form.city.trim() || null,
         cr_number: form.cr_number.trim() || null,
         vat_number: form.vat_number.trim() || null,
+        credit_limit: form.credit_limit ? Number(form.credit_limit) : null,
+        payment_terms_days: Math.min(90, Math.max(0, Number(form.payment_terms_days) || 14)),
         tags: form.tags.split(/[،,]/).map((t) => t.trim()).filter(Boolean),
         status: form.status,
       }).eq('id', client.id);
@@ -249,6 +278,10 @@ function ClientProfileCard({ client }: { client: Client }) {
         )}
         {fact('س.ت', client.cr_number, true)}
         {fact('الرقم الضريبي', client.vat_number, true)}
+        {fact('شروط السداد', `${client.payment_terms_days ?? 14} يوماً`)}
+        {client.credit_limit != null &&
+          fact('الحد الائتماني', `SAR ${Number(client.credit_limit).toLocaleString('en-US')}`, true)}
+        {client.collections_hold && <CollectionsHoldBadge clientId={client.id} />}
         {(client.tags ?? []).map((t) => <Badge key={t} variant="outline">{t}</Badge>)}
         <Button variant="ghost" size="xs" className="ms-auto" onClick={() => setEditing(true)}>
           <Pencil className="h-3.5 w-3.5" aria-hidden /> تعديل البيانات
@@ -271,6 +304,8 @@ function ClientProfileCard({ client }: { client: Client }) {
         {field('المدينة', 'city')}
         {field('السجل التجاري', 'cr_number', true, 'numeric')}
         {field('الرقم الضريبي (VAT)', 'vat_number', true, 'numeric')}
+        {field('الحد الائتماني SAR (فارغ = بلا حد)', 'credit_limit', true, 'numeric')}
+        {field('شروط السداد (أيام)', 'payment_terms_days', true, 'numeric')}
         {field('الوسوم (مفصولة بفواصل)', 'tags')}
         <Select label="الحالة" value={form.status}
           onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as Client['status'] }))}>

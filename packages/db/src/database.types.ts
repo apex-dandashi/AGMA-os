@@ -449,11 +449,14 @@ export type Database = {
         Row: {
           budget_tier: string | null
           city: string | null
+          collections_hold: boolean
           company: string
           cr_number: string | null
           created_at: string
+          credit_limit: number | null
           decision_maker: string | null
           id: string
+          payment_terms_days: number
           sector: string | null
           status: Database["public"]["Enums"]["client_status"]
           tags: string[]
@@ -464,11 +467,14 @@ export type Database = {
         Insert: {
           budget_tier?: string | null
           city?: string | null
+          collections_hold?: boolean
           company: string
           cr_number?: string | null
           created_at?: string
+          credit_limit?: number | null
           decision_maker?: string | null
           id?: string
+          payment_terms_days?: number
           sector?: string | null
           status?: Database["public"]["Enums"]["client_status"]
           tags?: string[]
@@ -479,11 +485,14 @@ export type Database = {
         Update: {
           budget_tier?: string | null
           city?: string | null
+          collections_hold?: boolean
           company?: string
           cr_number?: string | null
           created_at?: string
+          credit_limit?: number | null
           decision_maker?: string | null
           id?: string
+          payment_terms_days?: number
           sector?: string | null
           status?: Database["public"]["Enums"]["client_status"]
           tags?: string[]
@@ -618,6 +627,7 @@ export type Database = {
           number: string | null
           payload: Json
           payment_account_id: string | null
+          revenue_method: string | null
           scope_id: string | null
           status: Database["public"]["Enums"]["document_status"]
           supersedes: string | null
@@ -636,6 +646,7 @@ export type Database = {
           number?: string | null
           payload?: Json
           payment_account_id?: string | null
+          revenue_method?: string | null
           scope_id?: string | null
           status?: Database["public"]["Enums"]["document_status"]
           supersedes?: string | null
@@ -654,6 +665,7 @@ export type Database = {
           number?: string | null
           payload?: Json
           payment_account_id?: string | null
+          revenue_method?: string | null
           scope_id?: string | null
           status?: Database["public"]["Enums"]["document_status"]
           supersedes?: string | null
@@ -725,6 +737,7 @@ export type Database = {
           id: string
           note: string | null
           supplier: string | null
+          wht_applicable: boolean
         }
         Insert: {
           amount: number
@@ -735,6 +748,7 @@ export type Database = {
           id?: string
           note?: string | null
           supplier?: string | null
+          wht_applicable?: boolean
         }
         Update: {
           amount?: number
@@ -745,6 +759,7 @@ export type Database = {
           id?: string
           note?: string | null
           supplier?: string | null
+          wht_applicable?: boolean
         }
         Relationships: [
           {
@@ -1606,6 +1621,125 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_promises: {
+        Row: {
+          amount: number | null
+          created_at: string
+          created_by: string | null
+          id: string
+          invoice_id: string
+          kept: boolean | null
+          note: string | null
+          promised_on: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_id: string
+          kept?: boolean | null
+          note?: string | null
+          promised_on: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_id?: string
+          kept?: boolean | null
+          note?: string | null
+          promised_on?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_promises_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_promises_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "document_margins"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_promises_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_sessions: {
+        Row: {
+          amount: number
+          checkout_url: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          expires_at: string | null
+          id: string
+          invoice_id: string
+          provider: string
+          reference: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          checkout_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          expires_at?: string | null
+          id?: string
+          invoice_id: string
+          provider?: string
+          reference: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          checkout_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          expires_at?: string | null
+          id?: string
+          invoice_id?: string
+          provider?: string
+          reference?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_sessions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_sessions_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "document_margins"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_sessions_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount: number
@@ -2176,6 +2310,51 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      revenue_schedules: {
+        Row: {
+          amount: number
+          created_at: string
+          document_id: string
+          id: string
+          period_end: string
+          period_start: string
+          recognized_at: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          document_id: string
+          id?: string
+          period_end: string
+          period_start: string
+          recognized_at?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          document_id?: string
+          id?: string
+          period_end?: string
+          period_start?: string
+          recognized_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "revenue_schedules_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "document_margins"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "revenue_schedules_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
             referencedColumns: ["id"]
           },
         ]
@@ -3274,6 +3453,15 @@ export type Database = {
           },
         ]
       }
+      revenue_waterfall: {
+        Row: {
+          deferred_added: number | null
+          invoiced_net: number | null
+          month: string | null
+          recognized: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       app_role: {
@@ -3334,6 +3522,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      recognize_revenue: { Args: never; Returns: undefined }
       render_template: {
         Args: { p_body: string; p_payload: Json }
         Returns: string
@@ -3341,7 +3530,10 @@ export type Database = {
       run_daily_jobs: { Args: never; Returns: undefined }
       run_daily_jobs_v2: { Args: never; Returns: undefined }
       run_daily_jobs_v3: { Args: never; Returns: undefined }
+      run_daily_jobs_v4: { Args: never; Returns: undefined }
+      run_dunning: { Args: never; Returns: undefined }
       send_overdue_reminders: { Args: never; Returns: undefined }
+      send_tax_reminders: { Args: never; Returns: undefined }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
     }

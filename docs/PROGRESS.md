@@ -22,6 +22,42 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
 
+## المالية ٢٫٠ log (2026-08-07) — docs/11 §ب, all six items
+
+1. **Deferred revenue & recognition (IFRS 15, agency-sized):**
+   revenue_schedules auto-generated at finalize — retainer lines
+   («اشتراك شهري», both UI and cron paths) defer over the service month;
+   everything else recognizes at issue; credit notes recognize negative.
+   Daily recognize_revenue() + revenue_waterfall view. New «الإيراد» tab:
+   deferred balance card, monthly مفوتر/مثبت/مؤجّل table, upcoming
+   recognition schedule. Fixture-verified: 13,000 invoiced → 8,000
+   recognized + 5,000 deferred. توزيع الدخل stays cash-based BY DESIGN.
+2. **Full dunning ladder** (run_dunning, replaces the +3/+7 pair): −7
+   gentle email → +7 email + collection task → +15 manager escalation →
+   +30 collections_hold + auto-issue + alert → +45 payment-plan/legal
+   decision. Active payment promise pauses client-facing chasing only
+   (team tasks continue) — all fixture-verified including the hold flag,
+   the auto-issue, and the promise pause.
+3. **Credit limits & payment terms:** clients.credit_limit /
+   payment_terms_days / collections_hold + profile editing + hold badge
+   with admin release. Invoice due date now computed from the client's
+   terms; finalize dialog warns when the open balance would breach the
+   limit. New-work hold enforced by DB guard on scope send (verified).
+4. **Tax-invoice gate:** VAT invoice for a client without a vat_number is
+   refused at the database with guidance (verified).
+5. **Tax calendar:** VAT quarterly (1 Jan/Apr/Jul/Oct), WHT day-3 check for
+   last-month non-resident supplier expenses (new wht_applicable flag +
+   «استقطاع» badge), Zakat April-1 heads-up. In run_daily_jobs_v4 (cron
+   repointed).
+6. **Payment sessions (adapter-ready):** payment_sessions table +
+   PaymentProvider interface; manual_transfer provider generates a unique
+   AGMA-PAY reference + copy-ready Arabic transfer instructions from the
+   invoice row. PSP (mada/Apple Pay hosted checkout) drops into the same
+   interface — provider choice logged as قرار شركاء. Card data never
+   stored, by rule.
+
+All gates green; migration applied to production.
+
 ## Language review log (2026-08-07) — clear Saudi Arabic everywhere
 
 Owner feedback: too many literal translations and unexplained jargon. Full

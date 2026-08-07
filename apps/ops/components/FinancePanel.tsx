@@ -6,6 +6,7 @@ import {
   Badge,
   Button,
   Card,
+  Checkbox,
   ConfirmDialog,
   EmptyState,
   Input,
@@ -14,9 +15,13 @@ import {
   SkeletonList,
   Switch,
   Tabs,
+  Table,
+  Td,
+  Tr,
 } from '@agma/ui';
-import { Download, Pencil, Receipt, RefreshCw, Trash2, Wallet as WalletIcon } from 'lucide-react';
+import { Download, Handshake, Link as LinkIcon, Pencil, Receipt, RefreshCw, Trash2, Wallet as WalletIcon } from 'lucide-react';
 import { exportCsv } from '../lib/csv';
+import { newPaymentReference, paymentProvider } from '../lib/payments';
 import { fmtNum as fmt } from '../lib/format';
 import type { Tables } from '@agma/db';
 import {
@@ -64,6 +69,7 @@ export default function FinancePanel() {
           { key: 'retainers', label: 'الاشتراكات' },
           { key: 'expenses', label: 'المصروفات' },
           { key: 'wallets', label: 'محافظ الإعلانات' },
+          { key: 'revenue', label: 'الإيراد' },
           { key: 'allocations', label: 'توزيع الدخل' },
         ]}
       />
@@ -72,6 +78,7 @@ export default function FinancePanel() {
         {tab === 'retainers' && <RetainersTab />}
         {tab === 'expenses' && <ExpensesTab />}
         {tab === 'wallets' && <WalletsTab />}
+        {tab === 'revenue' && <RevenueTab />}
         {tab === 'allocations' && <AllocationsTab />}
       </div>
     </div>
@@ -100,6 +107,8 @@ function InvoicesTab() {
   const [paying, setPaying] = useState<Doc | null>(null);
   const [crediting, setCrediting] = useState<Doc | null>(null);
   const [finalizing, setFinalizing] = useState<Doc | null>(null);
+  const [linking, setLinking] = useState<Doc | null>(null);
+  const [promising, setPromising] = useState<Doc | null>(null);
 
   const invoices = useMemo(
     () => (docs ?? []).filter((d) => d.type === 'invoice' || d.type === 'credit_note'),
@@ -140,8 +149,11 @@ function InvoicesTab() {
       const payload = doc.payload as unknown as InvoicePayload;
       const total = payload.items.reduce((s, i) => s + i.amount, 0)
         + (payload.vatEnabled ? payload.vatAmount ?? 0 : 0);
+      // شروط السداد من ملف العميل (docs/11 §ب-3) لا ١٤ يوماً ثابتة.
+      const termsDays = (clients ?? []).find((c) => c.id === doc.client_id)
+        ?.payment_terms_days ?? 14;
       const due = new Date();
-      due.setDate(due.getDate() + 14);
+      due.setDate(due.getDate() + termsDays);
       const { error } = await supabase
         .from('documents')
         .update({
@@ -256,9 +268,17 @@ function InvoicesTab() {
                     <Button size="xs" onClick={() => setFinalizing(doc)}>اعتماد وترقيم</Button>
                   )}
                   {doc.type === 'invoice' && doc.status !== 'draft' && doc.status !== 'void' && balance > 0 && (
-                    <Button variant="outline" size="xs" onClick={() => setPaying(doc)}>
-                      تسجيل دفعة
-                    </Button>
+                    <>
+                      <Button variant="outline" size="xs" onClick={() => setPaying(doc)}>
+                        تسجيل دفعة
+                      </Button>
+                      <Button variant="ghost" size="xs" onClick={() => setLinking(doc)}>
+                        <LinkIcon className="h-3.5 w-3.5" aria-hidden /> رابط دفع
+                      </Button>
+                      <Button variant="ghost" size="xs" onClick={() => setPromising(doc)}>
+                        <Handshake className="h-3.5 w-3.5" aria-hidden /> وعد بالسداد
+                      </Button>
+                    </>
                   )}
                   {doc.type === 'invoice' && doc.status !== 'draft' && doc.status !== 'void' && (
                     <Button variant="ghost" size="xs" onClick={() => setCrediting(doc)}>
@@ -275,9 +295,32 @@ function InvoicesTab() {
       <NewInvoiceModal open={showNew} onClose={() => setShowNew(false)} />
       <PaymentModal invoice={paying} paid={paying ? paidByInvoice.get(paying.id) ?? 0 : 0}
         onClose={() => setPaying(null)} />
+      {linking && (
+        <PaymentLinkModal invoice={linking}
+          balance={Number(linking.total ?? 0) - (paidByInvoice.get(linking.id) ?? 0)}
+          onClose={() => setLinking(null)} />
+      )}
+      {promising && (
+        <PromiseModal invoice={promising} onClose={() => setPromising(null)} />
+      )}
       <ConfirmDialog open={!!finalizing} onClose={() => setFinalizing(null)}
         title="اعتماد وترقيم"
-        message="سيُحجز الرقم التسلسلي نهائياً وتصبح الفاتورة غير قابلة للتعديل (رقم 3 من القواعد: التصحيح عبر إشعار دائن فقط). متابعة؟"
+        message={(() => {
+          const base = 'سيُحجز الرقم التسلسلي نهائياً وتصبح الفاتورة غير قابلة للتعديل (التصحيح عبر إشعار دائن فقط).';
+          if (!finalizing) return base;
+          const client = (clients ?? []).find((c) => c.id === finalizing.client_id);
+          if (!client?.credit_limit) return `${base} متابعة؟`;
+          const openBalance = invoices
+            .filter((d) => d.client_id === client.id && d.type === 'invoice'
+              && d.status !== 'draft' && d.status !== 'void')
+            .reduce((s, d) => s + Number(d.total ?? 0) - (paidByInvoice.get(d.id) ?? 0), 0);
+          const newTotal = openBalance + Number(finalizing.total
+            ?? (finalizing.payload as unknown as InvoicePayload).items
+              .reduce((s, i) => s + i.amount, 0));
+          return newTotal > Number(client.credit_limit)
+            ? `${base}\n\nتنبيه ائتماني: رصيد العميل المفتوح سيصبح SAR ${fmt(newTotal)} متجاوزاً حدّه الائتماني (SAR ${fmt(Number(client.credit_limit))}) — حصّلوا قبل التوسع. متابعة رغم ذلك؟`
+            : `${base} متابعة؟`;
+        })()}
         confirmLabel="اعتماد"
         onConfirm={async () => {
           if (finalizing) await finalize.mutateAsync(finalizing);
@@ -648,11 +691,12 @@ function ExpensesTab() {
   const [category, setCategory] = useState('عام');
   const [amount, setAmount] = useState(0);
   const [supplier, setSupplier] = useState('');
+  const [wht, setWht] = useState(false);
 
   const add = useAppMutation(
     async () => {
       const { error } = await getSupabase().from('expenses').insert({
-        category, amount, supplier: supplier || null,
+        category, amount, supplier: supplier || null, wht_applicable: wht,
       });
       if (error) throw new Error(error.message);
     },
@@ -674,7 +718,7 @@ function ExpensesTab() {
         e.preventDefault();
         if (amount <= 0) return;
         await add.mutateAsync(undefined as never);
-        setAmount(0); setSupplier('');
+        setAmount(0); setSupplier(''); setWht(false);
       }} className="mb-4 flex flex-wrap items-end gap-2 rounded-sm border border-gray-dark p-3">
         <Select label="التصنيف" value={category} onChange={(e) => setCategory(e.target.value)}>
           {['عام','اشتراكات وأدوات','إعلانات','رواتب ومستقلون','ضيافة وتنقل','حكومي'].map((c) => (
@@ -685,6 +729,10 @@ function ExpensesTab() {
           onChange={(e) => setAmount(Number(e.target.value))} className="w-28" />
         <div className="min-w-40 flex-1">
           <Input label="المورّد" value={supplier} onChange={(e) => setSupplier(e.target.value)} />
+        </div>
+        <div className="pb-2">
+          <Checkbox label="مورّد غير مقيم (استقطاع)" checked={wht}
+            onChange={(e) => setWht(e.target.checked)} />
         </div>
         <Button type="submit" size="sm" loading={add.isPending}>+ مصروف</Button>
       </form>
@@ -762,6 +810,7 @@ function ExpenseRow({ expense: e, invalidate }:
     <Card className="group flex items-center gap-3 p-2.5 text-sm">
       <Badge variant="outline">{e.category}</Badge>
       <span className="text-gray-light">{e.supplier ?? '—'}</span>
+      {e.wht_applicable && <Badge variant="outline">استقطاع</Badge>}
       <span dir="ltr" className="ms-auto font-bold">SAR {fmt(Number(e.amount))}</span>
       <span dir="ltr" className="text-xs text-gray-medium">{e.expense_date}</span>
       <AttachmentsButton entity="expense" entityId={e.id} title={e.category}
@@ -780,6 +829,172 @@ function ExpenseRow({ expense: e, invalidate }:
         confirmLabel="حذف"
         onConfirm={async () => { await remove.mutateAsync(undefined as never); }} />
     </Card>
+  );
+}
+
+/** رابط دفع: جلسة بمرجع فريد + نص جاهز للإرسال — بلا أي بيانات بطاقات. */
+function PaymentLinkModal({ invoice, balance, onClose }:
+  { invoice: Doc; balance: number; onClose: () => void }) {
+  const [session, setSession] = useState<{ reference: string; instructions: string } | null>(null);
+
+  const create = useAppMutation(
+    async () => {
+      const payload = invoice.payload as unknown as InvoicePayload;
+      const reference = newPaymentReference();
+      const checkout = paymentProvider.createCheckout({
+        invoiceNumber: invoice.number ?? '؟',
+        amount: balance,
+        bank: {
+          iban: payload.paymentAccount.iban,
+          bankName: payload.paymentAccount.bankName,
+          beneficiaryName: payload.paymentAccount.beneficiaryName,
+        },
+      }, reference);
+      const { error } = await getSupabase().from('payment_sessions').insert({
+        invoice_id: invoice.id,
+        reference,
+        amount: balance,
+        provider: checkout.provider,
+        checkout_url: checkout.checkoutUrl,
+      });
+      if (error) throw new Error(error.message);
+      setSession({ reference, instructions: checkout.instructions });
+    },
+    { invalidate: [], successMessage: 'أُنشئ رابط السداد بمرجع فريد' }
+  );
+
+  return (
+    <Modal open onClose={onClose} title={`رابط دفع — ${invoice.number ?? ''}`}>
+      <div className="space-y-3">
+        {!session ? (
+          <>
+            <p className="text-sm text-gray-light">
+              يُنشأ مرجع سداد فريد للفاتورة (المتبقي: <b dir="ltr">SAR {fmt(balance)}</b>)
+              مع تعليمات تحويل جاهزة للإرسال في واتساب أو البريد. عند ربط مزود
+              دفع مرخّص (قرار شركاء) يصبح الزر نفسه رابط بطاقات مباشراً.
+            </p>
+            <Button size="sm" loading={create.isPending}
+              onClick={() => create.mutate(undefined as never)}>
+              إنشاء المرجع والتعليمات
+            </Button>
+          </>
+        ) : (
+          <>
+            <pre className="whitespace-pre-wrap rounded-sm bg-gray-dark/30 p-3 text-sm leading-relaxed text-gray-light">
+              {session.instructions}
+            </pre>
+            <div className="flex gap-2">
+              <Button size="sm" onClick={() => {
+                navigator.clipboard.writeText(session.instructions);
+              }}>
+                نسخ النص
+              </Button>
+              <Button variant="outline" size="sm" onClick={onClose}>إغلاق</Button>
+            </div>
+          </>
+        )}
+      </div>
+    </Modal>
+  );
+}
+
+/** وعد بالسداد: يوقف مطاردة العميل حتى موعده، وتبقى متابعة الفريق. */
+function PromiseModal({ invoice, onClose }: { invoice: Doc; onClose: () => void }) {
+  const [date, setDate] = useState('');
+  const [note, setNote] = useState('');
+
+  const save = useAppMutation(
+    async () => {
+      const { error } = await getSupabase().from('payment_promises').insert({
+        invoice_id: invoice.id,
+        promised_on: date,
+        amount: invoice.total,
+        note: note.trim() || null,
+      });
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [], successMessage: 'سُجّل الوعد — تتوقف رسائل التذكير للعميل حتى موعده' }
+  );
+
+  return (
+    <Modal open onClose={onClose} title={`وعد بالسداد — ${invoice.number ?? ''}`}>
+      <div className="space-y-3">
+        <Input label="تاريخ الوعد" type="date" dir="ltr" value={date}
+          onChange={(e) => setDate(e.target.value)} />
+        <Input label="ملاحظة (من وعد؟ وكيف؟)" value={note}
+          onChange={(e) => setNote(e.target.value)} />
+        <Button size="sm" className="w-full" loading={save.isPending} disabled={!date}
+          onClick={async () => {
+            await save.mutateAsync(undefined as never);
+            onClose();
+          }}>
+          سجّل الوعد
+        </Button>
+      </div>
+    </Modal>
+  );
+}
+
+/* --------------------------------------------------------------- revenue */
+
+/** شلال الإيراد: المفوتر ← المثبت ← المؤجل، شهراً بشهر (docs/11 §ب-1). */
+function RevenueTab() {
+  const { data, isLoading } = useQuery({
+    queryKey: ['revenue-waterfall'],
+    queryFn: async () => {
+      const supabase = getSupabase();
+      const [waterfall, pending] = await Promise.all([
+        supabase.from('revenue_waterfall').select('*').limit(12),
+        supabase.from('revenue_schedules')
+          .select('*, documents(number, client_id)')
+          .is('recognized_at', null).order('period_end'),
+      ]);
+      if (waterfall.error) throw new Error(waterfall.error.message);
+      return { waterfall: waterfall.data ?? [], pending: pending.data ?? [] };
+    },
+  });
+
+  if (isLoading || !data) return <SkeletonList rows={4} />;
+  const deferredTotal = data.pending.reduce((s, r) => s + Number(r.amount), 0);
+
+  return (
+    <div className="space-y-5">
+      <p className="text-sm text-gray-medium">
+        المبلغ المفوتر مقدماً ليس دخلاً بعد — يصبح دخلاً مثبتاً عند اكتمال
+        الخدمة (نهاية شهر الاشتراك أو التسليم). جولات توزيع الدخل تبقى على
+        النقد المحصّل؛ هذه الصفحة تريكما الصورة المحاسبية الصحيحة.
+      </p>
+      <Card className="p-4 text-center sm:w-64">
+        <p className="text-2xl font-black" dir="ltr">SAR {fmt(deferredTotal)}</p>
+        <p className="text-xs text-gray-medium">إيراد مؤجل — خدمات مدفوعة لم تكتمل بعد</p>
+      </Card>
+      <Table head={['الشهر', 'المفوتر (صافي)', 'المثبت', 'أُجّل']}>
+        {data.waterfall.map((w) => (
+          <Tr key={w.month}>
+            <Td dir="ltr" className="font-medium">{w.month}</Td>
+            <Td dir="ltr">{fmt(w.invoiced_net)}</Td>
+            <Td dir="ltr" className="text-gray-light">{fmt(w.recognized)}</Td>
+            <Td dir="ltr" className="text-gray-medium">{fmt(w.deferred_added)}</Td>
+          </Tr>
+        ))}
+      </Table>
+      {data.pending.length > 0 && (
+        <div>
+          <h3 className="mb-1.5 font-bold text-gray-light">جدول الإثبات القادم</h3>
+          <div className="space-y-1">
+            {data.pending.map((r) => (
+              <Card key={r.id} className="flex items-center gap-3 p-2 text-sm">
+                <b dir="ltr">{(r as { documents?: { number: string | null } | null }).documents?.number ?? '—'}</b>
+                <span dir="ltr" className="text-gray-light">SAR {fmt(Number(r.amount))}</span>
+                <span dir="ltr" className="ms-auto text-xs text-gray-medium">
+                  يُثبت في {r.period_end}
+                </span>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
