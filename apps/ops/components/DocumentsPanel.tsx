@@ -23,6 +23,7 @@ import { FileText, PenLine } from 'lucide-react';
 import QuoteBuilder from './QuoteBuilder';
 import { AttachmentsButton } from './AttachmentsBlock';
 import ContractBuilder from './ContractBuilder';
+import { ReviewsButton } from './DocumentReviews';
 
 type Doc = Tables<'documents'>;
 
@@ -193,6 +194,7 @@ export default function DocumentsPanel() {
                   {STATUS_LABELS[doc.status]}
                 </Badge>
                 <span className="ms-auto flex items-center gap-2">
+                  <ReviewsButton documentId={doc.id} title={doc.number ?? TYPE_LABELS[doc.type]} docStatus={doc.status} />
                   <AttachmentsButton entity="document" entityId={doc.id}
                     title={doc.number ?? TYPE_LABELS[doc.type]}
                     hint={doc.status === 'signed' || doc.status === 'active' ? 'ارفع النسخة الموقّعة الممسوحة هنا' : undefined} />

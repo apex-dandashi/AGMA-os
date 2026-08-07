@@ -13,19 +13,33 @@ import { keys, useAppMutation } from '../lib/queries';
  */
 const ROLE_LABELS: Record<Enums<'user_role'>, string> = {
   admin: 'شريك',
+  cfo: 'مدير مالي',
+  accountant: 'محاسب',
+  legal: 'مستشار قانوني',
+  auditor: 'مدقق حوكمة',
   strategist: 'مدير عمليات',
   executor: 'عضو تنفيذ',
   client: 'عميل',
 };
 
-const ROLE_MATRIX: { cap: string; admin: boolean; strategist: boolean; executor: boolean }[] = [
-  { cap: 'مهامه: تنفيذ وتعليق وتسجيل وقت ورفع ملفات', admin: true, strategist: true, executor: true },
-  { cap: 'فحوصات الإطلاق و«أوقِف وراجِع» وتسجيل المشاكل', admin: true, strategist: true, executor: true },
-  { cap: 'المبيعات والعملاء والمستندات والمشاريع كاملة', admin: true, strategist: true, executor: false },
-  { cap: 'اعتماد وترقيم الفواتير والعروض وتسجيل الدفعات', admin: true, strategist: true, executor: false },
-  { cap: 'توزيع الدخل: تأكيد الجولات وتوزيع الأرباح', admin: true, strategist: false, executor: false },
-  { cap: 'الإعدادات: حسابات بنكية، نسب، كتالوج، قوائم فحص', admin: true, strategist: false, executor: false },
-  { cap: 'الفريق: دعوات وأدوار وتقييم ربعي ورواتب/تكلفة', admin: true, strategist: false, executor: false },
+const MATRIX_ROLES = ['admin', 'cfo', 'accountant', 'legal', 'auditor', 'strategist', 'executor'] as const;
+const ROLE_MATRIX: { cap: string; roles: Record<(typeof MATRIX_ROLES)[number], boolean> }[] = [
+  { cap: 'قراءة شاملة لكل السجلات',
+    roles: { admin: true, cfo: true, accountant: true, legal: true, auditor: true, strategist: true, executor: false } },
+  { cap: 'مهامه: تنفيذ وتعليق وتسجيل وقت ورفع ملفات',
+    roles: { admin: true, cfo: true, accountant: true, legal: true, auditor: false, strategist: true, executor: true } },
+  { cap: 'المبيعات والعملاء والمستندات والمشاريع',
+    roles: { admin: true, cfo: true, accountant: true, legal: true, auditor: false, strategist: true, executor: false } },
+  { cap: 'اعتماد وترقيم الفواتير وتسجيل الدفعات والمصروفات',
+    roles: { admin: true, cfo: true, accountant: true, legal: false, auditor: false, strategist: true, executor: false } },
+  { cap: 'المالية الحساسة: الحسابات البنكية، نسب التوزيع، تأكيد الجولات، توزيع الأرباح',
+    roles: { admin: true, cfo: true, accountant: false, legal: false, auditor: false, strategist: false, executor: false } },
+  { cap: 'مكتبة البنود القانونية وقوالب العقود',
+    roles: { admin: true, cfo: false, accountant: false, legal: true, auditor: false, strategist: false, executor: false } },
+  { cap: 'اعتماد المستندات عند طلب مراجعته (كلٌّ في تخصصه)',
+    roles: { admin: true, cfo: true, accountant: true, legal: true, auditor: true, strategist: false, executor: false } },
+  { cap: 'الفريق: دعوات وأدوار وتقييم ربعي وتكلفة/س',
+    roles: { admin: true, cfo: false, accountant: false, legal: false, auditor: false, strategist: false, executor: false } },
 ];
 
 export default function TeamPanel({ me }: { me: Tables<'profiles'> }) {
@@ -75,7 +89,7 @@ export default function TeamPanel({ me }: { me: Tables<'profiles'> }) {
 
   const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
-  const [role, setRole] = useState<'admin' | 'strategist' | 'executor'>('strategist');
+  const [role, setRole] = useState<Exclude<Enums<'user_role'>, 'client'>>('strategist');
   const [inviting, setInviting] = useState(false);
 
   const changeRole = useAppMutation(
@@ -125,6 +139,10 @@ export default function TeamPanel({ me }: { me: Tables<'profiles'> }) {
           <Select label="مستوى الصلاحية" value={role} onChange={(e) => setRole(e.target.value as typeof role)}>
             <option value="strategist">مدير عمليات</option>
             <option value="executor">عضو تنفيذ</option>
+            <option value="cfo">مدير مالي</option>
+            <option value="accountant">محاسب</option>
+            <option value="legal">مستشار قانوني</option>
+            <option value="auditor">مدقق حوكمة</option>
             <option value="admin">شريك</option>
           </Select>
           <Button type="submit" size="sm" loading={inviting}>دعوة</Button>
@@ -139,7 +157,7 @@ export default function TeamPanel({ me }: { me: Tables<'profiles'> }) {
         <Table head={[
           'الاسم', 'البريد',
           <span key="r" className="inline-flex items-center gap-1">مستوى الصلاحية
-            <Hint wide text="ثلاثة مستويات أمنية يفرضها النظام على مستوى قاعدة البيانات: شريك (كل شيء)، مدير عمليات (كل التشغيل عدا المالية الحساسة والإعدادات)، عضو تنفيذ (مهامه ومشاريعه). الوظيفة الفعلية تُوصف بالمسمى والمقاعد، لا بهذا المستوى." /></span>,
+            <Hint wide text="أدوار يفرضها النظام على مستوى قاعدة البيانات: شريك (كل شيء) · مدير مالي (التشغيل + المالية الحساسة) · محاسب (التشغيل المالي دون الحسابات البنكية وتأكيد الجولات) · مستشار قانوني (التشغيل + مكتبة البنود) · مدقق حوكمة (قراءة شاملة فقط) · مدير عمليات · عضو تنفيذ. افتح «ماذا يستطيع كل دور؟» للمصفوفة الكاملة." /></span>,
           'المسمى الوظيفي',
           <span key="s" className="inline-flex items-center gap-1">المقاعد
             <Hint text="مقاعد الهيكل التنظيمي (رؤية، تكامل، مبيعات، تسويق، تسليم، مالية) — كل مقعد له مسؤول واحد. يُعدَّل من: النظام ← الرؤية." /></span>,
@@ -166,6 +184,10 @@ export default function TeamPanel({ me }: { me: Tables<'profiles'> }) {
                       className="w-36"
                     >
                       <option value="admin">شريك</option>
+                      <option value="cfo">مدير مالي</option>
+                      <option value="accountant">محاسب</option>
+                      <option value="legal">مستشار قانوني</option>
+                      <option value="auditor">مدقق حوكمة</option>
                       <option value="strategist">مدير عمليات</option>
                       <option value="executor">عضو تنفيذ</option>
                     </Select>
@@ -252,14 +274,14 @@ function RoleMatrixCard() {
       </Button>
       {open && (
         <div className="mt-2 overflow-x-auto">
-          <Table head={['القدرة', 'شريك', 'مدير عمليات', 'عضو تنفيذ']}>
+          <Table head={['القدرة', ...MATRIX_ROLES.map((r) => ROLE_LABELS[r])]}>
             {ROLE_MATRIX.map((r) => (
               <Tr key={r.cap}>
                 <Td className="text-gray-light">{r.cap}</Td>
-                {([r.admin, r.strategist, r.executor] as const).map((ok, i) => (
-                  <Td key={i}>
-                    <span className={ok ? 'font-bold text-pulse-orange' : 'text-gray-medium'}>
-                      {ok ? '✓' : '—'}
+                {MATRIX_ROLES.map((role) => (
+                  <Td key={role}>
+                    <span className={r.roles[role] ? 'font-bold text-pulse-orange' : 'text-gray-medium'}>
+                      {r.roles[role] ? '✓' : '—'}
                     </span>
                   </Td>
                 ))}

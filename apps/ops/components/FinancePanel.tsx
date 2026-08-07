@@ -33,6 +33,7 @@ import {
 } from '@agma/legal-templates';
 import AllocationsTab from './AllocationsTab';
 import { AttachmentsButton } from './AttachmentsBlock';
+import { ReviewsButton } from './DocumentReviews';
 import { getSupabase } from '../lib/supabase';
 import { keys, useAppMutation, useClients, useDocuments, usePaymentAccounts } from '../lib/queries';
 
@@ -265,6 +266,7 @@ function InvoicesTab() {
                   </span>
                 )}
                 <span className="ms-auto flex items-center gap-2">
+                  <ReviewsButton documentId={doc.id} title={doc.number ?? 'فاتورة'} docStatus={doc.status} />
                   <Button variant="ghost" size="xs" onClick={() => openPrint(doc)}>
                     معاينة / طباعة
                   </Button>

@@ -620,6 +620,71 @@ export type Database = {
         }
         Relationships: []
       }
+      document_reviews: {
+        Row: {
+          created_at: string
+          decided_at: string | null
+          document_id: string
+          id: string
+          note: string | null
+          requested_by: string | null
+          reviewer: string | null
+          reviewer_role: Database["public"]["Enums"]["user_role"]
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string | null
+          document_id: string
+          id?: string
+          note?: string | null
+          requested_by?: string | null
+          reviewer?: string | null
+          reviewer_role: Database["public"]["Enums"]["user_role"]
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string | null
+          document_id?: string
+          id?: string
+          note?: string | null
+          requested_by?: string | null
+          reviewer?: string | null
+          reviewer_role?: Database["public"]["Enums"]["user_role"]
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_reviews_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "document_margins"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_reviews_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_reviews_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_reviews_reviewer_fkey"
+            columns: ["reviewer"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           client_id: string
@@ -3587,6 +3652,8 @@ export type Database = {
       }
       generate_allocation: { Args: never; Returns: undefined }
       is_admin: { Args: never; Returns: boolean }
+      is_finance_lead: { Args: never; Returns: boolean }
+      is_legal_lead: { Args: never; Returns: boolean }
       is_project_member: { Args: { pid: string }; Returns: boolean }
       is_strategist_plus: { Args: never; Returns: boolean }
       is_team: { Args: never; Returns: boolean }
@@ -3692,7 +3759,15 @@ export type Database = {
       rock_status: "on_track" | "off_track" | "done" | "dropped"
       scope_status: "draft" | "sent" | "approved" | "rejected"
       task_status: "todo" | "in_progress" | "review" | "done" | "blocked"
-      user_role: "admin" | "strategist" | "executor" | "client"
+      user_role:
+        | "admin"
+        | "strategist"
+        | "executor"
+        | "client"
+        | "cfo"
+        | "accountant"
+        | "legal"
+        | "auditor"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3874,7 +3949,16 @@ export const Constants = {
       rock_status: ["on_track", "off_track", "done", "dropped"],
       scope_status: ["draft", "sent", "approved", "rejected"],
       task_status: ["todo", "in_progress", "review", "done", "blocked"],
-      user_role: ["admin", "strategist", "executor", "client"],
+      user_role: [
+        "admin",
+        "strategist",
+        "executor",
+        "client",
+        "cfo",
+        "accountant",
+        "legal",
+        "auditor",
+      ],
     },
   },
 } as const

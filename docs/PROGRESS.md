@@ -22,6 +22,39 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
 
+## Roles 2.0 log (2026-08-07) — specialist roles + document approvals
+
+Owner: «لازم يكون في مدير مالي، محاسب، حوكمة وقانونية… وكل واحد له صلاحيات
+مختلفة» + approval workflow for documents. Delivered, DB-enforced:
+
+**4 new roles** (enum + helper redefinition; all RLS-verified per persona):
+- **cfo مدير مالي**: everything operational + sensitive finance (bank
+  accounts view/manage, allocation rules, round confirmation, profit
+  distributions) — not team management.
+- **accountant محاسب**: full financial operations (invoices, payments,
+  expenses, docs) — verified CANNOT see bank accounts or write rules.
+- **legal مستشار قانوني**: operations + clause library/contract templates.
+- **auditor مدقق حوكمة**: read-EVERYTHING (11 explicit read policies added
+  where reads were manager-gated) — verified cannot write documents/clients.
+
+**Document approvals (اعتمادات):** document_reviews table — request a
+review by role (legal/cfo/accountant/auditor/admin) from the new ختم button
+on any draft document or invoice; role holders get notified, decide with a
+note (rejection requires a written reason), requester gets notified; a DB
+gate refuses finalize/numbering while any review is pending or rejected —
+full loop fixture-verified (request → notify legal → blocked → approve →
+passes → requester notified).
+
+**Accounts seeded in PRODUCTION** (editable later from الفريق):
+cfo@ / accountant@ / legal@ / auditor@agma.com.sa — created with unusable
+random passwords; passwords are set via «نسيت كلمة المرور» on the login
+page (recovery email), then TOTP enrollment is enforced on first login.
+
+UI: full role labels + 7-role capability matrix in الفريق; settings tabs
+gated per specialty (بنكية/نسب → شريك+مدير مالي، بنود → شريك+قانوني).
+Production migration incident: gen_salt needed schema-qualification
+(extensions.) — fixed and pushed; all 31 migrations aligned local=remote.
+
 ## Print & contracts round log (2026-08-07) — owner PDF feedback + study 3
 
 **Print fixes (owner screenshot):**

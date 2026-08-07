@@ -29,13 +29,26 @@ import { useProfile } from './AppShell';
  */
 export default function SettingsPanel() {
   const me = useProfile();
-  const [tab, setTab] = useState('accounts');
 
-  if (me.role !== 'admin') {
+  // كل تبويب لأصحابه: المالية الحساسة للشريك والمدير المالي، البنود
+  // القانونية للشريك والمستشار القانوني، والباقي للشريك (RLS يفرضها أيضاً).
+  const TABS = [
+    { key: 'accounts', label: 'الحسابات البنكية', roles: ['admin', 'cfo'] },
+    { key: 'rules', label: 'نسب التوزيع', roles: ['admin', 'cfo'] },
+    { key: 'clauses', label: 'البنود القانونية', roles: ['admin', 'legal'] },
+    { key: 'checklists', label: 'قوائم الفحص', roles: ['admin'] },
+    { key: 'services', label: 'الخدمات', roles: ['admin'] },
+    { key: 'taskTemplates', label: 'قوالب المهام', roles: ['admin'] },
+    { key: 'templates', label: 'قوالب الإشعارات', roles: ['admin'] },
+  ].filter((t) => t.roles.includes(me.role));
+
+  const [tab, setTab] = useState(TABS[0]?.key ?? '');
+
+  if (TABS.length === 0) {
     return (
       <EmptyState icon={<SettingsIcon className="h-8 w-8" aria-hidden />}
-        title="الإعدادات للشركاء فقط"
-        hint="نِسب التوزيع والحسابات البنكية والبنود القانونية قرارات شركاء." />
+        title="الإعدادات لأصحاب الأدوار المختصة"
+        hint="الحسابات والنسب للشريك والمدير المالي، والبنود القانونية للشريك والمستشار القانوني." />
     );
   }
 
@@ -43,15 +56,7 @@ export default function SettingsPanel() {
     <div>
       <h1 className="mb-3 text-xl font-black">الإعدادات</h1>
       <Tabs active={tab} onChange={setTab}
-        tabs={[
-          { key: 'accounts', label: 'الحسابات البنكية' },
-          { key: 'clauses', label: 'البنود القانونية' },
-          { key: 'checklists', label: 'قوائم الفحص' },
-          { key: 'rules', label: 'نسب التوزيع' },
-          { key: 'services', label: 'الخدمات' },
-          { key: 'taskTemplates', label: 'قوالب المهام' },
-          { key: 'templates', label: 'قوالب الإشعارات' },
-        ]} />
+        tabs={TABS.map(({ key, label }) => ({ key, label }))} />
       <div className="mt-4">
         {tab === 'accounts' && <AccountsTab />}
         {tab === 'clauses' && <ClausesTab />}
