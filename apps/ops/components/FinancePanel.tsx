@@ -12,6 +12,7 @@ import {
   Modal,
   Select,
   SkeletonList,
+  Switch,
   Tabs,
 } from '@agma/ui';
 import { Download, Pencil, Receipt, RefreshCw, Trash2, Wallet as WalletIcon } from 'lucide-react';
@@ -540,25 +541,92 @@ function RetainersTab() {
       ) : (
         <div className="space-y-2">
           {(retainers ?? []).map((r) => (
-            <Card key={r.id} className="flex flex-wrap items-center gap-3 p-3 text-sm">
-              <span className="font-bold">{r.title}</span>
-              <span className="text-gray-light">
-                {(clients ?? []).find((c) => c.id === r.client_id)?.company}
-              </span>
-              <span dir="ltr" className="font-bold">SAR {Number(r.amount).toLocaleString('en-US')}</span>
-              <Badge variant="outline">يوم {r.day_of_month}</Badge>
-              {r.last_generated && (
-                <span className="text-xs text-gray-medium" dir="ltr">آخر توليد: {r.last_generated}</span>
-              )}
-              <Button variant="outline" size="xs" className="ms-auto"
-                loading={generate.isPending} onClick={() => generate.mutate(r)}>
-                توليد فاتورة الآن
-              </Button>
-            </Card>
+            <RetainerRow key={r.id} retainer={r}
+              clientName={(clients ?? []).find((c) => c.id === r.client_id)?.company ?? ''}
+              onGenerate={() => generate.mutate(r)}
+              generating={generate.isPending}
+              invalidate={retainersKey as unknown as readonly string[]} />
           ))}
         </div>
       )}
     </div>
+  );
+}
+
+function RetainerRow({ retainer: r, clientName, onGenerate, generating, invalidate }: {
+  retainer: Tables<'recurring_invoices'>;
+  clientName: string;
+  onGenerate: () => void;
+  generating: boolean;
+  invalidate: readonly string[];
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState({
+    title: r.title, amount: String(r.amount), day: String(r.day_of_month),
+  });
+
+  const patch = useAppMutation(
+    async (p: Record<string, unknown>) => {
+      const { error } = await getSupabase().from('recurring_invoices')
+        .update(p as never).eq('id', r.id);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [invalidate] }
+  );
+
+  if (editing) {
+    return (
+      <Card className="flex flex-wrap items-end gap-2 p-3 text-sm">
+        <Input label="العنوان" value={draft.title} className="min-w-40 flex-1"
+          onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))} />
+        <Input label="SAR" type="number" dir="ltr" value={draft.amount} className="w-28"
+          onChange={(e) => setDraft((d) => ({ ...d, amount: e.target.value }))} />
+        <Input label="يوم الشهر" type="number" dir="ltr" value={draft.day} className="w-24"
+          onChange={(e) => setDraft((d) => ({ ...d, day: e.target.value }))} />
+        <Button size="xs" className="mb-1" loading={patch.isPending}
+          disabled={draft.title.trim().length < 2 || Number(draft.amount) <= 0
+            || Number(draft.day) < 1 || Number(draft.day) > 28}
+          onClick={async () => {
+            await patch.mutateAsync({
+              title: draft.title.trim(),
+              amount: Number(draft.amount),
+              day_of_month: Number(draft.day),
+            });
+            setEditing(false);
+          }}>
+          حفظ
+        </Button>
+        <Button variant="ghost" size="xs" className="mb-1" onClick={() => setEditing(false)}>إلغاء</Button>
+      </Card>
+    );
+  }
+  return (
+    <Card className={`group flex flex-wrap items-center gap-3 p-3 text-sm ${r.active ? '' : 'opacity-60'}`}>
+      <span className="font-bold">{r.title}</span>
+      <span className="text-gray-light">{clientName}</span>
+      <span dir="ltr" className="font-bold">SAR {fmt(Number(r.amount))}</span>
+      <Badge variant="outline">يوم {r.day_of_month}</Badge>
+      {!r.active && <Badge variant="outline">موقوف مؤقتاً</Badge>}
+      {r.last_generated && (
+        <span className="text-xs text-gray-medium" dir="ltr">آخر توليد: {r.last_generated}</span>
+      )}
+      <span className="ms-auto flex items-center gap-2">
+        <Button variant="ghost" size="xs" aria-label={`تعديل ${r.title}`}
+          onClick={() => {
+            setDraft({ title: r.title, amount: String(r.amount), day: String(r.day_of_month) });
+            setEditing(true);
+          }}>
+          <Pencil className="h-3 w-3" aria-hidden />
+        </Button>
+        <Switch label={r.active ? 'نشط' : 'موقوف'} checked={r.active}
+          onChange={(v) => patch.mutate({ active: v })} />
+        {r.active && (
+          <Button variant="outline" size="xs" loading={generating} onClick={onGenerate}>
+            توليد فاتورة الآن
+          </Button>
+        )}
+      </span>
+    </Card>
   );
 }
 

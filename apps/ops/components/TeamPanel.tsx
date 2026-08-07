@@ -188,6 +188,115 @@ export default function TeamPanel({ me }: { me: Tables<'profiles'> }) {
           })}
         </Table>
       )}
+      <PeopleAnalyzer
+        team={(profiles ?? []).filter((p) => p.role !== 'client' && p.active)}
+        isAdmin={isAdmin} meId={me.id} />
     </div>
+  );
+}
+
+const SCORE_CYCLE: Record<string, string> = { '': '+', '+': '±', '±': '-', '-': '+' };
+const quarterNow = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-Q${Math.floor(d.getMonth() / 3) + 1}`;
+};
+
+/**
+ * محلّل الأشخاص (EOS): كل شخص — الشريكان قبل غيرهما — يُقيَّم ربعياً على كل
+ * قيمة جوهرية (+/±/−) وعلى GWC لمقعده. القاعدة: +++ أو لا يبقى في المقعد.
+ */
+function PeopleAnalyzer({ team, isAdmin, meId }: {
+  team: Tables<'profiles'>[];
+  isAdmin: boolean;
+  meId: string;
+}) {
+  const quarter = quarterNow();
+  const paKey = ['people-reviews', quarter];
+  const { data } = useQuery({
+    queryKey: paKey,
+    queryFn: async () => {
+      const supabase = getSupabase();
+      const [reviews, vision] = await Promise.all([
+        supabase.from('people_reviews').select('*').eq('quarter', quarter),
+        supabase.from('vision').select('core_values').single(),
+      ]);
+      return {
+        reviews: reviews.data ?? [],
+        values: ((vision.data?.core_values as string[]) ?? []),
+      };
+    },
+  });
+
+  const save = useAppMutation(
+    async ({ subject, value_scores, gwc }: {
+      subject: string;
+      value_scores: Record<string, string>;
+      gwc: Record<string, boolean>;
+    }) => {
+      const { error } = await getSupabase().from('people_reviews').upsert({
+        subject, reviewer: meId, quarter,
+        value_scores: value_scores as never,
+        gwc: gwc as never,
+      }, { onConflict: 'subject,reviewer,quarter' });
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [paKey], successMessage: 'حُفظ التقييم' }
+  );
+
+  if (!data || data.values.length === 0) return null;
+
+  return (
+    <section className="mt-8">
+      <h2 className="mb-1 font-bold text-gray-light">محلّل الأشخاص — {quarter}</h2>
+      <p className="mb-2 text-xs text-gray-medium">
+        انقر الرمز للتبديل (+ / ± / −). GWC: يفهمه · يريده · يقدر عليه.
+        القاعدة: من لا يحقق «+ + +» على القيم يُناقش مقعده في الجلسة الربعية —
+        الشريكان يقيّم أحدهما الآخر أولاً.
+      </p>
+      <Table head={['العضو', ...data.values.map((v) => v.replace('(قرار شركاء) ', '')), 'G', 'W', 'C']}>
+        {team.map((p) => {
+          const r = data.reviews.find((x) => x.subject === p.id && x.reviewer === meId);
+          const scores = (r?.value_scores as Record<string, string>) ?? {};
+          const gwc = (r?.gwc as Record<string, boolean>) ?? {};
+          const disabled = !isAdmin;
+          return (
+            <Tr key={p.id}>
+              <Td className="font-medium">{p.full_name ?? p.email}</Td>
+              {data.values.map((v) => (
+                <Td key={v}>
+                  <button type="button" disabled={disabled}
+                    aria-label={`تقييم ${p.full_name ?? ''} على ${v}`}
+                    className="rounded-sm px-2 py-0.5 text-sm font-bold text-gray-light hover:bg-gray-dark/40 disabled:cursor-default focus-visible:ring-2 focus-visible:ring-pulse-orange/60 focus:outline-none"
+                    onClick={() => save.mutate({
+                      subject: p.id,
+                      value_scores: { ...scores, [v]: SCORE_CYCLE[scores[v] ?? ''] },
+                      gwc,
+                    })}>
+                    <span className={scores[v] === '+' ? 'text-pulse-orange' : scores[v] === '-' ? 'text-gray-medium' : ''}>
+                      {scores[v] ?? '·'}
+                    </span>
+                  </button>
+                </Td>
+              ))}
+              {(['gets', 'wants', 'capacity'] as const).map((k) => (
+                <Td key={k}>
+                  <button type="button" disabled={disabled}
+                    aria-label={`${k} — ${p.full_name ?? ''}`}
+                    className="rounded-sm px-2 py-0.5 text-sm font-bold hover:bg-gray-dark/40 disabled:cursor-default focus-visible:ring-2 focus-visible:ring-pulse-orange/60 focus:outline-none"
+                    onClick={() => save.mutate({
+                      subject: p.id, value_scores: scores,
+                      gwc: { ...gwc, [k]: !gwc[k] },
+                    })}>
+                    <span className={gwc[k] ? 'text-pulse-orange' : 'text-gray-medium'}>
+                      {gwc[k] ? '✓' : '·'}
+                    </span>
+                  </button>
+                </Td>
+              ))}
+            </Tr>
+          );
+        })}
+      </Table>
+    </section>
   );
 }

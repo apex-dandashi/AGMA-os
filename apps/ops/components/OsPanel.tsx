@@ -106,6 +106,9 @@ function ScorecardTab() {
           </Button>
         )}
       </div>
+      {me.role === 'admin' && (
+        <ManualMetricEntry metrics={data.metrics.filter((m) => m.source === 'manual')} />
+      )}
       {weeks.length === 0 ? (
         <EmptyState icon={<Gauge className="h-8 w-8" aria-hidden />}
           title="لا نتائج بعد"
@@ -142,6 +145,54 @@ function ScorecardTab() {
           })}
         </Table>
       )}
+    </div>
+  );
+}
+
+/** Monday of the current week — matches Postgres date_trunc('week'). */
+function currentWeekStart(): string {
+  const d = new Date();
+  const day = (d.getDay() + 6) % 7;
+  d.setDate(d.getDate() - day);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Manual metrics (NPS وأمثالها) have no cron — the number is typed here. */
+function ManualMetricEntry({ metrics }: { metrics: Tables<'scorecard_metrics'>[] }) {
+  const [key, setKey] = useState('');
+  const [value, setValue] = useState('');
+  const week = currentWeekStart();
+
+  const save = useAppMutation(
+    async () => {
+      const metric = metrics.find((m) => m.key === key);
+      if (!metric) throw new Error('اختر المؤشر');
+      const v = Number(value);
+      const green = metric.direction === 'up'
+        ? v >= Number(metric.green_threshold ?? 0)
+        : v <= Number(metric.green_threshold ?? 0);
+      const { error } = await getSupabase().from('scorecard_entries').upsert({
+        metric_key: key, week_start: week, value: v, is_green: green,
+      }, { onConflict: 'metric_key,week_start' });
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [['scorecard']], successMessage: 'سُجّلت القيمة لهذا الأسبوع' }
+  );
+
+  if (metrics.length === 0) return null;
+  return (
+    <div className="mb-3 flex flex-wrap items-end gap-2 rounded-sm border border-gray-dark p-3">
+      <Select label="مؤشر يدوي" value={key} onChange={(e) => setKey(e.target.value)} className="w-48">
+        <option value="">— اختر —</option>
+        {metrics.map((m) => <option key={m.key} value={m.key}>{m.name_ar}</option>)}
+      </Select>
+      <Input label={`قيمة أسبوع ${week.slice(5)}`} type="number" dir="ltr" value={value}
+        onChange={(e) => setValue(e.target.value)} className="w-32" />
+      <Button size="sm" className="mb-0.5" loading={save.isPending}
+        disabled={!key || value === ''}
+        onClick={() => save.mutate(undefined as never)}>
+        سجّل
+      </Button>
     </div>
   );
 }
@@ -593,6 +644,79 @@ function MeetingSection({ n, title, children }:
 
 /* ----------------------------------------------------------------- vision */
 
+/**
+ * الغاية الأساسية (E-Myth، docs/10 §2.1.1): what life must this company buy
+ * you? RLS is owner-only — each partner sees and edits only their own row.
+ * Root node of every annual plan; revisited yearly.
+ */
+function PrimaryAimCard({ meId }: { meId: string }) {
+  const aimKey = ['primary-aim', meId];
+  const { data, isLoading } = useQuery({
+    queryKey: aimKey,
+    queryFn: async () => {
+      const { data, error } = await getSupabase()
+        .from('primary_aims').select('*').maybeSingle();
+      if (error) throw new Error(error.message);
+      return data;
+    },
+  });
+  const [editing, setEditing] = useState(false);
+  const [statement, setStatement] = useState('');
+  const [excerpt, setExcerpt] = useState('');
+
+  const save = useAppMutation(
+    async () => {
+      const { error } = await getSupabase().from('primary_aims').upsert({
+        profile_id: meId,
+        statement: statement.trim(),
+        shared_excerpt: excerpt.trim() || null,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'profile_id' });
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [aimKey], successMessage: 'حُفظت الغاية — تُراجع سنوياً' }
+  );
+
+  if (isLoading) return null;
+  return (
+    <Card className="border-pulse-orange/30 p-4">
+      <div className="mb-1 flex items-center gap-2">
+        <Target className="h-4 w-4 text-pulse-orange" aria-hidden />
+        <h3 className="font-bold">غايتك الأساسية (خاص بك — لا يراه أحد غيرك)</h3>
+        <Button variant="ghost" size="xs" className="ms-auto"
+          onClick={() => {
+            setStatement(data?.statement ?? '');
+            setExcerpt(data?.shared_excerpt ?? '');
+            setEditing((v) => !v);
+          }}>
+          {editing ? 'إغلاق' : data ? 'تعديل' : 'اكتبها'}
+        </Button>
+      </div>
+      {editing ? (
+        <div className="space-y-2">
+          <Textarea label="أي حياة يجب أن تشتريها لك هذه الشركة؟" rows={3}
+            value={statement} onChange={(e) => setStatement(e.target.value)} />
+          <Textarea label="مقتطف تشاركه مع شريكك (اختياري)" rows={2}
+            value={excerpt} onChange={(e) => setExcerpt(e.target.value)} />
+          <Button size="sm" loading={save.isPending} disabled={statement.trim().length < 10}
+            onClick={async () => {
+              await save.mutateAsync(undefined as never);
+              setEditing(false);
+            }}>
+            حفظ
+          </Button>
+        </div>
+      ) : data ? (
+        <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-light">{data.statement}</p>
+      ) : (
+        <p className="text-sm text-gray-medium">
+          الجذر الذي تُقاس عليه كل خطة سنوية وكل «هل نقبل هذا العميل؟» — لم تُكتب بعد.
+        </p>
+      )}
+    </Card>
+  );
+}
+
 function VisionTab() {
   const me = useProfile();
   const visionKey = ['vision'];
@@ -626,6 +750,7 @@ function VisionTab() {
 
   return (
     <div className="space-y-6">
+      {me.role === 'admin' && <PrimaryAimCard meId={me.id} />}
       <Card className="p-4">
         <h3 className="mb-2 font-bold text-pulse-orange">القيم الجوهرية</h3>
         <ul className="space-y-1 text-sm text-gray-light">

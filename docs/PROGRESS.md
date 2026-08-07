@@ -22,6 +22,29 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
 
+## Orange package log (2026-08-07) — usability audit items 11–16
+
+11. **Manual scorecard entry**: admins record values for source='manual'
+    metrics (NPS وأمثالها) for the current week — green/red computed against
+    the threshold on save. The metrics can finally light up.
+12. **Primary Aim page** (E-Myth root node): private card at the top of the
+    Vision tab — «أي حياة يجب أن تشتريها لك هذه الشركة؟» + optional shared
+    excerpt. RLS is owner-only: each partner sees only their own.
+13. **People Analyzer** (EOS): new people_reviews table (migration
+    20260807200000, admin-write/team-read, audited) + quarterly grid in
+    الفريق — click-to-cycle +/±/− per core value and ✓ per G/W/C, partners
+    rate each other first. Values come live from the V/TO core values.
+14. **Service catalog editor**: settings tab الخدمات — rename, activate/
+    deactivate (hidden from scope builder, history preserved — no deletes by
+    design), add new service with auto slug per category.
+15. **Task-template editor**: settings tab قوالب المهام — per-template EMT
+    class (feeds the Technician gauge) and pause-checklist binding, filtered
+    by playbook.
+16. **Retainers manageable**: pause/resume switch (cron already skips
+    inactive — verified), inline edit of title/amount/billing day (1–28).
+
+All gates green; people_reviews migration applied to production.
+
 ## Red package log (2026-08-07) — usability audit items 1–10
 
 From the systematic «أين أدخل…؟» audit; the high-priority ten, all shipped:

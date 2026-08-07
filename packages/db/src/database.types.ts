@@ -1627,6 +1627,54 @@ export type Database = {
           },
         ]
       }
+      people_reviews: {
+        Row: {
+          created_at: string
+          gwc: Json
+          id: string
+          note: string | null
+          quarter: string
+          reviewer: string
+          subject: string
+          value_scores: Json
+        }
+        Insert: {
+          created_at?: string
+          gwc?: Json
+          id?: string
+          note?: string | null
+          quarter: string
+          reviewer?: string
+          subject: string
+          value_scores?: Json
+        }
+        Update: {
+          created_at?: string
+          gwc?: Json
+          id?: string
+          note?: string | null
+          quarter?: string
+          reviewer?: string
+          subject?: string
+          value_scores?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "people_reviews_reviewer_fkey"
+            columns: ["reviewer"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "people_reviews_subject_fkey"
+            columns: ["subject"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       playbook_stages: {
         Row: {
           id: string

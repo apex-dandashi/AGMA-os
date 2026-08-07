@@ -9,6 +9,7 @@ import {
   Checkbox,
   EmptyState,
   Input,
+  Select,
   SkeletonList,
   Switch,
   Tabs,
@@ -47,6 +48,8 @@ export default function SettingsPanel() {
           { key: 'clauses', label: 'البنود القانونية' },
           { key: 'checklists', label: 'قوائم الفحص' },
           { key: 'rules', label: 'نسب التوزيع' },
+          { key: 'services', label: 'الخدمات' },
+          { key: 'taskTemplates', label: 'قوالب المهام' },
           { key: 'templates', label: 'قوالب الإشعارات' },
         ]} />
       <div className="mt-4">
@@ -54,6 +57,8 @@ export default function SettingsPanel() {
         {tab === 'clauses' && <ClausesTab />}
         {tab === 'checklists' && <ChecklistsTab />}
         {tab === 'rules' && <RulesTab />}
+        {tab === 'services' && <ServicesTab />}
+        {tab === 'taskTemplates' && <TaskTemplatesTab />}
         {tab === 'templates' && <TemplatesTab />}
       </div>
     </div>
@@ -404,6 +409,203 @@ function RulesTab() {
         onClick={() => save.mutate(undefined as never)}>
         حفظ النسب
       </Button>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------- services */
+
+function ServicesTab() {
+  const key = ['settings-services'];
+  const { data, isLoading } = useQuery({
+    queryKey: key,
+    queryFn: async () => {
+      const supabase = getSupabase();
+      const [services, categories] = await Promise.all([
+        supabase.from('services_catalog').select('*').order('sort'),
+        supabase.from('service_categories').select('*').order('sort'),
+      ]);
+      if (services.error) throw new Error(services.error.message);
+      return { services: services.data ?? [], categories: categories.data ?? [] };
+    },
+  });
+  const [draft, setDraft] = useState({ name_ar: '', name_en: '', category_id: '' });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+
+  const patch = useAppMutation(
+    async ({ id, p }: { id: string; p: Record<string, unknown> }) => {
+      const { error } = await getSupabase().from('services_catalog')
+        .update(p as never).eq('id', id);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [key] }
+  );
+  const add = useAppMutation(
+    async () => {
+      const slug = draft.name_en.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+      const { error } = await getSupabase().from('services_catalog').insert({
+        category_id: draft.category_id,
+        slug,
+        name_ar: draft.name_ar.trim(),
+        name_en: draft.name_en.trim(),
+        sort: 99,
+      });
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [key], successMessage: 'أُضيفت الخدمة — قيّمها TVR في الجلسة الربعية' }
+  );
+
+  if (isLoading || !data) return <SkeletonList rows={6} />;
+  return (
+    <div className="space-y-4">
+      <p className="text-xs text-gray-medium">
+        إيقاف الخدمة يخفيها من بناء النطاقات دون كسر السجلات القديمة. الحذف غير
+        متاح عمداً — التاريخ لا يُمحى.
+      </p>
+      {data.categories.map((cat) => (
+        <div key={cat.id}>
+          <h3 className="mb-1.5 text-sm font-bold text-pulse-orange">{cat.name_ar}</h3>
+          <div className="space-y-1">
+            {data.services.filter((s) => s.category_id === cat.id).map((s) => (
+              <Card key={s.id} className="flex items-center gap-3 p-2 text-sm">
+                {editingId === s.id ? (
+                  <>
+                    <Input value={editName} aria-label="اسم الخدمة" className="w-56"
+                      onChange={(e) => setEditName(e.target.value)} />
+                    <Button size="xs" loading={patch.isPending}
+                      disabled={editName.trim().length < 2}
+                      onClick={async () => {
+                        await patch.mutateAsync({ id: s.id, p: { name_ar: editName.trim() } });
+                        setEditingId(null);
+                      }}>حفظ</Button>
+                    <Button variant="ghost" size="xs" onClick={() => setEditingId(null)}>إلغاء</Button>
+                  </>
+                ) : (
+                  <>
+                    <span className={s.active ? '' : 'text-gray-medium line-through'}>{s.name_ar}</span>
+                    <span dir="ltr" className="text-xs text-gray-medium">{s.slug}</span>
+                    <span className="ms-auto flex items-center gap-2">
+                      <Button variant="ghost" size="xs" aria-label={`تعديل ${s.name_ar}`}
+                        onClick={() => { setEditingId(s.id); setEditName(s.name_ar); }}>
+                        تعديل
+                      </Button>
+                      <Switch label={s.active ? 'نشطة' : 'موقوفة'} checked={s.active}
+                        onChange={(v) => patch.mutate({ id: s.id, p: { active: v } })} />
+                    </span>
+                  </>
+                )}
+              </Card>
+            ))}
+          </div>
+        </div>
+      ))}
+      <Card className="p-4">
+        <p className="mb-2 text-sm font-bold text-gray-light">خدمة جديدة</p>
+        <div className="flex flex-wrap items-end gap-2">
+          <Input label="الاسم عربي" value={draft.name_ar}
+            onChange={(e) => setDraft((d) => ({ ...d, name_ar: e.target.value }))} />
+          <Input label="الاسم إنجليزي" dir="ltr" value={draft.name_en}
+            onChange={(e) => setDraft((d) => ({ ...d, name_en: e.target.value }))} />
+          <Select label="الفئة" value={draft.category_id}
+            onChange={(e) => setDraft((d) => ({ ...d, category_id: e.target.value }))}>
+            <option value="">— اختر —</option>
+            {data.categories.map((c) => <option key={c.id} value={c.id}>{c.name_ar}</option>)}
+          </Select>
+          <Button size="sm" className="mb-0.5" loading={add.isPending}
+            disabled={draft.name_ar.trim().length < 2 || draft.name_en.trim().length < 2 || !draft.category_id}
+            onClick={async () => {
+              await add.mutateAsync(undefined as never);
+              setDraft({ name_ar: '', name_en: '', category_id: '' });
+            }}>
+            + أضف
+          </Button>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------- task templates */
+
+const EMT_LABELS: Record<string, string> = {
+  entrepreneur: 'ريادي', manager: 'إداري', technician: 'تنفيذي',
+};
+
+function TaskTemplatesTab() {
+  const key = ['settings-task-templates'];
+  const { data, isLoading } = useQuery({
+    queryKey: key,
+    queryFn: async () => {
+      const supabase = getSupabase();
+      const [templates, stages, playbooks, checklists] = await Promise.all([
+        supabase.from('task_templates').select('*').order('sort'),
+        supabase.from('playbook_stages').select('id, name_ar, playbook_id'),
+        supabase.from('playbooks').select('id, name_ar, slug').order('slug'),
+        supabase.from('pause_checklists').select('key, name_ar'),
+      ]);
+      if (templates.error) throw new Error(templates.error.message);
+      return {
+        templates: templates.data ?? [],
+        stages: stages.data ?? [],
+        playbooks: playbooks.data ?? [],
+        checklists: checklists.data ?? [],
+      };
+    },
+  });
+  const [playbookFilter, setPlaybookFilter] = useState('');
+
+  const patch = useAppMutation(
+    async ({ id, p }: { id: string; p: Record<string, unknown> }) => {
+      const { error } = await getSupabase().from('task_templates')
+        .update(p as never).eq('id', id);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [key] }
+  );
+
+  if (isLoading || !data) return <SkeletonList rows={6} />;
+  const stageById = new Map(data.stages.map((s) => [s.id, s]));
+  const visible = data.templates.filter((t) => {
+    if (!playbookFilter) return true;
+    return stageById.get(t.stage_id ?? '')?.playbook_id === playbookFilter;
+  });
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-3">
+        <Select value={playbookFilter} aria-label="تصفية بالدليل"
+          onChange={(e) => setPlaybookFilter(e.target.value)} className="w-56">
+          <option value="">كل الأدلة</option>
+          {data.playbooks.map((p) => <option key={p.id} value={p.id}>{p.name_ar}</option>)}
+        </Select>
+        <p className="text-xs text-gray-medium">
+          التصنيف (ريادي/إداري/تنفيذي) يغذي مقياس فخ المنفّذ؛ قائمة الفحص تجعل
+          المهمة بوابة إطلاق لا تُنجز بدون اجتيازها.
+        </p>
+      </div>
+      <div className="space-y-1">
+        {visible.map((t) => (
+          <Card key={t.id} className="flex flex-wrap items-center gap-2 p-2 text-sm">
+            <span className="min-w-40 flex-1">{t.title_ar}</span>
+            <span className="text-xs text-gray-medium">
+              {stageById.get(t.stage_id ?? '')?.name_ar ?? '—'}
+            </span>
+            <Select value={t.emt_class} aria-label={`تصنيف ${t.title_ar}`}
+              onChange={(e) => patch.mutate({ id: t.id, p: { emt_class: e.target.value } })}
+              className="w-28 py-1 text-xs">
+              {Object.entries(EMT_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            </Select>
+            <Select value={t.checklist_key ?? ''} aria-label={`قائمة فحص ${t.title_ar}`}
+              onChange={(e) => patch.mutate({ id: t.id, p: { checklist_key: e.target.value || null } })}
+              className="w-44 py-1 text-xs">
+              <option value="">بلا قائمة فحص</option>
+              {data.checklists.map((c) => <option key={c.key} value={c.key}>{c.name_ar}</option>)}
+            </Select>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }
