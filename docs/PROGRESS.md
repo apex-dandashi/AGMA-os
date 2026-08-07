@@ -14,6 +14,7 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 4 | Projects + playbooks + HR | ✅ Done (2026-08-07) |
 | 5 | Finance KSA | ✅ Done (2026-08-07) |
 | 6 | Notifications | ⬜ Next |
+| 6.5 | **EOS core** — rocks, issues/IDS, scorecard, L10 meetings (docs/09) | ⬜ |
 | 7 | Portal + onboarding + Drop Forms | ⬜ |
 | 8 | Content Engine | ⬜ |
 | 9 | Help Centre / RAG + chatbots | ⬜ |

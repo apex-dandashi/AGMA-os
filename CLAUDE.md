@@ -13,6 +13,7 @@ All specifications live in `/docs` — read the relevant one before touching its
 - `docs/06-brand-standards.md` — entity constants, payment accounts, document anatomy, visual tokens (design contract for ALL generated documents/emails)
 - `docs/07-quality-roadmap.md` — quality gap analysis, hardening sprints, Definition of Done
 - `docs/08-erp-crm-reference.md` — ERP/CRM functionality benchmark (adopt/skip per phase)
+- `docs/09-traction-eos.md` — EOS (Traction) layer: V/TO, Rocks, self-computing Scorecard, IDS, L10 meetings, accountability chart
 - `docs/references/` — real quotation/invoice PDFs + CR certificate = visual ground truth for generator QA
 
 ## Stack
@@ -60,7 +61,7 @@ bilingual-ready · keyboard + screen-reader pass · unit + happy-path e2e +
 RLS check for new tables · realtime on team-shared views.
 
 ## Build phases (track in docs/PROGRESS.md — update after every session)
-0. Scaffold + CI/CD + migrate current site → 1. Schema/RLS/seeds/auth/audit → 2. CRM + Sales + website sync → 3. Legal generators → **3.5 Quality hardening (docs/07 — Sprints A/B/C)** → 4. Projects + playbooks + HR → 5. Finance KSA → 6. Notifications → 7. Portal + onboarding + Drop Forms → 8. Content Engine → 9. Help Centre/RAG + chatbots → 10. Employee portal + Analytics + digests
+0. Scaffold + CI/CD + migrate current site → 1. Schema/RLS/seeds/auth/audit → 2. CRM + Sales + website sync → 3. Legal generators → **3.5 Quality hardening (docs/07 — Sprints A/B/C)** → 4. Projects + playbooks + HR → 5. Finance KSA → 6. Notifications → **6.5 EOS core (docs/09)** → 7. Portal + onboarding + Drop Forms → 8. Content Engine → 9. Help Centre/RAG + chatbots → 10. Employee portal + Analytics + digests
 
 ## Environment variables (names only — values from owner)
 `SUPABASE_URL` `SUPABASE_ANON_KEY` `SUPABASE_SERVICE_ROLE_KEY` (single production project — both site environments point at it) · `R2_ACCOUNT_ID` `R2_ACCESS_KEY_ID` `R2_SECRET_ACCESS_KEY` `R2_BUCKET` · `TWILIO_ACCOUNT_SID` `TWILIO_AUTH_TOKEN` `TWILIO_WHATSAPP_FROM` · `SENDGRID_API_KEY` · `GEMINI_API_KEY` `ANTHROPIC_API_KEY` `HIGGSFIELD_API_KEY` · `HOSTINGER_DEPLOY_*`
