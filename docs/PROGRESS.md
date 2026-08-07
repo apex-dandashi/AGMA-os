@@ -22,6 +22,32 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
 
+## Gaps round log (2026-08-07) — owner walkthrough fixes
+
+The owner walked the app and hit real walls: «أين أدخل بيانات العميل؟ موقع
+شركته؟ كيف أنشئ عقد عدم إفصاح؟ كيف أعدّل الإعدادات؟». All closed:
+
+- **Full client profile**: clients gained website / city / cr_number /
+  vat_number. New «بيانات العميل» card on the client page — sector, decision
+  maker, budget tier, status, tags, website (clickable), CR and VAT — all
+  editable in place. CR/VAT will feed contracts and ZATCA invoicing.
+- **NDA in three clicks**: ContractBuilder in المستندات («+ عقد / عدم
+  إفصاح») — type selector (nda/sow/sla/msa/amc/coc), client prefills the
+  second party (with CR + representative), 7 seeded NDA clauses arrive
+  pre-picked (تعريف السرية، الالتزامات، الاستثناءات، مدة ٣ سنوات، الإعادة
+  والإتلاف، التعويض، النظام السعودي/الرياض), custom clauses addable,
+  live preview via renderContract, draft → finalize.
+- **Contracts numbering**: new gapless CT-00001 counter; finalize button now
+  works for every draft type (was quote-only) and picks Q/CT by type.
+- **الإعدادات page** (nav entry, admin-only): bank accounts CRUD with Saudi
+  IBAN validation + single-default enforcement · clause library editor with
+  approve toggles · pause-checklist editor (1–9 items enforced) · allocation
+  CAP→TAP editor with sum=100% guard (the قرار شركاء enabler) · notification
+  template approve/active switches. Backed by new admin RLS policies on
+  payment_accounts and notification_templates.
+
+All gates green; migration applied to production.
+
 ## Data round log (2026-08-07) — entry → processing → output → AI-readiness
 
 **Entry layer (every path produces the same clean value):**

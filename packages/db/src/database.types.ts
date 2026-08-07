@@ -401,7 +401,9 @@ export type Database = {
       clients: {
         Row: {
           budget_tier: string | null
+          city: string | null
           company: string
+          cr_number: string | null
           created_at: string
           decision_maker: string | null
           id: string
@@ -409,10 +411,14 @@ export type Database = {
           status: Database["public"]["Enums"]["client_status"]
           tags: string[]
           updated_at: string
+          vat_number: string | null
+          website: string | null
         }
         Insert: {
           budget_tier?: string | null
+          city?: string | null
           company: string
+          cr_number?: string | null
           created_at?: string
           decision_maker?: string | null
           id?: string
@@ -420,10 +426,14 @@ export type Database = {
           status?: Database["public"]["Enums"]["client_status"]
           tags?: string[]
           updated_at?: string
+          vat_number?: string | null
+          website?: string | null
         }
         Update: {
           budget_tier?: string | null
+          city?: string | null
           company?: string
+          cr_number?: string | null
           created_at?: string
           decision_maker?: string | null
           id?: string
@@ -431,6 +441,8 @@ export type Database = {
           status?: Database["public"]["Enums"]["client_status"]
           tags?: string[]
           updated_at?: string
+          vat_number?: string | null
+          website?: string | null
         }
         Relationships: []
       }

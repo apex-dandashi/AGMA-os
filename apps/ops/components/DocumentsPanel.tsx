@@ -21,6 +21,7 @@ import { getSupabase } from '../lib/supabase';
 import { keys, useAppMutation, useClients, useDocuments } from '../lib/queries';
 import { FileText, PenLine } from 'lucide-react';
 import QuoteBuilder from './QuoteBuilder';
+import ContractBuilder from './ContractBuilder';
 
 type Doc = Tables<'documents'>;
 
@@ -49,6 +50,7 @@ export default function DocumentsPanel() {
   const { data: docs, isLoading } = useDocuments();
   const { data: clients } = useClients();
   const [showBuilder, setShowBuilder] = useState(false);
+  const [showContract, setShowContract] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [finalizing, setFinalizing] = useState<Doc | null>(null);
@@ -58,7 +60,7 @@ export default function DocumentsPanel() {
     async (doc: Doc) => {
       const supabase = getSupabase();
       const { data: number, error: rpcErr } = await supabase.rpc('next_document_number', {
-        p_prefix: 'Q',
+        p_prefix: doc.type === 'quote' ? 'Q' : 'CT',
       });
       if (rpcErr || !number) throw new Error('تعذر حجز رقم المستند');
       const payload = { ...(doc.payload as object), number } as never;
@@ -129,8 +131,12 @@ export default function DocumentsPanel() {
     <div>
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <h1 className="text-xl font-black">المستندات</h1>
-        <Button variant="outline" size="sm" onClick={() => setShowBuilder((v) => !v)}>
+        <Button variant="outline" size="sm" onClick={() => { setShowBuilder((v) => !v); setShowContract(false); }}>
           {showBuilder ? 'إغلاق' : '+ عرض سعر'}
+        </Button>
+        <Button variant="outline" size="sm"
+          onClick={() => { setShowContract((v) => !v); setShowBuilder(false); }}>
+          {showContract ? 'إغلاق' : '+ عقد / عدم إفصاح'}
         </Button>
         <div className="ms-auto flex gap-2">
           <Select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} aria-label="تصفية بالنوع">
@@ -148,6 +154,9 @@ export default function DocumentsPanel() {
         </div>
       </div>
 
+      {showContract && (
+        <ContractBuilder clients={clients ?? []} onDone={() => setShowContract(false)} />
+      )}
       {showBuilder && (
         <QuoteBuilder clients={clients ?? []} onDone={() => setShowBuilder(false)} />
       )}
@@ -182,7 +191,7 @@ export default function DocumentsPanel() {
                   <Button variant="ghost" size="xs" onClick={() => openPrint(doc)}>
                     معاينة / طباعة
                   </Button>
-                  {doc.type === 'quote' && doc.status === 'draft' && (
+                  {doc.status === 'draft' && (
                     <Button size="xs" onClick={() => setFinalizing(doc)}>
                       اعتماد وترقيم
                     </Button>

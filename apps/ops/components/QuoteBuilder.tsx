@@ -248,7 +248,7 @@ export default function QuoteBuilder({ clients, onDone }:
       </div>
 
       <div className="flex flex-wrap gap-1.5" role="group" aria-label="بنود الشروط">
-        {(clauses ?? []).map((c) => (
+        {(clauses ?? []).filter((c) => c.category !== 'nda').map((c) => (
           <button key={c.id} type="button" aria-pressed={pickedClauses.has(c.id)}
             onClick={() =>
               setPickedClauses((prev) => {

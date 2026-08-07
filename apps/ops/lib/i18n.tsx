@@ -17,6 +17,7 @@ const DICT = {
   'nav.finance': { ar: 'المالية', en: 'Finance' },
   'nav.website': { ar: 'الموقع', en: 'Website' },
   'nav.team': { ar: 'الفريق', en: 'Team' },
+  'nav.settings': { ar: 'الإعدادات', en: 'Settings' },
   'chrome.search': { ar: 'بحث…', en: 'Search…' },
   'chrome.signout': { ar: 'خروج', en: 'Sign out' },
   'chrome.skip': { ar: 'تخطي إلى المحتوى', en: 'Skip to content' },

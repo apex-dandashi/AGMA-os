@@ -21,7 +21,7 @@ import {
 } from '@agma/db/schemas';
 import { getSupabase } from '../lib/supabase';
 import { keys, useAppMutation, useClientDetail, useClients } from '../lib/queries';
-import { Download, Users } from 'lucide-react';
+import { Download, Pencil, Users } from 'lucide-react';
 import { exportCsv } from '../lib/csv';
 import { fmtDate, fmtSAR } from '../lib/format';
 import ScopeBuilder from './ScopeBuilder';
@@ -183,6 +183,110 @@ function Client360Card({ clientId }: { clientId: string }) {
   );
 }
 
+const CLIENT_STATUS: Record<Enums<'client_status'>, string> = {
+  active: 'نشط', paused: 'متوقف مؤقتاً', archived: 'مؤرشف',
+};
+
+/** بيانات العميل — every field the record supports, editable in place. */
+function ClientProfileCard({ client }: { client: Client }) {
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({
+    sector: client.sector ?? '',
+    decision_maker: client.decision_maker ?? '',
+    budget_tier: client.budget_tier ?? '',
+    website: client.website ?? '',
+    city: client.city ?? '',
+    cr_number: client.cr_number ?? '',
+    vat_number: client.vat_number ?? '',
+    tags: (client.tags ?? []).join('، '),
+    status: client.status,
+  });
+
+  const save = useAppMutation(
+    async () => {
+      const { error } = await getSupabase().from('clients').update({
+        sector: form.sector.trim() || null,
+        decision_maker: form.decision_maker.trim() || null,
+        budget_tier: form.budget_tier.trim() || null,
+        website: form.website.trim() || null,
+        city: form.city.trim() || null,
+        cr_number: form.cr_number.trim() || null,
+        vat_number: form.vat_number.trim() || null,
+        tags: form.tags.split(/[،,]/).map((t) => t.trim()).filter(Boolean),
+        status: form.status,
+      }).eq('id', client.id);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [keys.clients], successMessage: 'حُفظت بيانات العميل' }
+  );
+
+  if (!editing) {
+    const fact = (label: string, v: string | null, ltr = false) =>
+      v ? (
+        <span className="text-xs text-gray-light">
+          <span className="text-gray-medium">{label}: </span>
+          <span dir={ltr ? 'ltr' : undefined}>{v}</span>
+        </span>
+      ) : null;
+    return (
+      <Card className="flex flex-wrap items-center gap-x-4 gap-y-1.5 p-3">
+        <Badge variant={client.status === 'active' ? 'accent' : 'outline'}>
+          {CLIENT_STATUS[client.status] ?? client.status}
+        </Badge>
+        {fact('القطاع', client.sector)}
+        {fact('صاحب القرار', client.decision_maker)}
+        {fact('المدينة', client.city)}
+        {client.website && (
+          <a href={/^https?:\/\//.test(client.website) ? client.website : `https://${client.website}`}
+            target="_blank" rel="noreferrer" dir="ltr"
+            className="text-xs text-pulse-orange underline-offset-2 hover:underline">
+            {client.website}
+          </a>
+        )}
+        {fact('س.ت', client.cr_number, true)}
+        {fact('الرقم الضريبي', client.vat_number, true)}
+        {(client.tags ?? []).map((t) => <Badge key={t} variant="outline">{t}</Badge>)}
+        <Button variant="ghost" size="xs" className="ms-auto" onClick={() => setEditing(true)}>
+          <Pencil className="h-3.5 w-3.5" aria-hidden /> تعديل البيانات
+        </Button>
+      </Card>
+    );
+  }
+
+  const field = (label: string, key: keyof typeof form, ltr = false, mode?: 'url' | 'numeric') => (
+    <Input label={label} value={form[key] as string} dir={ltr ? 'ltr' : undefined}
+      inputMode={mode} onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))} />
+  );
+  return (
+    <Card className="p-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {field('القطاع', 'sector')}
+        {field('صاحب القرار', 'decision_maker')}
+        {field('فئة الميزانية', 'budget_tier')}
+        {field('الموقع الإلكتروني', 'website', true, 'url')}
+        {field('المدينة', 'city')}
+        {field('السجل التجاري', 'cr_number', true, 'numeric')}
+        {field('الرقم الضريبي (VAT)', 'vat_number', true, 'numeric')}
+        {field('الوسوم (مفصولة بفواصل)', 'tags')}
+        <Select label="الحالة" value={form.status}
+          onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as Client['status'] }))}>
+          {Object.entries(CLIENT_STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+        </Select>
+      </div>
+      <div className="mt-3 flex gap-2">
+        <Button size="sm" loading={save.isPending}
+          onClick={async () => {
+            await save.mutateAsync(undefined as never);
+            setEditing(false);
+          }}>
+          حفظ
+        </Button>
+        <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>إلغاء</Button>
+      </div>
+    </Card>
+  );
+}
+
 function ClientDetail({ client }: { client: Client }) {
   const { data, isLoading } = useClientDetail(client.id);
   const [showScopeBuilder, setShowScopeBuilder] = useState(false);
@@ -213,6 +317,7 @@ function ClientDetail({ client }: { client: Client }) {
     <div className="space-y-6">
       <h2 className="text-lg font-black">{client.company}</h2>
       <Client360Card clientId={client.id} />
+      <ClientProfileCard key={`profile-${client.id}`} client={client} />
 
       <section>
         <div className="mb-2 flex items-center gap-3">
