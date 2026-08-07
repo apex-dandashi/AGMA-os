@@ -3652,6 +3652,7 @@ export type Database = {
       }
       generate_allocation: { Args: never; Returns: undefined }
       is_admin: { Args: never; Returns: boolean }
+      is_biller: { Args: never; Returns: boolean }
       is_finance_lead: { Args: never; Returns: boolean }
       is_legal_lead: { Args: never; Returns: boolean }
       is_project_member: { Args: { pid: string }; Returns: boolean }
@@ -3768,6 +3769,11 @@ export type Database = {
         | "accountant"
         | "legal"
         | "auditor"
+        | "sales"
+        | "pm"
+        | "collections"
+        | "hr"
+        | "dpo"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3958,6 +3964,11 @@ export const Constants = {
         "accountant",
         "legal",
         "auditor",
+        "sales",
+        "pm",
+        "collections",
+        "hr",
+        "dpo",
       ],
     },
   },

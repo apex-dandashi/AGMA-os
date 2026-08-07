@@ -22,6 +22,34 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
 
+## Roles 2.1 log (2026-08-07) — the full set, derived from docs/11–13
+
+Owner: «إلخ = افترض باقي الأدوار المهمة بالمنطق والمراجع». Five more roles,
+each boundary fixture-verified against the database:
+
+- **sales مدير مبيعات**: pipeline/clients/quotes/contracts/projects; numbers
+  quotes (Q-00055 ✓) — REFUSED invoice numbering (guided message: «المبيعات
+  تطلبها ولا تعتمدها») and payments/expenses (new is_biller() gate: INV/CN
+  numbering + payments + expenses + retainers restricted to
+  admin/cfo/accountant/strategist).
+- **pm مدير مشاريع**: full operations incl. projects/checklists — same
+  financial restriction as sales.
+- **collections مسؤول تحصيل**: reads invoices/clients/leads, records
+  payments ✓ and promises, logs interactions — blocked from expenses ✓,
+  invoice approval, and write-offs.
+- **hr شؤون الفريق**: edits team data (job title, cost/hr ✓, leaves) — a
+  row-level guard blocks role/active changes by anyone but a partner ✓
+  (NULL-jwt semantics keep service-role invites working).
+- **dpo مسؤول الخصوصية**: reads people data + audit_log ✓ — no writes.
+  audit_log now app-readable by admin/auditor/dpo (harness updated: client
+  persona must see zero rows, verified).
+
+Reference roles deliberately mapped, documented in the team page: Treasury/
+Tax → cfo+accountant · GL Accountant → external accountant · Security →
+partner. UI: 13 role labels, per-role capability cards (matrix outgrew a
+table), invite/change selects. 5 more production accounts: sales@/pm@/
+collections@/hr@/dpo@agma.com.sa (password via recovery + TOTP).
+
 ## Roles 2.0 log (2026-08-07) — specialist roles + document approvals
 
 Owner: «لازم يكون في مدير مالي، محاسب، حوكمة وقانونية… وكل واحد له صلاحيات

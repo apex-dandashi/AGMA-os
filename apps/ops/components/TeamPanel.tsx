@@ -17,29 +17,53 @@ const ROLE_LABELS: Record<Enums<'user_role'>, string> = {
   accountant: 'محاسب',
   legal: 'مستشار قانوني',
   auditor: 'مدقق حوكمة',
+  sales: 'مدير مبيعات',
+  pm: 'مدير مشاريع',
+  collections: 'مسؤول تحصيل',
+  hr: 'شؤون الفريق',
+  dpo: 'مسؤول الخصوصية',
   strategist: 'مدير عمليات',
   executor: 'عضو تنفيذ',
   client: 'عميل',
 };
 
-const MATRIX_ROLES = ['admin', 'cfo', 'accountant', 'legal', 'auditor', 'strategist', 'executor'] as const;
-const ROLE_MATRIX: { cap: string; roles: Record<(typeof MATRIX_ROLES)[number], boolean> }[] = [
-  { cap: 'قراءة شاملة لكل السجلات',
-    roles: { admin: true, cfo: true, accountant: true, legal: true, auditor: true, strategist: true, executor: false } },
-  { cap: 'مهامه: تنفيذ وتعليق وتسجيل وقت ورفع ملفات',
-    roles: { admin: true, cfo: true, accountant: true, legal: true, auditor: false, strategist: true, executor: true } },
-  { cap: 'المبيعات والعملاء والمستندات والمشاريع',
-    roles: { admin: true, cfo: true, accountant: true, legal: true, auditor: false, strategist: true, executor: false } },
-  { cap: 'اعتماد وترقيم الفواتير وتسجيل الدفعات والمصروفات',
-    roles: { admin: true, cfo: true, accountant: true, legal: false, auditor: false, strategist: true, executor: false } },
-  { cap: 'المالية الحساسة: الحسابات البنكية، نسب التوزيع، تأكيد الجولات، توزيع الأرباح',
-    roles: { admin: true, cfo: true, accountant: false, legal: false, auditor: false, strategist: false, executor: false } },
-  { cap: 'مكتبة البنود القانونية وقوالب العقود',
-    roles: { admin: true, cfo: false, accountant: false, legal: true, auditor: false, strategist: false, executor: false } },
-  { cap: 'اعتماد المستندات عند طلب مراجعته (كلٌّ في تخصصه)',
-    roles: { admin: true, cfo: true, accountant: true, legal: true, auditor: true, strategist: false, executor: false } },
-  { cap: 'الفريق: دعوات وأدوار وتقييم ربعي وتكلفة/س',
-    roles: { admin: true, cfo: false, accountant: false, legal: false, auditor: false, strategist: false, executor: false } },
+/** قدرات كل دور كما تفرضها قاعدة البيانات — تُعرض بطاقةً لكل دور. */
+const ROLE_CAPS: { role: Exclude<Enums<'user_role'>, 'client'>; can: string[]; cannot: string[] }[] = [
+  { role: 'admin',
+    can: ['كل شيء بلا استثناء — بما فيه الفريق والأدوار والإعدادات كاملة'], cannot: [] },
+  { role: 'cfo',
+    can: ['كل التشغيل', 'الحسابات البنكية ونسب التوزيع', 'تأكيد جولات التوزيع وتوزيع الأرباح', 'اعتماد المستندات المالية'],
+    cannot: ['إدارة الفريق والأدوار'] },
+  { role: 'accountant',
+    can: ['اعتماد وترقيم الفواتير', 'تسجيل الدفعات والمصروفات والاشتراكات', 'كل التشغيل'],
+    cannot: ['الحسابات البنكية', 'نسب التوزيع وتأكيد الجولات'] },
+  { role: 'legal',
+    can: ['كل التشغيل', 'مكتبة البنود القانونية وقوالب العقود', 'اعتماد المستندات القانونية'],
+    cannot: ['المالية الحساسة', 'الفريق'] },
+  { role: 'auditor',
+    can: ['قراءة كل السجلات بما فيها سجل التدقيق', 'اعتماد المستندات عند طلبه'],
+    cannot: ['أي كتابة أو تعديل — دور رقابي صرف'] },
+  { role: 'sales',
+    can: ['المسار والعملاء والعروض والعقود', 'ترقيم عروض الأسعار والعقود', 'المشاريع'],
+    cannot: ['اعتماد أو ترقيم الفواتير (يطلبها ولا يعتمدها)', 'تسجيل دفعات أو مصروفات'] },
+  { role: 'pm',
+    can: ['المشاريع والمهام والفحوصات كاملة', 'العملاء والمستندات تشغيلياً'],
+    cannot: ['اعتماد الفواتير والدفعات والمصروفات'] },
+  { role: 'collections',
+    can: ['قراءة الفواتير والعملاء', 'تسجيل الدفعات ووعود السداد', 'تسجيل التواصل'],
+    cannot: ['اعتماد الفواتير', 'المصروفات', 'الشطب (قرار شريك)'] },
+  { role: 'hr',
+    can: ['بيانات الفريق: المسمى، التكلفة/س، الإجازات'],
+    cannot: ['تغيير الأدوار أو التفعيل (حارس على مستوى الصف)', 'أي بيانات مالية أو عملاء'] },
+  { role: 'dpo',
+    can: ['قراءة بيانات الأشخاص (عملاء، جهات اتصال، محتملون)', 'قراءة سجل التدقيق', 'اعتماد مستندات الخصوصية'],
+    cannot: ['أي كتابة'] },
+  { role: 'strategist',
+    can: ['كل التشغيل بما فيه اعتماد الفواتير'],
+    cannot: ['المالية الحساسة', 'الإعدادات', 'الفريق'] },
+  { role: 'executor',
+    can: ['مهامه: تنفيذ وتعليق ووقت وملفات وفحوصات'],
+    cannot: ['ما عدا ذلك'] },
 ];
 
 export default function TeamPanel({ me }: { me: Tables<'profiles'> }) {
@@ -143,6 +167,11 @@ export default function TeamPanel({ me }: { me: Tables<'profiles'> }) {
             <option value="accountant">محاسب</option>
             <option value="legal">مستشار قانوني</option>
             <option value="auditor">مدقق حوكمة</option>
+            <option value="sales">مدير مبيعات</option>
+            <option value="pm">مدير مشاريع</option>
+            <option value="collections">مسؤول تحصيل</option>
+            <option value="hr">شؤون الفريق</option>
+            <option value="dpo">مسؤول الخصوصية</option>
             <option value="admin">شريك</option>
           </Select>
           <Button type="submit" size="sm" loading={inviting}>دعوة</Button>
@@ -188,6 +217,11 @@ export default function TeamPanel({ me }: { me: Tables<'profiles'> }) {
                       <option value="accountant">محاسب</option>
                       <option value="legal">مستشار قانوني</option>
                       <option value="auditor">مدقق حوكمة</option>
+                      <option value="sales">مدير مبيعات</option>
+                      <option value="pm">مدير مشاريع</option>
+                      <option value="collections">مسؤول تحصيل</option>
+                      <option value="hr">شؤون الفريق</option>
+                      <option value="dpo">مسؤول الخصوصية</option>
                       <option value="strategist">مدير عمليات</option>
                       <option value="executor">عضو تنفيذ</option>
                     </Select>
@@ -273,23 +307,18 @@ function RoleMatrixCard() {
         {open ? 'إخفاء صلاحيات المستويات' : 'ماذا يستطيع كل مستوى صلاحية؟'}
       </Button>
       {open && (
-        <div className="mt-2 overflow-x-auto">
-          <Table head={['القدرة', ...MATRIX_ROLES.map((r) => ROLE_LABELS[r])]}>
-            {ROLE_MATRIX.map((r) => (
-              <Tr key={r.cap}>
-                <Td className="text-gray-light">{r.cap}</Td>
-                {MATRIX_ROLES.map((role) => (
-                  <Td key={role}>
-                    <span className={r.roles[role] ? 'font-bold text-pulse-orange' : 'text-gray-medium'}>
-                      {r.roles[role] ? '✓' : '—'}
-                    </span>
-                  </Td>
-                ))}
-              </Tr>
-            ))}
-          </Table>
-          <p className="mt-1 text-xs text-gray-medium">
-            هذه حدود يفرضها النظام على مستوى قاعدة البيانات، لا مجرد إخفاء أزرار.
+        <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {ROLE_CAPS.map((r) => (
+            <div key={r.role} className="rounded-sm border border-gray-dark p-3 text-xs">
+              <p className="mb-1 font-bold text-pulse-orange">{ROLE_LABELS[r.role]}</p>
+              {r.can.map((c, i) => <p key={i} className="text-gray-light">✓ {c}</p>)}
+              {r.cannot.map((c, i) => <p key={i} className="text-gray-medium">— {c}</p>)}
+            </div>
+          ))}
+          <p className="text-xs text-gray-medium sm:col-span-2 lg:col-span-3">
+            هذه حدود تفرضها قاعدة البيانات نفسها، لا مجرد إخفاء أزرار. أمين
+            الخزينة والضريبة يغطيهما المدير المالي والمحاسب؛ دفتر الأستاذ
+            الرسمي عند محاسبكم الخارجي؛ وأمن النظام عند الشريك.
           </p>
         </div>
       )}

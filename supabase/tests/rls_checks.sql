@@ -85,11 +85,12 @@ begin
   select count(*) into n from public.tasks;
   if n <> 0 then raise exception 'client: tasks must be invisible, got %', n; end if;
 
-  begin
-    select count(*) into n from public.audit_log;
-    raise exception 'client: audit_log must be permission-denied';
-  exception when insufficient_privilege then null;
-  end;
+  -- audit_log is now grantable (auditor/dpo read it) — RLS must still hide
+  -- every row from clients.
+  select count(*) into n from public.audit_log;
+  if n <> 0 then
+    raise exception 'client: audit_log rows must be hidden, saw %', n;
+  end if;
 end $$;
 
 -- ---------- EXECUTOR persona -------------------------------------------------
