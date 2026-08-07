@@ -14,6 +14,10 @@ delete from public.scopes
 delete from public.website_clients
   where id = 'e58bf443-5302-4b95-b54b-2e4543214674';
 
+-- Leads converted/linked to the test client during the walkthrough
+delete from public.leads
+  where client_id = 'd0a90caf-11ef-4fe2-81a9-098fa0de009f';
+
 -- Test client مرّونيا (contacts/interactions would cascade; none exist)
 delete from public.clients
   where id = 'd0a90caf-11ef-4fe2-81a9-098fa0de009f';
