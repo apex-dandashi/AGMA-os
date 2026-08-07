@@ -47,7 +47,16 @@ builds + typechecks green.
 
 **Owner to-do (SETUP.md Phase 2 additions):** env vars on both marketing
 deployments + redeploy · create ops.agma.com.sa deployment · create first
-team user + promote to admin.
+team user + promote to admin. **All completed 2026-08-07** (admin:
+abdulrahman.elibrahim@gmail.com). Supabase public config additionally
+hardcoded as env fallback (Hostinger static builds don't receive env vars).
+
+**Post-deploy incident (2026-08-07, resolved):** sites appeared stale after
+deploys. Root causes: (1) Hostinger CDN edge served old assets and its
+flush didn't purge → **CDN disabled on all three sites** (SETUP.md §2);
+(2) verification-script false negatives (compressed responses + a marker
+string that JSX splits across elements). Origin + on-disk builds were
+verified current via SSH. agma.com.sa confirmed serving Phase 2 code.
 
 **Manual test list (after owner to-do):**
 1. Submit the contact form on agma.com.sa → lead appears in ops pipeline

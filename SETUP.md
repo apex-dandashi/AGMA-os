@@ -29,6 +29,18 @@ deploy secrets needed; deploys are Hostinger's Git integration (below).
 
 ## 2. Hostinger (Git integration — replaces the old SSH/rsync plan)
 
+**Infrastructure notes (2026-08-07):**
+- **Hostinger CDN is DISABLED on all three sites** — its edge cache served
+  stale JS after deploys and "Flush cache" did not purge it (verified:
+  same URL, different bytes vs. origin). Do not re-enable until Hostinger's
+  flush provably works; origin serving is fine at current scale.
+- SSH access is set up (key `agma-diagnostics`, private key on the dev Mac
+  at `~/.ssh/agma_hostinger`): `ssh -i ~/.ssh/agma_hostinger -p 65002
+  u557105919@147.93.91.152`. Deploys land in
+  `~/domains/<site>/hbuilds/versions/<id>/public_html` → copied to
+  `~/domains/<site>/public_html`.
+- hPanel timestamps display in local time (UTC+3); server files are UTC.
+
 Deploys pull straight from GitHub; no SSH keys or GitHub secrets involved.
 
 - [x] Staging: hPanel Git deploy on `staging.agma.com.sa` ← repo **AGMA-os**,
