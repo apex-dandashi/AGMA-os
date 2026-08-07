@@ -7,6 +7,7 @@ import {
   Badge,
   Button,
   Card,
+  ConfirmDialog,
   EmptyState,
   Input,
   Select,
@@ -20,11 +21,12 @@ import {
   interactionInputSchema,
 } from '@agma/db/schemas';
 import { getSupabase } from '../lib/supabase';
-import { keys, useAppMutation, useClientDetail, useClients } from '../lib/queries';
-import { Download, Pencil, Users } from 'lucide-react';
+import { keys, useAppMutation, useCatalog, useClientDetail, useClients } from '../lib/queries';
+import { Download, Pencil, Trash2, Users } from 'lucide-react';
 import { exportCsv } from '../lib/csv';
 import { fmtDate, fmtSAR } from '../lib/format';
 import ScopeBuilder from './ScopeBuilder';
+import QuoteBuilder from './QuoteBuilder';
 
 type Client = Tables<'clients'>;
 type Scope = Tables<'scopes'>;
@@ -289,7 +291,9 @@ function ClientProfileCard({ client }: { client: Client }) {
 
 function ClientDetail({ client }: { client: Client }) {
   const { data, isLoading } = useClientDetail(client.id);
+  const { data: catalog } = useCatalog();
   const [showScopeBuilder, setShowScopeBuilder] = useState(false);
+  const [quoteScope, setQuoteScope] = useState<Scope | null>(null);
   const toast = useToast();
 
   const sendScope = useAppMutation(
@@ -337,24 +341,46 @@ function ClientDetail({ client }: { client: Client }) {
               </Badge>
               <span className="text-gray-light">{s.service_ids.length} خدمة</span>
               {s.timeline && <span className="text-gray-medium">{s.timeline}</span>}
-              {s.status === 'draft' && (
-                <Button
-                  variant="outline"
-                  size="xs"
-                  className="ms-auto"
-                  loading={sendScope.isPending}
-                  onClick={() => sendScope.mutate(s)}
-                >
-                  إرسال للاعتماد
+              <span className="ms-auto flex gap-1.5">
+                <Button variant="ghost" size="xs"
+                  onClick={() => setQuoteScope(quoteScope?.id === s.id ? null : s)}>
+                  {quoteScope?.id === s.id ? 'إغلاق' : 'عرض سعر من النطاق'}
                 </Button>
-              )}
+                {s.status === 'draft' && (
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    loading={sendScope.isPending}
+                    onClick={() => sendScope.mutate(s)}
+                  >
+                    إرسال للاعتماد
+                  </Button>
+                )}
+              </span>
             </Card>
           ))}
           {scopes.length === 0 && !showScopeBuilder && (
             <p className="text-sm text-gray-medium">لا نطاقات بعد</p>
           )}
         </div>
+        {quoteScope && (
+          <div className="mt-3">
+            <QuoteBuilder
+              clients={[client]}
+              onDone={() => setQuoteScope(null)}
+              initial={{
+                clientId: client.id,
+                scopeId: quoteScope.id,
+                items: (catalog?.services ?? [])
+                  .filter((sv) => quoteScope.service_ids.includes(sv.id))
+                  .map((sv) => ({ title: sv.name_ar, description: '', amount: 0 })),
+              }}
+            />
+          </div>
+        )}
       </section>
+
+      <ClientDocumentsSection clientId={client.id} />
 
       <section className="grid gap-6 md:grid-cols-2">
         <ContactsBlock clientId={client.id} contacts={contacts} isFirst={contacts.length === 0} />
@@ -423,16 +449,94 @@ function ContactsBlock({
       </form>
       <ul className="space-y-1 text-sm">
         {contacts.map((c) => (
-          <li key={c.id} className="flex gap-2 text-gray-light">
-            <span>{c.name}</span>
-            {c.is_primary && <Badge variant="accent">رئيسي</Badge>}
-            {c.phone && <span dir="ltr" className="text-gray-medium">{c.phone}</span>}
-            {c.email && <span dir="ltr" className="text-gray-medium">{c.email}</span>}
-          </li>
+          <ContactRow key={c.id} contact={c} clientId={clientId} />
         ))}
         {contacts.length === 0 && <li className="text-sm text-gray-medium">لا جهات اتصال</li>}
       </ul>
     </div>
+  );
+}
+
+function ContactRow({ contact: c, clientId }: { contact: Tables<'contacts'>; clientId: string }) {
+  const [editing, setEditing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [form, setForm] = useState({ name: c.name, phone: c.phone ?? '', email: c.email ?? '' });
+  const [err, setErr] = useState<string | undefined>();
+
+  const patch = useAppMutation(
+    async (p: Record<string, unknown>) => {
+      const supabase = getSupabase();
+      if (p.is_primary === true) {
+        await supabase.from('contacts').update({ is_primary: false }).eq('client_id', clientId);
+      }
+      const { error } = await supabase.from('contacts').update(p as never).eq('id', c.id);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [keys.clientDetail(clientId)] }
+  );
+  const remove = useAppMutation(
+    async () => {
+      const { error } = await getSupabase().from('contacts').delete().eq('id', c.id);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [keys.clientDetail(clientId)], successMessage: 'حُذفت جهة الاتصال (مسجّل في التدقيق)' }
+  );
+
+  if (editing) {
+    return (
+      <li className="space-y-1.5 rounded-sm border border-gray-dark p-2">
+        <div className="flex flex-wrap gap-1.5">
+          <Input value={form.name} aria-label="الاسم" className="w-32"
+            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+          <Input value={form.phone} aria-label="الهاتف" dir="ltr" inputMode="tel" className="w-32"
+            onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} />
+          <Input value={form.email} aria-label="البريد" dir="ltr" inputMode="email" className="w-40"
+            onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
+        </div>
+        {err && <p className="text-xs text-pulse-orange">{err}</p>}
+        <div className="flex gap-1.5">
+          <Button size="xs" loading={patch.isPending} onClick={async () => {
+            const parsed = contactInputSchema.safeParse(form);
+            if (!parsed.success) { setErr(parsed.error.issues[0]?.message); return; }
+            await patch.mutateAsync({
+              name: parsed.data.name,
+              phone: parsed.data.phone ?? null,
+              email: parsed.data.email ?? null,
+            });
+            setEditing(false);
+          }}>حفظ</Button>
+          <Button variant="ghost" size="xs" onClick={() => setEditing(false)}>إلغاء</Button>
+        </div>
+      </li>
+    );
+  }
+  return (
+    <li className="group flex items-center gap-2 text-gray-light">
+      <span>{c.name}</span>
+      {c.is_primary && <Badge variant="accent">رئيسي</Badge>}
+      {c.phone && <span dir="ltr" className="text-gray-medium">{c.phone}</span>}
+      {c.email && <span dir="ltr" className="text-gray-medium">{c.email}</span>}
+      <span className="ms-auto flex gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+        {!c.is_primary && (
+          <Button variant="ghost" size="xs" onClick={() => patch.mutate({ is_primary: true })}>
+            تعيين رئيسياً
+          </Button>
+        )}
+        <Button variant="ghost" size="xs" aria-label={`تعديل ${c.name}`}
+          onClick={() => setEditing(true)}>
+          <Pencil className="h-3 w-3" aria-hidden />
+        </Button>
+        <Button variant="ghost" size="xs" aria-label={`حذف ${c.name}`}
+          onClick={() => setConfirmDelete(true)}>
+          <Trash2 className="h-3 w-3" aria-hidden />
+        </Button>
+      </span>
+      <ConfirmDialog open={confirmDelete} onClose={() => setConfirmDelete(false)}
+        title="حذف جهة الاتصال"
+        message={`حذف «${c.name}»؟ الإجراء يُسجَّل في سجل التدقيق.`}
+        confirmLabel="حذف"
+        onConfirm={async () => { await remove.mutateAsync(undefined as never); }} />
+    </li>
   );
 }
 
@@ -485,12 +589,107 @@ function InteractionsBlock({
       </form>
       <ul className="space-y-1 text-sm">
         {interactions.map((i) => (
-          <li key={i.id} className="text-gray-light">
-            <span className="text-xs text-gray-medium">{KIND_LABELS[i.kind]}</span> — {i.summary}
-          </li>
+          <InteractionRow key={i.id} interaction={i} clientId={clientId} />
         ))}
         {interactions.length === 0 && <li className="text-sm text-gray-medium">لا سجلات بعد</li>}
       </ul>
     </div>
+  );
+}
+
+function InteractionRow({ interaction: i, clientId }:
+  { interaction: Tables<'interactions'>; clientId: string }) {
+  const [editing, setEditing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [summary, setSummary] = useState(i.summary);
+
+  const patch = useAppMutation(
+    async () => {
+      const { error } = await getSupabase().from('interactions')
+        .update({ summary: summary.trim() }).eq('id', i.id);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [keys.clientDetail(clientId)] }
+  );
+  const remove = useAppMutation(
+    async () => {
+      const { error } = await getSupabase().from('interactions').delete().eq('id', i.id);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [keys.clientDetail(clientId)], successMessage: 'حُذف السجل (موثّق في التدقيق)' }
+  );
+
+  if (editing) {
+    return (
+      <li className="flex gap-1.5">
+        <Input value={summary} aria-label="تعديل الملخص" className="flex-1"
+          onChange={(e) => setSummary(e.target.value)} />
+        <Button size="xs" loading={patch.isPending} disabled={summary.trim().length < 3}
+          onClick={async () => { await patch.mutateAsync(undefined as never); setEditing(false); }}>
+          حفظ
+        </Button>
+        <Button variant="ghost" size="xs" onClick={() => { setEditing(false); setSummary(i.summary); }}>
+          إلغاء
+        </Button>
+      </li>
+    );
+  }
+  return (
+    <li className="group flex items-center gap-2 text-gray-light">
+      <span className="min-w-0 flex-1">
+        <span className="text-xs text-gray-medium">{KIND_LABELS[i.kind]}</span> — {i.summary}
+      </span>
+      <span className="flex gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+        <Button variant="ghost" size="xs" aria-label="تعديل السجل" onClick={() => setEditing(true)}>
+          <Pencil className="h-3 w-3" aria-hidden />
+        </Button>
+        <Button variant="ghost" size="xs" aria-label="حذف السجل" onClick={() => setConfirmDelete(true)}>
+          <Trash2 className="h-3 w-3" aria-hidden />
+        </Button>
+      </span>
+      <ConfirmDialog open={confirmDelete} onClose={() => setConfirmDelete(false)}
+        title="حذف سجل التواصل"
+        message="حذف هذا السجل؟ الإجراء يُسجَّل في سجل التدقيق."
+        confirmLabel="حذف"
+        onConfirm={async () => { await remove.mutateAsync(undefined as never); }} />
+    </li>
+  );
+}
+
+const DOC_TYPE_AR: Record<string, string> = {
+  quote: 'عرض سعر', sow: 'نطاق عمل', nda: 'عدم إفصاح', sla: 'مستوى خدمة',
+  msa: 'اتفاقية رئيسية', amc: 'عقد صيانة', coc: 'ميثاق تعاون',
+  invoice: 'فاتورة', credit_note: 'إشعار دائن',
+};
+
+/** كل مستندات العميل في مكانه — الإدارة تبقى في «المستندات» و«المالية». */
+function ClientDocumentsSection({ clientId }: { clientId: string }) {
+  const { data: docs } = useQuery({
+    queryKey: ['client-docs', clientId],
+    queryFn: async () => {
+      const { data, error } = await getSupabase().from('documents')
+        .select('id, type, number, status, total, issued_on, created_at')
+        .eq('client_id', clientId)
+        .order('created_at', { ascending: false }).limit(30);
+      if (error) throw new Error(error.message);
+      return data;
+    },
+  });
+  if (!docs?.length) return null;
+  return (
+    <section>
+      <h3 className="mb-2 font-bold text-gray-light">المستندات والفواتير</h3>
+      <div className="space-y-1.5">
+        {docs.map((d) => (
+          <Card key={d.id} className="flex flex-wrap items-center gap-3 p-2.5 text-sm">
+            <Badge variant="outline">{DOC_TYPE_AR[d.type] ?? d.type}</Badge>
+            <b dir="ltr">{d.number ?? 'مسودة'}</b>
+            <span className="text-xs text-gray-medium">{d.status}</span>
+            {d.total != null && <span dir="ltr" className="text-gray-light">{fmtSAR(d.total)}</span>}
+            <span dir="ltr" className="ms-auto text-xs text-gray-medium">{fmtDate(d.issued_on ?? d.created_at)}</span>
+          </Card>
+        ))}
+      </div>
+    </section>
   );
 }

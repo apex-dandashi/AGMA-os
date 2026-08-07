@@ -107,13 +107,25 @@ export default function PipelineBoard() {
         .select()
         .single();
       if (error) throw new Error(error.message);
+      // Contact info from the website form lives as text in the notes —
+      // carry it into a structured primary contact (DB triggers normalize).
+      const phone = lead.notes?.match(/الهاتف: *(.+)/)?.[1]?.trim() || null;
+      const email = lead.notes?.match(/البريد: *(.+)/)?.[1]?.trim() || null;
+      const { error: e3 } = await supabase.from('contacts').insert({
+        client_id: client.id,
+        name: lead.name,
+        phone,
+        email,
+        is_primary: true,
+      });
+      if (e3) throw new Error(e3.message);
       const { error: e2 } = await supabase
         .from('leads')
         .update({ client_id: client.id, stage: 'live' })
         .eq('id', lead.id);
       if (e2) throw new Error(e2.message);
     },
-    { invalidate: [keys.leads, keys.clients], successMessage: 'تم تحويل المحتمل إلى عميل' }
+    { invalidate: [keys.leads, keys.clients], successMessage: 'تم التحويل — أُنشئت جهة الاتصال من بيانات الطلب' }
   );
 
   function onDragEnd(e: DragEndEvent) {

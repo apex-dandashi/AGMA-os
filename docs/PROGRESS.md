@@ -22,6 +22,34 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
 
+## Red package log (2026-08-07) — usability audit items 1–10
+
+From the systematic «أين أدخل…؟» audit; the high-priority ten, all shipped:
+
+1. **Quote from scope**: «عرض سعر من النطاق» on every scope card — items
+   prefill from the scope's services, client fixed, document links scope_id.
+2. **Contacts manageable**: inline edit (name/phone/email), delete with
+   confirm, «تعيين رئيسياً» (single-primary enforced) — hover controls.
+3. **Interactions manageable**: inline summary edit + delete with confirm.
+4. **Conversion carries contact**: converting a lead now parses الهاتف/البريد
+   from the intake notes into a structured primary contact (normalization
+   triggers apply). No more retyping from the notes blob.
+5. **Client documents in place**: «المستندات والفواتير» section on the client
+   page (type, number, status, total, date) — management stays in its panels.
+6. **Ad-hoc tasks**: «+ مهمة» per stage (strategist+; title + due). Toast
+   reminds: untemplated work counts as scope leak — by design.
+7. **Task editing**: title + due date inline edit, delete with confirm
+   (strategist+), executor sees none of it.
+8. **Time entries manageable**: TimeLogModal lists prior entries (who,
+   minutes, note); members delete their own (new RLS policy), strategist+ any.
+9. **Expenses correctable**: inline edit (category/amount/supplier) + delete
+   with a warning that it moves OpEx averages and vault months.
+10. **VAT end-to-end**: ١٥٪ checkbox in QuoteBuilder → vatAmount in payload →
+    renderers (already supported) → carried into invoice conversion →
+    included in documents.total at finalize (payments/balance correct).
+
+All gates green; time-entry policy migration applied to production.
+
 ## Gaps round log (2026-08-07) — owner walkthrough fixes
 
 The owner walked the app and hit real walls: «أين أدخل بيانات العميل؟ موقع

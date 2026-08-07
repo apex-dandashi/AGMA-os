@@ -15,12 +15,13 @@ import {
   SkeletonList,
   Spinner,
 } from '@agma/ui';
-import { Download, FolderKanban, Lock, ShieldCheck, Timer } from 'lucide-react';
+import { Download, FolderKanban, Lock, Pencil, ShieldCheck, Timer, Trash2 } from 'lucide-react';
 import { exportCsv } from '../lib/csv';
 import ChecklistRunModal from './ChecklistRunModal';
 import { METHOD_PHASES, type Enums, type Tables } from '@agma/db';
 import { getSupabase } from '../lib/supabase';
 import { keys, useAppMutation, useClients } from '../lib/queries';
+import { useProfile } from './AppShell';
 
 type Project = Tables<'projects'>;
 type Task = Tables<'tasks'>;
@@ -325,14 +326,14 @@ function ProjectDetail({ project, clientName, onBack }:
               tasks={data.tasks.filter((t) => t.stage_id === stage.id)}
               allTasks={data.tasks} members={data.members}
               checklistByTemplate={data.checklistByTemplate}
-              detailKey={detailKey} />
+              detailKey={detailKey} projectId={project.id} />
           ))}
           {data.tasks.filter((t) => !t.stage_id).length > 0 && (
             <StageBlock
               stage={{ id: 'none', name_ar: 'مهام إضافية', name_en: '', method_phase: 'analyze', playbook_id: '', sort: 999 } as Stage}
               tasks={data.tasks.filter((t) => !t.stage_id)}
               allTasks={data.tasks} members={data.members}
-              checklistByTemplate={data.checklistByTemplate} detailKey={detailKey} />
+              checklistByTemplate={data.checklistByTemplate} detailKey={detailKey} projectId={project.id} />
           )}
         </div>
       )}
@@ -340,22 +341,63 @@ function ProjectDetail({ project, clientName, onBack }:
   );
 }
 
-function StageBlock({ stage, tasks, allTasks, members, checklistByTemplate, detailKey }: {
+function StageBlock({ stage, tasks, allTasks, members, checklistByTemplate, detailKey, projectId }: {
   stage: Stage;
   tasks: Task[];
   allTasks: Task[];
   members: { id: string; full_name: string | null; email: string | null }[];
   checklistByTemplate: Map<string, string>;
   detailKey: readonly unknown[];
+  projectId: string;
 }) {
+  const me = useProfile();
+  const [adding, setAdding] = useState(false);
+  const [title, setTitle] = useState('');
+  const [due, setDue] = useState('');
   const doneCount = tasks.filter((t) => t.status === 'done').length;
+
+  const addTask = useAppMutation(
+    async () => {
+      const { error } = await getSupabase().from('tasks').insert({
+        project_id: projectId,
+        stage_id: stage.id === 'none' ? null : stage.id,
+        title: title.trim(),
+        due: due || null,
+        sort: tasks.length,
+      });
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [detailKey], successMessage: 'أُضيفت المهمة — بلا قالب تُحتسب تسرب نطاق' }
+  );
+
   return (
     <section>
       <h2 className="mb-2 flex items-center gap-2 text-sm font-bold text-gray-light">
         <Badge variant="outline">{PHASE_LABELS[stage.method_phase]}</Badge>
         {stage.name_ar}
         <span className="text-xs text-gray-medium">{doneCount}/{tasks.length}</span>
+        {me.role !== 'executor' && (
+          <Button variant="ghost" size="xs" onClick={() => setAdding((v) => !v)}>
+            {adding ? 'إغلاق' : '+ مهمة'}
+          </Button>
+        )}
       </h2>
+      {adding && (
+        <div className="mb-2 flex flex-wrap items-end gap-2">
+          <Input label="عنوان المهمة" value={title} className="min-w-52 flex-1"
+            onChange={(e) => setTitle(e.target.value)} />
+          <Input label="الاستحقاق" type="date" dir="ltr" value={due} className="w-36"
+            onChange={(e) => setDue(e.target.value)} />
+          <Button size="sm" className="mb-0.5" loading={addTask.isPending}
+            disabled={title.trim().length < 3}
+            onClick={async () => {
+              await addTask.mutateAsync(undefined as never);
+              setTitle(''); setDue(''); setAdding(false);
+            }}>
+            أضف
+          </Button>
+        </div>
+      )}
       <div className="space-y-1.5">
         {tasks.map((task) => (
           <TaskRow key={task.id} task={task} allTasks={allTasks}
@@ -381,10 +423,15 @@ function TaskRow({ task, allTasks, members, detailKey, checklistKey, stageAssign
   checklistKey?: string;
   stageAssignees?: { name: string; taskTitle: string }[];
 }) {
+  const me = useProfile();
   const [logOpen, setLogOpen] = useState(false);
   const [checklistOpen, setChecklistOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [draft, setDraft] = useState({ title: task.title, due: task.due ?? '' });
   const blocker = task.blocked_by ? allTasks.find((t) => t.id === task.blocked_by) : null;
   const isBlocked = !!blocker && blocker.status !== 'done';
+  const canManage = me.role !== 'executor';
 
   const update = useAppMutation(
     async (patch: Partial<Task>) => {
@@ -392,6 +439,13 @@ function TaskRow({ task, allTasks, members, detailKey, checklistKey, stageAssign
       if (error) throw new Error(error.message);
     },
     { invalidate: [detailKey] }
+  );
+  const remove = useAppMutation(
+    async () => {
+      const { error } = await getSupabase().from('tasks').delete().eq('id', task.id);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [detailKey], successMessage: 'حُذفت المهمة (موثّق في التدقيق)' }
   );
 
   const overdue = task.due && task.status !== 'done' && new Date(task.due) < new Date();
@@ -406,7 +460,22 @@ function TaskRow({ task, allTasks, members, detailKey, checklistKey, stageAssign
           <option key={k} value={k}>{v}</option>
         ))}
       </Select>
-      <span className={task.status === 'done' ? 'line-through' : ''}>{task.title}</span>
+      {editing ? (
+        <span className="flex flex-wrap items-center gap-1.5">
+          <Input value={draft.title} aria-label="عنوان المهمة" className="w-56"
+            onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))} />
+          <Input type="date" dir="ltr" value={draft.due} aria-label="الاستحقاق" className="w-36"
+            onChange={(e) => setDraft((d) => ({ ...d, due: e.target.value }))} />
+          <Button size="xs" loading={update.isPending} disabled={draft.title.trim().length < 3}
+            onClick={async () => {
+              await update.mutateAsync({ title: draft.title.trim(), due: draft.due || null });
+              setEditing(false);
+            }}>حفظ</Button>
+          <Button variant="ghost" size="xs" onClick={() => setEditing(false)}>إلغاء</Button>
+        </span>
+      ) : (
+        <span className={task.status === 'done' ? 'line-through' : ''}>{task.title}</span>
+      )}
       {task.needs_client_approval && (
         <Badge variant="accent" title="بوابة اعتماد عميل">
           <ShieldCheck className="h-3 w-3" aria-hidden /> اعتماد
@@ -440,7 +509,27 @@ function TaskRow({ task, allTasks, members, detailKey, checklistKey, stageAssign
           aria-label="تسجيل وقت">
           <Timer className="h-3.5 w-3.5" aria-hidden />
         </Button>
+        {canManage && !editing && (
+          <>
+            <Button variant="ghost" size="xs" aria-label={`تعديل ${task.title}`}
+              onClick={() => {
+                setDraft({ title: task.title, due: task.due ?? '' });
+                setEditing(true);
+              }}>
+              <Pencil className="h-3 w-3" aria-hidden />
+            </Button>
+            <Button variant="ghost" size="xs" aria-label={`حذف ${task.title}`}
+              onClick={() => setConfirmDelete(true)}>
+              <Trash2 className="h-3 w-3" aria-hidden />
+            </Button>
+          </>
+        )}
       </span>
+      <ConfirmDialog open={confirmDelete} onClose={() => setConfirmDelete(false)}
+        title="حذف المهمة"
+        message={`حذف «${task.title}»؟ تُحذف معها سجلات وقتها، والإجراء موثّق في التدقيق.`}
+        confirmLabel="حذف"
+        onConfirm={async () => { await remove.mutateAsync(undefined as never); }} />
       <TimeLogModal open={logOpen} onClose={() => setLogOpen(false)} task={task} />
       {checklistKey && (
         <ChecklistRunModal open={checklistOpen} onClose={() => setChecklistOpen(false)}
@@ -453,8 +542,22 @@ function TaskRow({ task, allTasks, members, detailKey, checklistKey, stageAssign
 
 function TimeLogModal({ open, onClose, task }:
   { open: boolean; onClose: () => void; task: Task }) {
+  const me = useProfile();
   const [minutes, setMinutes] = useState(30);
   const [note, setNote] = useState('');
+  const entriesKey = ['time-entries', task.id];
+
+  const { data: entries } = useQuery({
+    queryKey: entriesKey,
+    enabled: open,
+    queryFn: async () => {
+      const { data, error } = await getSupabase().from('time_entries')
+        .select('*, profiles(full_name)').eq('task_id', task.id)
+        .order('created_at', { ascending: false });
+      if (error) throw new Error(error.message);
+      return data;
+    },
+  });
 
   const log = useAppMutation(
     async () => {
@@ -465,7 +568,15 @@ function TimeLogModal({ open, onClose, task }:
       });
       if (error) throw new Error(error.message);
     },
-    { invalidate: [], successMessage: 'سُجّل الوقت' }
+    { invalidate: [entriesKey], successMessage: 'سُجّل الوقت' }
+  );
+
+  const removeEntry = useAppMutation(
+    async (id: string) => {
+      const { error } = await getSupabase().from('time_entries').delete().eq('id', id);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [entriesKey], successMessage: 'حُذف الإدخال' }
   );
 
   return (
@@ -495,6 +606,26 @@ function TimeLogModal({ open, onClose, task }:
           }}>
           تسجيل
         </Button>
+        {(entries?.length ?? 0) > 0 && (
+          <div className="space-y-1 border-t border-gray-dark pt-2">
+            <p className="text-xs font-bold text-gray-light">الإدخالات السابقة</p>
+            {entries!.map((e) => (
+              <div key={e.id} className="flex items-center gap-2 text-xs text-gray-light">
+                <span dir="ltr">{e.minutes} د</span>
+                <span className="text-gray-medium">
+                  {(e as { profiles?: { full_name: string | null } | null }).profiles?.full_name ?? ''}
+                </span>
+                {e.note && <span className="min-w-0 flex-1 truncate text-gray-medium">{e.note}</span>}
+                {(e.member === me.id || me.role !== 'executor') && (
+                  <Button variant="ghost" size="xs" className="ms-auto" aria-label="حذف الإدخال"
+                    onClick={() => removeEntry.mutate(e.id)}>
+                    <Trash2 className="h-3 w-3" aria-hidden />
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </Modal>
   );

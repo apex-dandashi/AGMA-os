@@ -24,18 +24,27 @@ function todayAr(): string {
 
 const emptyItem = (): QuoteItem => ({ title: '', description: '', amount: 0 });
 
-export default function QuoteBuilder({ clients, onDone }:
-  { clients: Client[]; onDone: () => void }) {
+export default function QuoteBuilder({ clients, onDone, initial }: {
+  clients: Client[];
+  onDone: () => void;
+  /** Prefill (e.g. «عرض سعر من النطاق»): fixes the client, seeds items, links scope_id. */
+  initial?: { clientId?: string; scopeId?: string; items?: QuoteItem[] };
+}) {
   const { data: accounts } = usePaymentAccounts();
   const { data: clauses } = useClauses();
-  const [clientId, setClientId] = useState('');
+  const [clientId, setClientId] = useState(initial?.clientId ?? '');
   const [recipientName, setRecipientName] = useState('');
   const [projectName, setProjectName] = useState('');
   const [intro, setIntro] = useState('');
-  const [items, setItems] = useState<QuoteItem[]>([emptyItem()]);
+  const [items, setItems] = useState<QuoteItem[]>(
+    initial?.items?.length ? initial.items : [emptyItem()]
+  );
+  const [vatEnabled, setVatEnabled] = useState(false);
   // Internal costs per line (docs/08 §2 margin) — NEVER part of the client
   // payload; persisted to team-only document_costs.
-  const [costs, setCosts] = useState<number[]>([0]);
+  const [costs, setCosts] = useState<number[]>(
+    initial?.items?.length ? initial.items.map(() => 0) : [0]
+  );
   const [discountLabel, setDiscountLabel] = useState('');
   const [discountAmount, setDiscountAmount] = useState(0);
   const [opt1, setOpt1] = useState({ label: 'الإجمالي · الخيار الأول', amount: 0 });
@@ -80,7 +89,11 @@ export default function QuoteBuilder({ clients, onDone }:
         ...(opt1.amount > 0 ? [{ label: opt1.label, amount: opt1.amount }] : []),
         ...(opt2.amount > 0 ? [{ label: opt2.label, amount: opt2.amount, recommended: true }] : []),
       ],
-      vatEnabled: false,
+      vatEnabled,
+      vatAmount: vatEnabled
+        ? Math.round((items.filter((i) => i.title && i.amount > 0)
+            .reduce((s, i) => s + i.amount, 0) - (discountAmount || 0)) * 0.15 * 100) / 100
+        : undefined,
       paymentAccount: {
         iban: account.iban,
         bankName: account.bank_name,
@@ -91,7 +104,7 @@ export default function QuoteBuilder({ clients, onDone }:
         .map((c) => ({ title: c.title_ar, body: c.body_ar })),
       totalPages: 2,
     };
-  }, [accounts, accountId, clients, clientId, recipientName, projectName, intro, items, discountLabel, discountAmount, clauses, pickedClauses]);
+  }, [accounts, accountId, clients, clientId, recipientName, projectName, intro, items, discountLabel, discountAmount, clauses, pickedClauses, vatEnabled]);
 
   const save = useAppMutation(
     async () => {
@@ -115,6 +128,7 @@ export default function QuoteBuilder({ clients, onDone }:
       const { data: doc, error } = await supabase.from('documents').insert({
         type: 'quote',
         client_id: clientId,
+        scope_id: initial?.scopeId ?? null,
         payload: payload as never,
         payment_account_id: accountId,
       }).select('id').single();
@@ -225,6 +239,10 @@ export default function QuoteBuilder({ clients, onDone }:
           <Input type="number" dir="ltr" value={discountAmount || ''}
             onChange={(e) => setDiscountAmount(Number(e.target.value))}
             placeholder="قيمة الخصم" className="w-28" />
+          <div className="pb-2">
+            <Checkbox label="ضريبة القيمة المضافة ١٥٪" checked={vatEnabled}
+              onChange={(e) => setVatEnabled(e.target.checked)} />
+          </div>
         </div>
         <fieldset className="rounded-sm border border-gray-dark p-3">
           <legend className="px-1 text-xs text-gray-light">سيناريوهات التسعير (اختياري — حتى خيارين)</legend>

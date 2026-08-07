@@ -14,7 +14,7 @@ import {
   SkeletonList,
   Tabs,
 } from '@agma/ui';
-import { Download, Receipt, RefreshCw, Wallet as WalletIcon } from 'lucide-react';
+import { Download, Pencil, Receipt, RefreshCw, Trash2, Wallet as WalletIcon } from 'lucide-react';
 import { exportCsv } from '../lib/csv';
 import { fmtNum as fmt } from '../lib/format';
 import type { Tables } from '@agma/db';
@@ -136,7 +136,8 @@ function InvoicesTab() {
       });
       if (rpcErr || !number) throw new Error('تعذر حجز الرقم');
       const payload = doc.payload as unknown as InvoicePayload;
-      const total = payload.items.reduce((s, i) => s + i.amount, 0);
+      const total = payload.items.reduce((s, i) => s + i.amount, 0)
+        + (payload.vatEnabled ? payload.vatAmount ?? 0 : 0);
       const due = new Date();
       due.setDate(due.getDate() + 14);
       const { error } = await supabase
@@ -317,7 +318,8 @@ function NewInvoiceModal({ open, onClose }: { open: boolean; onClose: () => void
         projectName: qp.projectName,
         relatedNumber: quote.number ?? undefined,
         items: qp.items,
-        vatEnabled: false,
+        vatEnabled: qp.vatEnabled ?? false,
+        vatAmount: qp.vatAmount,
         paymentAccount: qp.paymentAccount,
       };
       const { error } = await getSupabase().from('documents').insert({
@@ -630,15 +632,82 @@ function ExpensesTab() {
       </div>
       <div className="space-y-1.5">
         {(expenses ?? []).map((e) => (
-          <Card key={e.id} className="flex items-center gap-3 p-2.5 text-sm">
-            <Badge variant="outline">{e.category}</Badge>
-            <span className="text-gray-light">{e.supplier ?? '—'}</span>
-            <span dir="ltr" className="ms-auto font-bold">SAR {Number(e.amount).toLocaleString('en-US')}</span>
-            <span dir="ltr" className="text-xs text-gray-medium">{e.expense_date}</span>
-          </Card>
+          <ExpenseRow key={e.id} expense={e} invalidate={expensesKey as unknown as readonly string[]} />
         ))}
       </div>
     </div>
+  );
+}
+
+function ExpenseRow({ expense: e, invalidate }:
+  { expense: Tables<'expenses'>; invalidate: readonly string[] }) {
+  const [editing, setEditing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [draft, setDraft] = useState({
+    amount: String(e.amount), category: e.category, supplier: e.supplier ?? '',
+  });
+
+  const patch = useAppMutation(
+    async () => {
+      const { error } = await getSupabase().from('expenses').update({
+        amount: Number(draft.amount),
+        category: draft.category,
+        supplier: draft.supplier.trim() || null,
+      }).eq('id', e.id);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [invalidate], successMessage: 'صُحّح المصروف (موثّق في التدقيق)' }
+  );
+  const remove = useAppMutation(
+    async () => {
+      const { error } = await getSupabase().from('expenses').delete().eq('id', e.id);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [invalidate], successMessage: 'حُذف المصروف (موثّق في التدقيق)' }
+  );
+
+  if (editing) {
+    return (
+      <Card className="flex flex-wrap items-end gap-2 p-2.5 text-sm">
+        <Select label="التصنيف" value={draft.category} className="w-40"
+          onChange={(ev) => setDraft((d) => ({ ...d, category: ev.target.value }))}>
+          {['عام','اشتراكات وأدوات','إعلانات','رواتب ومستقلون','ضيافة وتنقل','حكومي'].map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </Select>
+        <Input label="SAR" type="number" dir="ltr" value={draft.amount} className="w-28"
+          onChange={(ev) => setDraft((d) => ({ ...d, amount: ev.target.value }))} />
+        <Input label="المورّد" value={draft.supplier} className="min-w-32 flex-1"
+          onChange={(ev) => setDraft((d) => ({ ...d, supplier: ev.target.value }))} />
+        <Button size="xs" className="mb-1" loading={patch.isPending}
+          disabled={Number(draft.amount) <= 0}
+          onClick={async () => { await patch.mutateAsync(undefined as never); setEditing(false); }}>
+          حفظ
+        </Button>
+        <Button variant="ghost" size="xs" className="mb-1" onClick={() => setEditing(false)}>إلغاء</Button>
+      </Card>
+    );
+  }
+  return (
+    <Card className="group flex items-center gap-3 p-2.5 text-sm">
+      <Badge variant="outline">{e.category}</Badge>
+      <span className="text-gray-light">{e.supplier ?? '—'}</span>
+      <span dir="ltr" className="ms-auto font-bold">SAR {fmt(Number(e.amount))}</span>
+      <span dir="ltr" className="text-xs text-gray-medium">{e.expense_date}</span>
+      <span className="flex gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+        <Button variant="ghost" size="xs" aria-label="تعديل المصروف" onClick={() => setEditing(true)}>
+          <Pencil className="h-3 w-3" aria-hidden />
+        </Button>
+        <Button variant="ghost" size="xs" aria-label="حذف المصروف" onClick={() => setConfirmDelete(true)}>
+          <Trash2 className="h-3 w-3" aria-hidden />
+        </Button>
+      </span>
+      <ConfirmDialog open={confirmDelete} onClose={() => setConfirmDelete(false)}
+        title="حذف المصروف"
+        message={`حذف مصروف ${e.category} بقيمة SAR ${fmt(Number(e.amount))}؟ يؤثر على متوسط التشغيل وأشهر الخزينة، والإجراء موثّق.`}
+        confirmLabel="حذف"
+        onConfirm={async () => { await remove.mutateAsync(undefined as never); }} />
+    </Card>
   );
 }
 
