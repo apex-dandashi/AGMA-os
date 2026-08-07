@@ -718,6 +718,12 @@ const DOC_TYPE_AR: Record<string, string> = {
   quote: 'عرض سعر', sow: 'نطاق عمل', nda: 'عدم إفصاح', sla: 'مستوى خدمة',
   msa: 'اتفاقية رئيسية', amc: 'عقد صيانة', coc: 'ميثاق تعاون',
   invoice: 'فاتورة', credit_note: 'إشعار دائن',
+  change_order: 'أمر تغيير', dpa: 'معالجة بيانات',
+  media_auth: 'تفويض إعلاني', influencer: 'اتفاقية مؤثر',
+  service: 'اتفاقية خدمات', retainer: 'اشتراك شهري', partnership: 'شراكة وتعاون',
+  contractor: 'مقاول مستقل', referral: 'إحالة', licensing: 'ترخيص محتوى',
+  ip_addendum: 'ملحق ملكية فكرية', acceptance: 'محضر استلام', renewal: 'تجديد',
+  termination: 'إنهاء', settlement: 'تسوية ومخالصة', authorization: 'خطاب تفويض',
 };
 
 /** كل مستندات العميل في مكانه — الإدارة تبقى في «المستندات» و«المالية». */

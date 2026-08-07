@@ -18,6 +18,7 @@ All specifications live in `/docs` — read the relevant one before touching its
 - `docs/11-finance-platform-design.md` — owner-supplied corporate finance target-state (31-page PDF), ingested with adopt/defer/skip verdicts — «المالية ٢٫٠» package derives from section ب
 - `docs/12-finance-lifecycle-reference.md` — second owner study (client lifecycle depth), compared to docs/11 with verdicts; disputes/leakage/close/AR-normalize/renewals adopted
 - `docs/13-contract-library-reference.md` — third owner study (contract template library); P0 templates+clauses built, rest gated with triggers
+- `docs/14-contract-library-v2.md` — fourth owner study (33-template library + org identity + build rules); 12 new types + org_settings built, SCC/B2C/signature gated
 - `docs/references/` — real quotation/invoice PDFs + CR certificate = visual ground truth for generator QA
 
 ## Stack

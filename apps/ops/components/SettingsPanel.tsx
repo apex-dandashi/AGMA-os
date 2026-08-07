@@ -15,7 +15,7 @@ import {
   Tabs,
   Textarea,
 } from '@agma/ui';
-import { Landmark, ListChecks, ScrollText, Settings as SettingsIcon } from 'lucide-react';
+import { Building2, Landmark, ListChecks, ScrollText, Settings as SettingsIcon } from 'lucide-react';
 import type { Tables } from '@agma/db';
 import { getSupabase } from '../lib/supabase';
 import { useAppMutation } from '../lib/queries';
@@ -33,6 +33,7 @@ export default function SettingsPanel() {
   // كل تبويب لأصحابه: المالية الحساسة للشريك والمدير المالي، البنود
   // القانونية للشريك والمستشار القانوني، والباقي للشريك (RLS يفرضها أيضاً).
   const TABS = [
+    { key: 'org', label: 'بيانات المنشأة', roles: ['admin'] },
     { key: 'accounts', label: 'الحسابات البنكية', roles: ['admin', 'cfo'] },
     { key: 'rules', label: 'نسب التوزيع', roles: ['admin', 'cfo'] },
     { key: 'clauses', label: 'البنود القانونية', roles: ['admin', 'legal'] },
@@ -58,6 +59,7 @@ export default function SettingsPanel() {
       <Tabs active={tab} onChange={setTab}
         tabs={TABS.map(({ key, label }) => ({ key, label }))} />
       <div className="mt-4">
+        {tab === 'org' && <OrgTab />}
         {tab === 'accounts' && <AccountsTab />}
         {tab === 'clauses' && <ClausesTab />}
         {tab === 'checklists' && <ChecklistsTab />}
@@ -81,6 +83,79 @@ function LoadFailed({ error }: { error: Error }) {
 }
 
 /* ------------------------------------------------------------- accounts */
+
+/* -------------------------------------------------------------- org */
+
+/** الهوية القانونية — الطرف الأول في كل عقد جديد (docs/14 §1). */
+function OrgTab() {
+  const key = ['settings-org'];
+  const { data, isLoading, error } = useQuery({
+    queryKey: key,
+    queryFn: async () => {
+      const { data, error } = await getSupabase().from('org_settings').select('*').maybeSingle();
+      if (error) throw new Error(error.message);
+      return data;
+    },
+  });
+  const [form, setForm] = useState<Record<string, string> | null>(null);
+
+  const FIELDS: { k: string; label: string; ltr?: boolean; wide?: boolean }[] = [
+    { k: 'legal_name', label: 'الاسم القانوني (كما في السجل التجاري)', wide: true },
+    { k: 'brand', label: 'الاسم التجاري' },
+    { k: 'cr_number', label: 'رقم السجل التجاري', ltr: true },
+    { k: 'unified_number', label: 'الرقم الموحد للمنشأة', ltr: true },
+    { k: 'vat_number', label: 'الرقم الضريبي (من الشهادة الضريبية)', ltr: true },
+    { k: 'city', label: 'المدينة' },
+    { k: 'national_address', label: 'العنوان الوطني', wide: true },
+    { k: 'website', label: 'الموقع', ltr: true },
+    { k: 'phone', label: 'الجوال', ltr: true },
+    { k: 'email', label: 'البريد الرسمي', ltr: true },
+    { k: 'representative_name', label: 'ممثل المنشأة في العقود' },
+    { k: 'representative_title', label: 'صفة الممثل (مثال: المالك)' },
+  ];
+
+  const save = useAppMutation(
+    async () => {
+      if (!form) return;
+      if (form.legal_name.trim().length < 5 || form.cr_number.trim().length < 5) {
+        throw new Error('الاسم القانوني ورقم السجل إلزاميان');
+      }
+      const { error } = await getSupabase().from('org_settings')
+        .update(Object.fromEntries(FIELDS.map(({ k }) => [k, form[k]?.trim() || null])) as never)
+        .eq('id', true);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [key], successMessage: 'حُفظت بيانات المنشأة — ستظهر في العقود الجديدة' }
+  );
+
+  if (error) return <LoadFailed error={error as Error} />;
+  if (isLoading || !data) return <SkeletonList rows={3} />;
+  const f = form ?? Object.fromEntries(FIELDS.map(({ k }) => [k, (data as never)[k] ?? '']));
+  return (
+    <Card className="p-4">
+      <p className="mb-1 flex items-center gap-2 text-sm font-bold text-gray-light">
+        <Building2 className="h-4 w-4 text-pulse-orange" aria-hidden />
+        الهوية القانونية للطرف الأول
+      </p>
+      <p className="mb-3 text-xs text-gray-medium">
+        تدخل تلقائياً في ديباجة كل عقد جديد من «المستندات». العقود المحفوظة سابقاً
+        لا تتغير (نصها مجمّد). الرقم الضريبي من الشهادة الضريبية حصراً.
+      </p>
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {FIELDS.map(({ k, label, ltr, wide }) => (
+          <div key={k} className={wide ? 'sm:col-span-2' : undefined}>
+            <Input label={label} dir={ltr ? 'ltr' : undefined} value={f[k] ?? ''}
+              onChange={(e) => setForm({ ...f, [k]: e.target.value })} />
+          </div>
+        ))}
+      </div>
+      <Button size="sm" className="mt-3" loading={save.isPending} disabled={!form}
+        onClick={() => save.mutate(undefined as never)}>
+        حفظ
+      </Button>
+    </Card>
+  );
+}
 
 function AccountsTab() {
   const key = ['settings-accounts'];

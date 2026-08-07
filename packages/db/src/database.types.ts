@@ -1645,6 +1645,57 @@ export type Database = {
           },
         ]
       }
+      org_settings: {
+        Row: {
+          brand: string
+          city: string
+          cr_number: string
+          email: string | null
+          id: boolean
+          legal_name: string
+          national_address: string | null
+          phone: string | null
+          representative_name: string | null
+          representative_title: string | null
+          unified_number: string | null
+          updated_at: string
+          vat_number: string | null
+          website: string | null
+        }
+        Insert: {
+          brand?: string
+          city?: string
+          cr_number: string
+          email?: string | null
+          id?: boolean
+          legal_name: string
+          national_address?: string | null
+          phone?: string | null
+          representative_name?: string | null
+          representative_title?: string | null
+          unified_number?: string | null
+          updated_at?: string
+          vat_number?: string | null
+          website?: string | null
+        }
+        Update: {
+          brand?: string
+          city?: string
+          cr_number?: string
+          email?: string | null
+          id?: boolean
+          legal_name?: string
+          national_address?: string | null
+          phone?: string | null
+          representative_name?: string | null
+          representative_title?: string | null
+          unified_number?: string | null
+          updated_at?: string
+          vat_number?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
       pause_checklists: {
         Row: {
           active: boolean
@@ -3721,6 +3772,18 @@ export type Database = {
         | "dpa"
         | "media_auth"
         | "influencer"
+        | "service"
+        | "retainer"
+        | "partnership"
+        | "contractor"
+        | "referral"
+        | "licensing"
+        | "ip_addendum"
+        | "acceptance"
+        | "renewal"
+        | "termination"
+        | "settlement"
+        | "authorization"
       documentation_grade: "A" | "B" | "C"
       emt_class: "entrepreneur" | "manager" | "technician"
       experiment_status: "proposed" | "running" | "won" | "lost"
@@ -3924,6 +3987,18 @@ export const Constants = {
         "dpa",
         "media_auth",
         "influencer",
+        "service",
+        "retainer",
+        "partnership",
+        "contractor",
+        "referral",
+        "licensing",
+        "ip_addendum",
+        "acceptance",
+        "renewal",
+        "termination",
+        "settlement",
+        "authorization",
       ],
       documentation_grade: ["A", "B", "C"],
       emt_class: ["entrepreneur", "manager", "technician"],

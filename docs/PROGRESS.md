@@ -22,6 +22,35 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
 
+## Contract Library 2.0 log (2026-08-08) — docs/14, fourth owner study
+
+Study: «مكتبة AGMA الكاملة للعقود» (33 templates + smart fields + build rules).
+Verdicts in docs/14: 13 types already existed; this round closes the real gaps.
+
+- `20260808090000_contract_library2_enum.sql` — 12 new document_type values
+  (service, retainer, partnership, contractor, referral, licensing, ip_addendum,
+  acceptance, renewal, termination, settlement, authorization). Own migration
+  per the enum rule. All number under the CT counter (verified CT-00001).
+- `20260808100000_contract_library2.sql` — `org_settings` single-row legal
+  identity (seeded from CR 1009127528 + tax cert values; guard rejects a second
+  row) with team-read/admin-update RLS (persona-verified: executor reads but
+  UPDATE 0, client sees zero rows, admin updates representative fields) + 49
+  clause seeds: 11 unified general terms into `legal` (بذل عناية، منصات الغير،
+  AI، تعليق، قوة قاهرة، مسؤولية، إشعارات وتوقيع إلكتروني، نظام حاكم، لغة،
+  اتفاق كامل، تنازل/لا وكالة) + 12 template clause packs.
+- ContractBuilder: 3 new groups / 9 new templates (+termination in two forms);
+  first party reads from org_settings (COMPANY constants as fallback); rep
+  auto-prefills from client.decision_maker; custom-clause → legal-review nudge.
+  MSA/service/retainer now auto-include the unified general terms.
+- Settings: new admin tab «بيانات المنشأة» editing org_settings, with the
+  «frozen snapshots don't change» caveat spelled out.
+- Deferred with reasons (docs/14): SCC sheet (first real cross-border transfer,
+  official text locked), consumer e-commerce disclosure (first B2C), reseller,
+  goods-supplier; skipped: work order (=SOW), per-vertical contracts (clause
+  packs instead). Signature/hash evidence log → Phase 7.
+- Gauntlet green (typecheck, build, tests, RLS harness, e2e); both migrations
+  pushed to production.
+
 ## Roles 2.1 log (2026-08-07) — the full set, derived from docs/11–13
 
 Owner: «إلخ = افترض باقي الأدوار المهمة بالمنطق والمراجع». Five more roles,

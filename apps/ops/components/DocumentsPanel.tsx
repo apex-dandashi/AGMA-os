@@ -41,6 +41,18 @@ const TYPE_LABELS: Record<Enums<'document_type'>, string> = {
   influencer: 'اتفاقية مؤثر',
   invoice: 'فاتورة',
   credit_note: 'إشعار دائن',
+  service: 'اتفاقية خدمات',
+  retainer: 'اشتراك شهري',
+  partnership: 'شراكة وتعاون',
+  contractor: 'مقاول مستقل',
+  referral: 'اتفاقية إحالة',
+  licensing: 'ترخيص محتوى',
+  ip_addendum: 'ملحق ملكية فكرية',
+  acceptance: 'محضر استلام',
+  renewal: 'تجديد وتمديد',
+  termination: 'إنهاء',
+  settlement: 'تسوية ومخالصة',
+  authorization: 'خطاب تفويض',
 };
 
 const STATUS_LABELS: Record<Enums<'document_status'>, string> = {

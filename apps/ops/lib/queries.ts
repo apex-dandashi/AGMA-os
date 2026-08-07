@@ -29,6 +29,7 @@ export const keys = {
   documents: ['documents'] as QueryKey,
   accounts: ['payment_accounts'] as QueryKey,
   clauses: ['clauses'] as QueryKey,
+  orgSettings: ['org_settings'] as QueryKey,
   catalog: ['catalog'] as QueryKey,
   websiteClients: ['website_clients'] as QueryKey,
   clientDetail: (id: string) => ['client', id] as QueryKey,
@@ -71,6 +72,18 @@ export const useClauses = () =>
     queryKey: keys.clauses,
     queryFn: () =>
       must(getSupabase().from('clause_library').select('*').eq('approved', true).order('sort')),
+  });
+
+/** هوية المنشأة — الطرف الأول في كل عقد (docs/14 §1). صف واحد. */
+export const useOrgSettings = () =>
+  useQuery({
+    queryKey: keys.orgSettings,
+    queryFn: async () => {
+      const { data, error } = await getSupabase()
+        .from('org_settings').select('*').maybeSingle();
+      if (error) throw new Error(error.message);
+      return data;
+    },
   });
 
 export const useCatalog = () =>
