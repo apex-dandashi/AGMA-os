@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Badge,
@@ -22,6 +23,7 @@ import { getSupabase } from '../lib/supabase';
 import { keys, useAppMutation, useClientDetail, useClients } from '../lib/queries';
 import { Download, Users } from 'lucide-react';
 import { exportCsv } from '../lib/csv';
+import { fmtDate, fmtSAR } from '../lib/format';
 import ScopeBuilder from './ScopeBuilder';
 
 type Client = Tables<'clients'>;
@@ -151,6 +153,36 @@ export default function ClientsPanel() {
   );
 }
 
+function Client360Card({ clientId }: { clientId: string }) {
+  const { data: c360 } = useQuery({
+    queryKey: ['client-360', clientId],
+    queryFn: async () => {
+      const { data, error } = await getSupabase()
+        .from('client_360').select('*').eq('id', clientId).single();
+      if (error) throw new Error(error.message);
+      return data;
+    },
+  });
+  if (!c360) return null;
+  const stat = (label: string, value: string, alert = false) => (
+    <div className="text-center">
+      <p dir="ltr" className={`text-sm font-black ${alert ? 'text-pulse-orange' : ''}`}>{value}</p>
+      <p className="text-[11px] text-gray-medium">{label}</p>
+    </div>
+  );
+  return (
+    <Card className="flex flex-wrap items-center justify-between gap-3 p-3" aria-label="ملخص العميل 360">
+      {stat('المفوتر', fmtSAR(c360.invoiced_total))}
+      {stat('المحصَّل', fmtSAR(c360.paid_total))}
+      {stat('الرصيد المستحق', fmtSAR(c360.open_balance), Number(c360.open_balance) > 0)}
+      {stat('مشاريع نشطة', String(c360.active_projects ?? 0))}
+      {stat('اعتمادات معلّقة', String(c360.pending_approvals ?? 0), Number(c360.pending_approvals) > 0)}
+      {stat('آخر تواصل', fmtDate(c360.last_interaction_at))}
+      {c360.bought_package && <Badge variant="accent">عميل باقات</Badge>}
+    </Card>
+  );
+}
+
 function ClientDetail({ client }: { client: Client }) {
   const { data, isLoading } = useClientDetail(client.id);
   const [showScopeBuilder, setShowScopeBuilder] = useState(false);
@@ -180,6 +212,7 @@ function ClientDetail({ client }: { client: Client }) {
   return (
     <div className="space-y-6">
       <h2 className="text-lg font-black">{client.company}</h2>
+      <Client360Card clientId={client.id} />
 
       <section>
         <div className="mb-2 flex items-center gap-3">
@@ -237,14 +270,16 @@ function ContactsBlock({
 }) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [err, setErr] = useState<string | undefined>();
 
   const add = useAppMutation(
-    async (input: { name: string; phone?: string }) => {
+    async (input: { name: string; phone?: string; email?: string }) => {
       const { error } = await getSupabase().from('contacts').insert({
         client_id: clientId,
         name: input.name,
         phone: input.phone ?? null,
+        email: input.email ?? null,
         is_primary: isFirst,
       });
       if (error) throw new Error(error.message);
@@ -254,23 +289,31 @@ function ContactsBlock({
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    const parsed = contactInputSchema.safeParse({ name, phone });
+    const parsed = contactInputSchema.safeParse({ name, phone, email });
     if (!parsed.success) {
       setErr(parsed.error.issues[0]?.message);
       return;
     }
     setErr(undefined);
-    await add.mutateAsync({ name: parsed.data.name, phone: parsed.data.phone });
+    await add.mutateAsync({
+      name: parsed.data.name,
+      phone: parsed.data.phone,
+      email: parsed.data.email,
+    });
     setName('');
     setPhone('');
+    setEmail('');
   }
 
   return (
     <div>
       <h3 className="mb-2 font-bold text-gray-light">جهات الاتصال</h3>
-      <form onSubmit={submit} className="mb-2 flex gap-2">
+      <form onSubmit={submit} className="mb-2 flex flex-wrap gap-2">
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="الاسم" error={err} />
-        <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="الهاتف" dir="ltr" className="w-36" />
+        <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="الهاتف"
+          dir="ltr" inputMode="tel" className="w-36" />
+        <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="البريد"
+          dir="ltr" inputMode="email" className="w-44" />
         <Button type="submit" size="sm" loading={add.isPending}>+</Button>
       </form>
       <ul className="space-y-1 text-sm">
@@ -279,6 +322,7 @@ function ContactsBlock({
             <span>{c.name}</span>
             {c.is_primary && <Badge variant="accent">رئيسي</Badge>}
             {c.phone && <span dir="ltr" className="text-gray-medium">{c.phone}</span>}
+            {c.email && <span dir="ltr" className="text-gray-medium">{c.email}</span>}
           </li>
         ))}
         {contacts.length === 0 && <li className="text-sm text-gray-medium">لا جهات اتصال</li>}

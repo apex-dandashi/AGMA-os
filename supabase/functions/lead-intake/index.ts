@@ -10,13 +10,34 @@ const ALLOWED_ORIGINS = new Set([
   'http://localhost:3000',
 ]);
 
-// Mirror of packages/db/src/schemas.ts leadIntakeSchema (deno runtime can't
-// import the workspace package; keep the two in sync).
+// Mirror of packages/db/src/schemas.ts (deno runtime can't import the
+// workspace package; keep the two in sync).
+const DIGITS_AR = '٠١٢٣٤٥٦٧٨٩';
+const DIGITS_FA = '۰۱۲۳۴۵۶۷۸۹';
+function normalizeDigits(s: string): string {
+  return s.replace(/[٠-٩۰-۹]/g, (ch) => {
+    const i = DIGITS_AR.indexOf(ch);
+    return String(i >= 0 ? i : DIGITS_FA.indexOf(ch));
+  });
+}
+function normalizePhoneSa(s: string): string {
+  let d = normalizeDigits(s).replace(/[^0-9+]/g, '').replace(/^00/, '+');
+  if (d.startsWith('+966')) d = '+966' + d.slice(4).replace(/^0+/, '');
+  else if (d.startsWith('966')) d = '+966' + d.slice(3).replace(/^0+/, '');
+  else if (/^05[0-9]{8}$/.test(d)) d = '+966' + d.slice(1);
+  else if (/^5[0-9]{8}$/.test(d)) d = '+966' + d;
+  return d;
+}
+
 const intakeSchema = z.object({
   name: z.string().trim().min(2).max(200),
   company: z.string().trim().max(200).optional(),
-  phone: z.string().trim().max(40).optional(),
-  email: z.string().trim().email().max(200).optional().or(z.literal('')),
+  phone: z.string().trim().max(40)
+    .transform((v) => (v === '' ? undefined : normalizePhoneSa(v)))
+    .optional().catch(undefined),
+  email: z.string().trim()
+    .transform((v) => (v === '' ? undefined : v.toLowerCase()))
+    .pipe(z.string().email().max(200).optional()).catch(undefined),
   services: z.string().trim().max(500).optional(),
   budget: z.string().trim().max(100).optional(),
   message: z.string().trim().max(2000).optional(),

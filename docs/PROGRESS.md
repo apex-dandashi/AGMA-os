@@ -22,6 +22,44 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
 
+## Data round log (2026-08-07) — entry → processing → output → AI-readiness
+
+**Entry layer (every path produces the same clean value):**
+- DB normalization triggers on contacts/leads/clients: trim, email lowercase,
+  Arabic-Indic + Persian digits → Latin, Saudi phones → E.164
+  (normalize_phone_sa: ٠٥٥→+9665، 00966→+966، foreign numbers untouched —
+  all cases fixture-verified). One-time cleanup ran on existing rows.
+- Identical normalizers in packages/db schemas (zod transforms on phone/email)
+  and in the lead-intake edge function (redeployed) — form, API, and SQL
+  entries converge on the same representation. Website intake now .catch()es
+  bad phones to undefined instead of rejecting the lead.
+- pg_trgm + trigram indexes on clients.company / leads.name/company — fast
+  fuzzy duplicate detection and search.
+- Contact quick-form now captures email (with inputMode/ltr); the biggest
+  data_quality gap generator closed at the source.
+
+**Processing/consumption layer — 5 RLS-respecting views (security_invoker):**
+- client_360: one row per client — contacts, last interaction, projects,
+  scopes/packages, invoiced/paid/balance, pending approvals, wallet budget.
+  The retrieval surface for Phase-8 RAG/chatbots and any report.
+- pipeline_analytics: win rate, avg days-to-win, open value per source.
+- document_margins (total vs internal cost), project_costs (hours + labor
+  cost per project via time_entries × cost rates).
+- data_quality: named gaps (client no sector/contacts/90d-silence, contact
+  unreachable, open deal missing value/close-date/next-activity, lost deal
+  without reason) — fixture-verified flags.
+
+**Output layer:**
+- Client 360 summary card on the client page (invoiced/paid/balance, active
+  projects, pending approvals, last touch, «عميل باقات» badge).
+- «جودة البيانات» section in التحسين tab: grouped gap counts for the L10.
+- Source-performance strip on the pipeline (win % + cycle days per source,
+  appears once deals have closed).
+- Projects CSV export from project_costs (incl. hours + labor cost);
+  shared lib/format.ts replaced per-panel fmt duplicates.
+
+All gates green; migration + lead-intake deployed to production.
+
 ## Review round log (2026-08-07) — post-6.5, pre-Phase-7
 
 Code review of the 6.5 layer + audit against the docs/08 benchmark criteria.

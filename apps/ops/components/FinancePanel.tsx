@@ -16,6 +16,7 @@ import {
 } from '@agma/ui';
 import { Download, Receipt, RefreshCw, Wallet as WalletIcon } from 'lucide-react';
 import { exportCsv } from '../lib/csv';
+import { fmtNum as fmt } from '../lib/format';
 import type { Tables } from '@agma/db';
 import {
   renderInvoice,
@@ -190,8 +191,6 @@ function InvoicesTab() {
     w.document.write(renderInvoice(payload));
     w.document.close();
   }
-
-  const fmt = (n: number) => n.toLocaleString('en-US');
 
   return (
     <div>

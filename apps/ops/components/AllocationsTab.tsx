@@ -14,10 +14,9 @@ import {
 } from '@agma/ui';
 import { PiggyBank, Vault as VaultIcon } from 'lucide-react';
 import { getSupabase } from '../lib/supabase';
+import { fmtNum as fmt } from '../lib/format';
 import { useAppMutation } from '../lib/queries';
 import { useProfile } from './AppShell';
-
-const fmt = (n: number) => n.toLocaleString('en-US');
 
 /**
  * Profit First (docs/10 §2.4): the 10th/25th ritual, CAP→TAP path, Vault

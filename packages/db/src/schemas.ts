@@ -4,7 +4,42 @@ import { z } from 'zod';
  * Shared validation schemas — the single source used by ops forms, edge
  * functions, and payload guards (CLAUDE.md: Zod at every boundary).
  * Error messages are Arabic: they surface directly in the ops UI.
+ *
+ * Normalization mirrors the DB triggers (normalize_digits /
+ * normalize_phone_sa in 20260807170000): the same value is produced whether
+ * data enters via a form, the edge function, or SQL.
  */
+
+const DIGIT_MAP: Record<string, string> = {};
+for (const [i, ch] of [...'٠١٢٣٤٥٦٧٨٩'].entries()) DIGIT_MAP[ch] = String(i);
+for (const [i, ch] of [...'۰۱۲۳۴۵۶۷۸۹'].entries()) DIGIT_MAP[ch] = String(i);
+
+/** Arabic-Indic and Persian digits → Latin. */
+export function normalizeDigits(s: string): string {
+  return s.replace(/[٠-٩۰-۹]/g, (ch) => DIGIT_MAP[ch] ?? ch);
+}
+
+/** Saudi phone → E.164 (+9665XXXXXXXX); foreign numbers pass through. */
+export function normalizePhoneSa(s: string): string {
+  let d = normalizeDigits(s).replace(/[^0-9+]/g, '').replace(/^00/, '+');
+  if (d.startsWith('+966')) d = '+966' + d.slice(4).replace(/^0+/, '');
+  else if (d.startsWith('966')) d = '+966' + d.slice(3).replace(/^0+/, '');
+  else if (/^05[0-9]{8}$/.test(d)) d = '+966' + d.slice(1);
+  else if (/^5[0-9]{8}$/.test(d)) d = '+966' + d;
+  return d;
+}
+
+const optionalPhone = z
+  .string()
+  .trim()
+  .transform((v) => (v === '' ? undefined : normalizePhoneSa(v)))
+  .pipe(z.string().regex(/^\+?[0-9]{7,15}$/, 'رقم هاتف غير صالح').optional());
+
+const optionalEmail = z
+  .string()
+  .trim()
+  .transform((v) => (v === '' ? undefined : v.toLowerCase()))
+  .pipe(z.string().email('بريد غير صالح').max(200).optional());
 
 export const leadInputSchema = z.object({
   name: z.string().trim().min(2, 'الاسم مطلوب (حرفان على الأقل)').max(200),
@@ -16,8 +51,8 @@ export const leadInputSchema = z.object({
 export const leadIntakeSchema = z.object({
   name: z.string().trim().min(2).max(200),
   company: z.string().trim().max(200).optional(),
-  phone: z.string().trim().max(40).optional(),
-  email: z.string().trim().email().max(200).optional().or(z.literal('').transform(() => undefined)),
+  phone: optionalPhone.catch(undefined),
+  email: optionalEmail.catch(undefined),
   services: z.string().trim().max(500).optional(),
   budget: z.string().trim().max(100).optional(),
   message: z.string().trim().max(2000).optional(),
@@ -35,13 +70,8 @@ export const clientInputSchema = z.object({
 export const contactInputSchema = z.object({
   name: z.string().trim().min(2, 'اسم جهة الاتصال مطلوب').max(200),
   title: z.string().trim().max(120).optional().or(z.literal('').transform(() => undefined)),
-  phone: z
-    .string()
-    .trim()
-    .regex(/^\+?[0-9\s-]{7,20}$/, 'رقم هاتف غير صالح')
-    .optional()
-    .or(z.literal('').transform(() => undefined)),
-  email: z.string().trim().email('بريد غير صالح').max(200).optional().or(z.literal('').transform(() => undefined)),
+  phone: optionalPhone,
+  email: optionalEmail,
 });
 
 export const interactionInputSchema = z.object({

@@ -16,7 +16,7 @@ import {
   Textarea,
   Tr,
 } from '@agma/ui';
-import { BookOpenCheck, FlaskConical, Package, Rocket } from 'lucide-react';
+import { BookOpenCheck, DatabaseZap, FlaskConical, Package, Rocket } from 'lucide-react';
 import type { Enums, Tables } from '@agma/db';
 import { getSupabase } from '../lib/supabase';
 import { useAppMutation } from '../lib/queries';
@@ -198,7 +198,7 @@ export function ImproveTab() {
     queryKey: key,
     queryFn: async () => {
       const supabase = getSupabase();
-      const [experiments, playbooks, versions, customScopes] = await Promise.all([
+      const [experiments, playbooks, versions, customScopes, quality] = await Promise.all([
         supabase.from('experiments').select('*').order('created_at', { ascending: false }),
         supabase.from('playbooks').select('*').order('slug'),
         supabase.from('playbook_versions').select('*').order('released_at', { ascending: false }),
@@ -207,6 +207,7 @@ export function ImproveTab() {
           .not('why_no_package_fit', 'is', null)
           .gte('created_at', new Date(Date.now() - 90 * 86400000).toISOString())
           .order('created_at', { ascending: false }),
+        supabase.from('data_quality').select('*'),
       ]);
       if (experiments.error) throw new Error(experiments.error.message);
       return {
@@ -214,6 +215,7 @@ export function ImproveTab() {
         playbooks: playbooks.data ?? [],
         versions: versions.data ?? [],
         customScopes: customScopes.data ?? [],
+        quality: quality.data ?? [],
       };
     },
   });
@@ -227,6 +229,45 @@ export function ImproveTab() {
       <PlaybookDocsSection playbooks={data.playbooks} versions={data.versions}
         isAdmin={me.role === 'admin'} invalidate={key} />
       <ReasonMiningSection customScopes={data.customScopes} />
+      <DataQualitySection rows={data.quality} />
+    </div>
+  );
+}
+
+function DataQualitySection({ rows }: {
+  rows: { entity: string | null; entity_id: string | null; label: string | null; issue: string | null }[];
+}) {
+  const grouped = new Map<string, string[]>();
+  for (const r of rows) {
+    if (!r.issue) continue;
+    const list = grouped.get(r.issue) ?? [];
+    list.push(r.label ?? '—');
+    grouped.set(r.issue, list);
+  }
+  return (
+    <div>
+      <h3 className="mb-1 font-bold text-gray-light">جودة البيانات — الفجوات المسماة</h3>
+      <p className="mb-2 text-xs text-gray-medium">
+        سجلٌ ناقص لا يخدم تقريراً ولا نموذج ذكاء لاحقاً — تُراجع في اجتماع الأسبوع.
+      </p>
+      {grouped.size === 0 ? (
+        <EmptyState icon={<DatabaseZap className="h-8 w-8" aria-hidden />}
+          title="لا فجوات"
+          hint="كل السجلات مكتملة — البيانات جاهزة لأي تقرير أو نموذج." />
+      ) : (
+        <div className="space-y-1.5">
+          {[...grouped.entries()].sort((a, b) => b[1].length - a[1].length).map(([issue, labels]) => (
+            <Card key={issue} className="flex items-start gap-3 p-2.5 text-sm">
+              <Badge variant="outline">{labels.length}</Badge>
+              <div className="min-w-0">
+                <p className="font-medium">{issue}</p>
+                <p className="truncate text-xs text-gray-medium">{labels.slice(0, 6).join(' · ')}
+                  {labels.length > 6 ? ` (+${labels.length - 6})` : ''}</p>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

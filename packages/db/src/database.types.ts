@@ -89,6 +89,13 @@ export type Database = {
             foreignKeyName: "activities_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "client_360"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activities_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
@@ -97,6 +104,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activities_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "document_margins"
             referencedColumns: ["id"]
           },
           {
@@ -221,6 +235,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "approvals_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_360"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "approvals_client_id_fkey"
             columns: ["client_id"]
@@ -455,6 +476,13 @@ export type Database = {
             foreignKeyName: "contacts_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "client_360"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contacts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
@@ -490,6 +518,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "document_costs_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: true
+            referencedRelation: "document_margins"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "document_costs_document_id_fkey"
             columns: ["document_id"]
@@ -574,6 +609,13 @@ export type Database = {
             foreignKeyName: "documents_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "client_360"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
@@ -596,6 +638,13 @@ export type Database = {
             columns: ["scope_id"]
             isOneToOne: false
             referencedRelation: "scopes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_supersedes_fkey"
+            columns: ["supersedes"]
+            isOneToOne: false
+            referencedRelation: "document_margins"
             referencedColumns: ["id"]
           },
           {
@@ -840,6 +889,13 @@ export type Database = {
             foreignKeyName: "interactions_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "client_360"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interactions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
@@ -923,7 +979,21 @@ export type Database = {
             foreignKeyName: "issues_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "client_360"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "issues_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "issues_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "document_margins"
             referencedColumns: ["id"]
           },
           {
@@ -938,6 +1008,13 @@ export type Database = {
             columns: ["original_id"]
             isOneToOne: false
             referencedRelation: "issues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "issues_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_costs"
             referencedColumns: ["id"]
           },
           {
@@ -1050,6 +1127,13 @@ export type Database = {
           value?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "leads_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_360"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "leads_client_id_fkey"
             columns: ["client_id"]
@@ -1209,6 +1293,13 @@ export type Database = {
             foreignKeyName: "messages_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "client_360"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
@@ -1262,6 +1353,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "metrics_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_costs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "metrics_project_id_fkey"
             columns: ["project_id"]
@@ -1363,6 +1461,13 @@ export type Database = {
           template_key?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "notifications_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_360"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "notifications_client_id_fkey"
             columns: ["client_id"]
@@ -1485,6 +1590,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "document_margins"
             referencedColumns: ["id"]
           },
           {
@@ -1710,6 +1822,13 @@ export type Database = {
             foreignKeyName: "profiles_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "client_360"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
@@ -1791,6 +1910,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "projects_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_360"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "projects_client_id_fkey"
             columns: ["client_id"]
@@ -1880,6 +2006,13 @@ export type Database = {
             foreignKeyName: "recurring_invoices_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "client_360"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_invoices_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
@@ -1924,6 +2057,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "reports_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_costs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "reports_project_id_fkey"
             columns: ["project_id"]
@@ -2013,6 +2153,13 @@ export type Database = {
             foreignKeyName: "rocks_linked_project_fkey"
             columns: ["linked_project"]
             isOneToOne: false
+            referencedRelation: "project_costs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rocks_linked_project_fkey"
+            columns: ["linked_project"]
+            isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
@@ -2096,6 +2243,13 @@ export type Database = {
           why_no_package_fit?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "scopes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_360"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "scopes_client_id_fkey"
             columns: ["client_id"]
@@ -2409,6 +2563,13 @@ export type Database = {
             foreignKeyName: "sprints_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
+            referencedRelation: "project_costs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sprints_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
@@ -2546,6 +2707,13 @@ export type Database = {
             columns: ["executed_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_costs"
             referencedColumns: ["id"]
           },
           {
@@ -2746,6 +2914,13 @@ export type Database = {
             foreignKeyName: "wallets_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: true
+            referencedRelation: "client_360"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wallets_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
@@ -2793,6 +2968,13 @@ export type Database = {
             foreignKeyName: "website_clients_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: true
+            referencedRelation: "client_360"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_clients_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
@@ -2800,7 +2982,146 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      client_360: {
+        Row: {
+          active_projects: number | null
+          bought_package: boolean | null
+          company: string | null
+          contacts_count: number | null
+          created_at: string | null
+          id: string | null
+          invoiced_total: number | null
+          last_interaction_at: string | null
+          open_balance: number | null
+          paid_total: number | null
+          pending_approvals: number | null
+          projects_count: number | null
+          scopes_count: number | null
+          sector: string | null
+          status: Database["public"]["Enums"]["client_status"] | null
+          tags: string[] | null
+          wallet_budget: number | null
+        }
+        Insert: {
+          active_projects?: never
+          bought_package?: never
+          company?: string | null
+          contacts_count?: never
+          created_at?: string | null
+          id?: string | null
+          invoiced_total?: never
+          last_interaction_at?: never
+          open_balance?: never
+          paid_total?: never
+          pending_approvals?: never
+          projects_count?: never
+          scopes_count?: never
+          sector?: string | null
+          status?: Database["public"]["Enums"]["client_status"] | null
+          tags?: string[] | null
+          wallet_budget?: never
+        }
+        Update: {
+          active_projects?: never
+          bought_package?: never
+          company?: string | null
+          contacts_count?: never
+          created_at?: string | null
+          id?: string | null
+          invoiced_total?: never
+          last_interaction_at?: never
+          open_balance?: never
+          paid_total?: never
+          pending_approvals?: never
+          projects_count?: never
+          scopes_count?: never
+          sector?: string | null
+          status?: Database["public"]["Enums"]["client_status"] | null
+          tags?: string[] | null
+          wallet_budget?: never
+        }
+        Relationships: []
+      }
+      data_quality: {
+        Row: {
+          entity: string | null
+          entity_id: string | null
+          issue: string | null
+          label: string | null
+        }
+        Relationships: []
+      }
+      document_margins: {
+        Row: {
+          client_id: string | null
+          id: string | null
+          issued_on: string | null
+          margin_pct: number | null
+          number: string | null
+          status: Database["public"]["Enums"]["document_status"] | null
+          total: number | null
+          total_cost: number | null
+          type: Database["public"]["Enums"]["document_type"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_360"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pipeline_analytics: {
+        Row: {
+          avg_days_to_win: number | null
+          leads_total: number | null
+          lost: number | null
+          open: number | null
+          open_value: number | null
+          source: Database["public"]["Enums"]["lead_source"] | null
+          win_rate_pct: number | null
+          won: number | null
+        }
+        Relationships: []
+      }
+      project_costs: {
+        Row: {
+          client_id: string | null
+          hours_logged: number | null
+          id: string | null
+          labor_cost: number | null
+          mode: Database["public"]["Enums"]["project_mode"] | null
+          name: string | null
+          status: Database["public"]["Enums"]["project_status"] | null
+          tasks_done: number | null
+          tasks_total: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_360"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       app_role: {
@@ -2849,6 +3170,8 @@ export type Database = {
       is_strategist_plus: { Args: never; Returns: boolean }
       is_team: { Args: never; Returns: boolean }
       next_document_number: { Args: { p_prefix: string }; Returns: string }
+      normalize_digits: { Args: { t: string }; Returns: string }
+      normalize_phone_sa: { Args: { t: string }; Returns: string }
       notify_team: {
         Args: {
           p_client?: string
@@ -2867,6 +3190,8 @@ export type Database = {
       run_daily_jobs_v2: { Args: never; Returns: undefined }
       run_daily_jobs_v3: { Args: never; Returns: undefined }
       send_overdue_reminders: { Args: never; Returns: undefined }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       activity_kind: "call" | "meeting" | "task" | "deadline" | "followup"

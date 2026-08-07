@@ -162,6 +162,8 @@ export default function PipelineBoard() {
         </Button>
       </div>
 
+      <SourceAnalytics />
+
       {isLoading ? (
         <SkeletonList rows={5} />
       ) : filtered.length === 0 && !query ? (
@@ -208,6 +210,34 @@ export default function PipelineBoard() {
           if (converting) await convert.mutateAsync(converting);
         }}
       />
+    </div>
+  );
+}
+
+/** Win rate + cycle time per source (pipeline_analytics view) — the numbers
+ *  behind «أي مصدر يستحق الميزانية». Hidden until a deal has closed. */
+function SourceAnalytics() {
+  const { data } = useQuery({
+    queryKey: ['pipeline-analytics'],
+    queryFn: async () => {
+      const { data, error } = await getSupabase().from('pipeline_analytics').select('*');
+      if (error) throw new Error(error.message);
+      return data;
+    },
+  });
+  const rows = (data ?? []).filter((r) => (r.won ?? 0) + (r.lost ?? 0) > 0);
+  if (rows.length === 0) return null;
+  return (
+    <div className="mb-4 flex flex-wrap gap-2 text-xs" aria-label="أداء المصادر">
+      {rows.map((r) => (
+        <Badge key={r.source} variant="outline">
+          {SOURCE_LABELS[r.source as Enums<'lead_source'>]}: فوز{' '}
+          <b dir="ltr">{r.win_rate_pct ?? 0}%</b>
+          {r.avg_days_to_win != null && (
+            <> · <b dir="ltr">{r.avg_days_to_win}</b> يوماً للإغلاق</>
+          )}
+        </Badge>
+      ))}
     </div>
   );
 }

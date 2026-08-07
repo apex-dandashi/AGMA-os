@@ -15,7 +15,8 @@ import {
   SkeletonList,
   Spinner,
 } from '@agma/ui';
-import { FolderKanban, Lock, ShieldCheck, Timer } from 'lucide-react';
+import { Download, FolderKanban, Lock, ShieldCheck, Timer } from 'lucide-react';
+import { exportCsv } from '../lib/csv';
 import ChecklistRunModal from './ChecklistRunModal';
 import { METHOD_PHASES, type Enums, type Tables } from '@agma/db';
 import { getSupabase } from '../lib/supabase';
@@ -111,6 +112,7 @@ export default function ProjectsPanel() {
             <option key={k} value={k}>{v}</option>
           ))}
         </Select>
+        <ProjectsCsvButton />
       </div>
 
       {isLoading ? (
@@ -135,6 +137,29 @@ export default function ProjectsPanel() {
       <NewProjectModal open={showNew} onClose={() => setShowNew(false)}
         clients={clients ?? []} />
     </div>
+  );
+}
+
+/** Export via project_costs view — includes hours logged and labor cost,
+ *  the profitability side the list itself doesn't show. */
+function ProjectsCsvButton() {
+  const { data } = useQuery({
+    queryKey: ['project-costs'],
+    queryFn: async () => {
+      const { data, error } = await getSupabase().from('project_costs').select('*');
+      if (error) throw new Error(error.message);
+      return data;
+    },
+  });
+  return (
+    <Button variant="ghost" size="xs" aria-label="تصدير CSV"
+      disabled={!data?.length}
+      onClick={() => exportCsv('projects',
+        ['المشروع', 'الحالة', 'النمط', 'المهام', 'المنجزة', 'الساعات', 'كلفة العمل'],
+        (data ?? []).map((p) => [p.name, p.status, p.mode, p.tasks_total,
+          p.tasks_done, p.hours_logged, p.labor_cost]))}>
+      <Download className="h-3.5 w-3.5" aria-hidden /> CSV
+    </Button>
   );
 }
 
