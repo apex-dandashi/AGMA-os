@@ -35,6 +35,8 @@ export default function QuoteBuilder({ clients, onDone }:
   const [items, setItems] = useState<QuoteItem[]>([emptyItem()]);
   const [discountLabel, setDiscountLabel] = useState('');
   const [discountAmount, setDiscountAmount] = useState(0);
+  const [opt1, setOpt1] = useState({ label: 'الإجمالي · الخيار الأول', amount: 0 });
+  const [opt2, setOpt2] = useState({ label: 'الإجمالي · الخيار الثاني', amount: 0, recommended: true });
   const [accountId, setAccountId] = useState('');
   const [pickedClauses, setPickedClauses] = useState<Set<string>>(new Set());
   const [preview, setPreview] = useState(false);
@@ -70,7 +72,11 @@ export default function QuoteBuilder({ clients, onDone }:
         discountLabel && discountAmount > 0
           ? [{ label: discountLabel, amount: discountAmount }]
           : [],
-      options: [],
+      // Up to 2 priced scenarios with ★ marker (docs/06 §3.4)
+      options: [
+        ...(opt1.amount > 0 ? [{ label: opt1.label, amount: opt1.amount }] : []),
+        ...(opt2.amount > 0 ? [{ label: opt2.label, amount: opt2.amount, recommended: true }] : []),
+      ],
       vatEnabled: false,
       paymentAccount: {
         iban: account.iban,
@@ -117,6 +123,16 @@ export default function QuoteBuilder({ clients, onDone }:
     setItems((prev) => prev.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
   }
 
+  function moveItem(i: number, dir: -1 | 1) {
+    setItems((prev) => {
+      const j = i + dir;
+      if (j < 0 || j >= prev.length) return prev;
+      const next = [...prev];
+      [next[i], next[j]] = [next[j], next[i]];
+      return next;
+    });
+  }
+
   return (
     <div className="mb-4 space-y-3 rounded-sm border border-gray-dark p-4">
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
@@ -161,6 +177,14 @@ export default function QuoteBuilder({ clients, onDone }:
               <Checkbox label="بدون خصم" checked={!!item.noDiscount}
                 onChange={(e) => setItem(i, { noDiscount: e.target.checked })} />
             </div>
+            <div className="flex gap-1 pb-1.5">
+              <button type="button" aria-label="تحريك لأعلى" disabled={i === 0}
+                onClick={() => moveItem(i, -1)}
+                className="rounded-sm px-1.5 text-gray-medium hover:text-snow disabled:opacity-30 focus-visible:ring-2 focus-visible:ring-pulse-orange/60 focus:outline-none">↑</button>
+              <button type="button" aria-label="تحريك لأسفل" disabled={i === items.length - 1}
+                onClick={() => moveItem(i, 1)}
+                className="rounded-sm px-1.5 text-gray-medium hover:text-snow disabled:opacity-30 focus-visible:ring-2 focus-visible:ring-pulse-orange/60 focus:outline-none">↓</button>
+            </div>
           </div>
         ))}
         <div className="flex flex-wrap items-end gap-2">
@@ -173,6 +197,25 @@ export default function QuoteBuilder({ clients, onDone }:
             onChange={(e) => setDiscountAmount(Number(e.target.value))}
             placeholder="قيمة الخصم" className="w-28" />
         </div>
+        <fieldset className="rounded-sm border border-gray-dark p-3">
+          <legend className="px-1 text-xs text-gray-light">سيناريوهات التسعير (اختياري — حتى خيارين)</legend>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div className="flex gap-2">
+              <Input value={opt1.label} onChange={(e) => setOpt1({ ...opt1, label: e.target.value })}
+                aria-label="اسم الخيار الأول" />
+              <Input type="number" dir="ltr" value={opt1.amount || ''} className="w-28"
+                aria-label="قيمة الخيار الأول"
+                onChange={(e) => setOpt1({ ...opt1, amount: Number(e.target.value) })} />
+            </div>
+            <div className="flex gap-2">
+              <Input value={opt2.label} onChange={(e) => setOpt2({ ...opt2, label: e.target.value })}
+                aria-label="اسم الخيار الثاني (المُوصى به ★)" />
+              <Input type="number" dir="ltr" value={opt2.amount || ''} className="w-28"
+                aria-label="قيمة الخيار الثاني"
+                onChange={(e) => setOpt2({ ...opt2, amount: Number(e.target.value) })} />
+            </div>
+          </div>
+        </fieldset>
       </div>
 
       <div className="flex flex-wrap gap-1.5" role="group" aria-label="بنود الشروط">

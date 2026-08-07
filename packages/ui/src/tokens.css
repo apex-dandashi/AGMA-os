@@ -8,7 +8,7 @@
   --color-pure-ink: #0A0A0A;
   --color-snow: #FAFAFA;
   --color-gray-dark: #262626;
-  --color-gray-medium: #737373;
+  --color-gray-medium: #8A8A8A; /* was #737373 — failed WCAG AA on pure-ink */
   --color-gray-light: #D4D4D4;
 
   /* Document palette (provisional — see tokens.ts TODO) */

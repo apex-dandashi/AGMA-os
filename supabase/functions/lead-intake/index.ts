@@ -21,6 +21,7 @@ const intakeSchema = z.object({
   budget: z.string().trim().max(100).optional(),
   message: z.string().trim().max(2000).optional(),
   website: z.string().optional(),
+  utm: z.record(z.string().max(300)).optional(),
 });
 
 function corsHeaders(origin: string | null) {
@@ -81,6 +82,7 @@ Deno.serve(async (req) => {
     company: body.company || null,
     source: 'site',
     notes: notes || null,
+    utm: body.utm ?? {},
   });
 
   if (error) {

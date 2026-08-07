@@ -256,10 +256,20 @@ export default function MultiStepLeadForm() {
       .join('، ');
 
     try {
+      // Attribution: UTM params + referrer (docs/08 §1 source attribution)
+      const params = new URLSearchParams(window.location.search);
+      const utm: Record<string, string> = {};
+      for (const k of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']) {
+        const v = params.get(k);
+        if (v) utm[k.replace('utm_', '')] = v.slice(0, 200);
+      }
+      if (document.referrer) utm.referrer = document.referrer.slice(0, 300);
+
       const res = await fetch(`${SUPABASE_URL}/functions/v1/lead-intake`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
+          utm,
           name: formData.name,
           company: formData.company,
           phone: formData.phone,

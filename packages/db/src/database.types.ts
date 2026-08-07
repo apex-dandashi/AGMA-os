@@ -34,6 +34,87 @@ export type Database = {
   }
   public: {
     Tables: {
+      activities: {
+        Row: {
+          assignee: string | null
+          client_id: string | null
+          created_at: string
+          created_by: string | null
+          document_id: string | null
+          done_at: string | null
+          due_at: string
+          id: string
+          kind: Database["public"]["Enums"]["activity_kind"]
+          lead_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignee?: string | null
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          document_id?: string | null
+          done_at?: string | null
+          due_at: string
+          id?: string
+          kind?: Database["public"]["Enums"]["activity_kind"]
+          lead_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assignee?: string | null
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          document_id?: string | null
+          done_at?: string | null
+          due_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["activity_kind"]
+          lead_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activities_assignee_fkey"
+            columns: ["assignee"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activities_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activities_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activities_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activities_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       approvals: {
         Row: {
           client_id: string
@@ -163,6 +244,7 @@ export type Database = {
           id: string
           sector: string | null
           status: Database["public"]["Enums"]["client_status"]
+          tags: string[]
           updated_at: string
         }
         Insert: {
@@ -173,6 +255,7 @@ export type Database = {
           id?: string
           sector?: string | null
           status?: Database["public"]["Enums"]["client_status"]
+          tags?: string[]
           updated_at?: string
         }
         Update: {
@@ -183,6 +266,7 @@ export type Database = {
           id?: string
           sector?: string | null
           status?: Database["public"]["Enums"]["client_status"]
+          tags?: string[]
           updated_at?: string
         }
         Relationships: []
@@ -481,37 +565,55 @@ export type Database = {
           client_id: string | null
           company: string | null
           created_at: string
+          expected_close: string | null
           id: string
+          lost_reason: string | null
           name: string
           notes: string | null
+          outcome: Database["public"]["Enums"]["lead_outcome"]
           owner: string | null
           source: Database["public"]["Enums"]["lead_source"]
           stage: Database["public"]["Enums"]["lead_stage"]
+          tags: string[]
           updated_at: string
+          utm: Json
+          value: number | null
         }
         Insert: {
           client_id?: string | null
           company?: string | null
           created_at?: string
+          expected_close?: string | null
           id?: string
+          lost_reason?: string | null
           name: string
           notes?: string | null
+          outcome?: Database["public"]["Enums"]["lead_outcome"]
           owner?: string | null
           source?: Database["public"]["Enums"]["lead_source"]
           stage?: Database["public"]["Enums"]["lead_stage"]
+          tags?: string[]
           updated_at?: string
+          utm?: Json
+          value?: number | null
         }
         Update: {
           client_id?: string | null
           company?: string | null
           created_at?: string
+          expected_close?: string | null
           id?: string
+          lost_reason?: string | null
           name?: string
           notes?: string | null
+          outcome?: Database["public"]["Enums"]["lead_outcome"]
           owner?: string | null
           source?: Database["public"]["Enums"]["lead_source"]
           stage?: Database["public"]["Enums"]["lead_stage"]
+          tags?: string[]
           updated_at?: string
+          utm?: Json
+          value?: number | null
         }
         Relationships: [
           {
@@ -1283,6 +1385,7 @@ export type Database = {
       next_document_number: { Args: { p_prefix: string }; Returns: string }
     }
     Enums: {
+      activity_kind: "call" | "meeting" | "task" | "deadline" | "followup"
       approval_item_type:
         | "scope"
         | "roadmap"
@@ -1301,6 +1404,7 @@ export type Database = {
       document_type: "quote" | "sow" | "nda" | "sla" | "msa" | "amc" | "coc"
       interaction_kind: "call" | "whatsapp" | "email" | "meeting" | "note"
       kpi_direction: "up" | "down"
+      lead_outcome: "open" | "won" | "lost"
       lead_source: "call" | "whatsapp" | "email" | "site"
       lead_stage:
         | "discovery_call"
@@ -1451,6 +1555,7 @@ export const Constants = {
   },
   public: {
     Enums: {
+      activity_kind: ["call", "meeting", "task", "deadline", "followup"],
       approval_item_type: ["scope", "roadmap", "deliverable", "report", "task"],
       approval_status: ["pending", "approved", "rejected"],
       client_status: ["active", "paused", "archived"],
@@ -1458,6 +1563,7 @@ export const Constants = {
       document_type: ["quote", "sow", "nda", "sla", "msa", "amc", "coc"],
       interaction_kind: ["call", "whatsapp", "email", "meeting", "note"],
       kpi_direction: ["up", "down"],
+      lead_outcome: ["open", "won", "lost"],
       lead_source: ["call", "whatsapp", "email", "site"],
       lead_stage: [
         "discovery_call",

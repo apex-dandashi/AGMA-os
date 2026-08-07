@@ -18,7 +18,7 @@ export const colors = {
   /** Primary text on dark. */
   snow: '#FAFAFA',
   grayDark: '#262626',
-  grayMedium: '#737373',
+  grayMedium: '#8A8A8A', // lifted from #737373 for WCAG AA contrast on pure-ink
   grayLight: '#D4D4D4',
 } as const;
 

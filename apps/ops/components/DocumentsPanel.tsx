@@ -82,6 +82,24 @@ export default function DocumentsPanel() {
     { invalidate: [keys.documents] }
   );
 
+  // Immutability-compatible correction path: duplicate as a new draft version.
+  const newVersion = useAppMutation(
+    async (doc: Doc) => {
+      const payload = { ...(doc.payload as object), number: null } as never;
+      const { error } = await getSupabase().from('documents').insert({
+        type: doc.type,
+        client_id: doc.client_id,
+        scope_id: doc.scope_id,
+        payload,
+        payment_account_id: doc.payment_account_id,
+        version: doc.version + 1,
+        supersedes: doc.id,
+      });
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [keys.documents], successMessage: 'أُنشئت نسخة جديدة كمسودة' }
+  );
+
   const visible = useMemo(
     () =>
       (docs ?? []).filter(
@@ -151,6 +169,7 @@ export default function DocumentsPanel() {
               <Card key={doc.id} className="flex flex-wrap items-center gap-3 p-3 text-sm">
                 <Badge>{TYPE_LABELS[doc.type]}</Badge>
                 <b dir="ltr">{doc.number ?? '—'}</b>
+                {doc.version > 1 && <Badge variant="outline">v{doc.version}</Badge>}
                 <span className="text-gray-light">{client?.company}</span>
                 <Badge variant={doc.status === 'draft' ? 'neutral' : 'accent'}>
                   {STATUS_LABELS[doc.status]}
@@ -179,6 +198,12 @@ export default function DocumentsPanel() {
                     <Button variant="outline" size="xs"
                       onClick={() => setStatus.mutate({ doc, status: 'active' })}>
                       تفعيل
+                    </Button>
+                  )}
+                  {doc.status !== 'draft' && (
+                    <Button variant="ghost" size="xs" loading={newVersion.isPending}
+                      onClick={() => newVersion.mutate(doc)}>
+                      نسخة جديدة
                     </Button>
                   )}
                 </span>

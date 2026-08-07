@@ -9,6 +9,12 @@ project_id = "agma-os"
 [analytics]
 enabled = false
 
+# TOTP 2FA — mandatory for team roles (docs/05 §B11.4). Hosted project:
+# verify Auth → Multi-Factor is enabled in the dashboard too.
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
 # Public form endpoint — validates input itself; no user JWT exists on the
 # marketing site.
 [functions.lead-intake]

@@ -10,7 +10,7 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 1 | Schema / RLS / seeds / auth / audit | ✅ Done (2026-08-07) |
 | 2 | CRM + Sales + website sync | ✅ Done (2026-08-07) |
 | 3 | Legal generators | ✅ Done (2026-08-07) |
-| 3.5 | **Quality hardening** — docs/07 quality roadmap (owner verdict: 3/10 → target 9+) | 🔶 Sprint A done (2026-08-07); B & C next |
+| 3.5 | **Quality hardening** — docs/07 quality roadmap (owner verdict: 3/10 → target 9+) | 🔶 Sprints A+B done (2026-08-07); C next |
 | 4 | Projects + playbooks + HR | ⬜ |
 | 5 | Finance KSA | ⬜ |
 | 6 | Notifications | ⬜ |
@@ -18,6 +18,43 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 8 | Content Engine | ⬜ |
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
+
+## Phase 3.5 Sprint B log (2026-08-07)
+
+**Functionality half (docs/08):**
+- Migration `20260807080000`: **activities engine** (global reminders table,
+  linkable to leads/clients/documents), leads gain value/expected_close/
+  outcome(won|lost)+lost_reason/tags/utm, clients gain tags, realtime
+  publication on leads+documents+activities.
+- **Pipeline discipline**: next-action chip on every card («⚠ لا خطوة تالية»
+  when an open deal has no scheduled step — the Pipedrive rule), pipeline
+  value badge, deal value on cards, win/loss with reasons, tags, next-step
+  quick-add inside the lead editor, activities bell with overdue count +
+  quick-add + mark-done.
+- **UTM attribution**: marketing form captures utm_*+referrer → leads.utm.
+- **Quote depth**: two-scenario pricing UI (★ recommended), item reordering,
+  «نسخة جديدة» supersede flow with version badges.
+
+**UX half (docs/07):**
+- **Realtime**: postgres_changes → query invalidation (leads/documents/
+  activities live across teammates).
+- **TOTP 2FA enforced for team roles** (docs/05 §B11.4): forced enrollment on
+  first login (QR + secret), challenge on later logins; self-heals orphaned
+  unverified factors. Verified END-TO-END locally (enrolled + computed TOTP +
+  reached aal2). Local config: [auth.mfa.totp]; hosted: check dashboard.
+- **Auth lifecycle**: /reset page (request + set modes), invite-user edge
+  function (admin-only, role stamping), الفريق team page (invite + role管理).
+- **AR/EN chrome toggle** (i18n provider, localStorage persisted, direction
+  flips; documents remain Arabic-primary).
+- **Mobile**: bottom tab nav + responsive paddings.
+- **Contrast**: gray-medium token lifted #737373→#8A8A8A (WCAG AA on ink).
+
+**Bugs found & fixed while smoke-testing:** stale session for a deleted user
+hung the shell (now force-signs-out) · StrictMode double-enroll · orphaned
+unverified MFA factors blocking re-enrollment.
+
+**Owner notes:** SETUP.md gains two items — confirm hosted MFA/TOTP enabled,
+and configure custom SMTP before inviting the team (invites/resets email).
 
 ## Phase 3.5 Sprint A log (2026-08-07)
 

@@ -1,20 +1,34 @@
 'use client';
 
+import * as React from 'react';
 import { useEffect, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import type { Session } from '@supabase/supabase-js';
 import { Button, Input, Modal, Spinner, ToastProvider } from '@agma/ui';
 import type { Tables } from '@agma/db';
 import { getSupabase } from '../lib/supabase';
+import { LocaleProvider, useLocale, type DictKey } from '../lib/i18n';
+import { keys } from '../lib/queries';
+import MfaGate from './MfaGate';
+import ActivitiesBell, { activitiesKey } from './ActivitiesBell';
 
-const NAV = [
-  { href: '/', label: 'المسار' },
-  { href: '/clients/', label: 'العملاء' },
-  { href: '/documents/', label: 'المستندات' },
-  { href: '/website/', label: 'الموقع' },
-] as const;
+const NAV: { href: string; key: DictKey }[] = [
+  { href: '/', key: 'nav.pipeline' },
+  { href: '/clients/', key: 'nav.clients' },
+  { href: '/documents/', key: 'nav.documents' },
+  { href: '/website/', key: 'nav.website' },
+  { href: '/team/', key: 'nav.team' },
+];
+
+const ProfileContext = React.createContext<Tables<'profiles'> | null>(null);
+
+export function useProfile(): Tables<'profiles'> {
+  const p = React.useContext(ProfileContext);
+  if (!p) throw new Error('useProfile requires AppShell');
+  return p;
+}
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -28,9 +42,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ToastProvider>
-        <AuthGate>{children}</AuthGate>
-      </ToastProvider>
+      <LocaleProvider>
+        <ToastProvider>
+          <AuthGate>{children}</AuthGate>
+        </ToastProvider>
+      </LocaleProvider>
     </QueryClientProvider>
   );
 }
@@ -60,24 +76,19 @@ function AuthGate({ children }: { children: React.ReactNode }) {
       .select('*')
       .eq('id', session.user.id)
       .single()
-      .then(({ data }) => setProfile(data));
+      .then(({ data, error }) => {
+        if (error || !data) {
+          // Stale session for a deleted/blocked user — never hang on it.
+          getSupabase().auth.signOut();
+          return;
+        }
+        setProfile(data);
+      });
   }, [session]);
 
-  if (!ready) {
-    return (
-      <div className="grid min-h-screen place-items-center">
-        <Spinner className="h-6 w-6" />
-      </div>
-    );
-  }
+  if (!ready) return <CenterSpinner />;
   if (!session) return <LoginForm />;
-  if (!profile) {
-    return (
-      <div className="grid min-h-screen place-items-center">
-        <Spinner className="h-6 w-6" />
-      </div>
-    );
-  }
+  if (!profile) return <CenterSpinner />;
   if (profile.role === 'client') {
     return (
       <div className="grid min-h-screen place-items-center p-8 text-center">
@@ -91,12 +102,52 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return <Chrome profile={profile}>{children}</Chrome>;
+  return (
+    <ProfileContext.Provider value={profile}>
+      {/* 2FA mandatory for team roles (docs/05 §B11.4) */}
+      <MfaGate>
+        <Chrome profile={profile}>{children}</Chrome>
+      </MfaGate>
+    </ProfileContext.Provider>
+  );
+}
+
+function CenterSpinner() {
+  return (
+    <div className="grid min-h-screen place-items-center">
+      <Spinner className="h-6 w-6" />
+    </div>
+  );
+}
+
+/** Invalidate team-shared queries on any realtime change (docs/07 DoD #8). */
+function useRealtimeSync() {
+  const qc = useQueryClient();
+  useEffect(() => {
+    const supabase = getSupabase();
+    const channel = supabase
+      .channel('ops-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'leads' }, () =>
+        qc.invalidateQueries({ queryKey: keys.leads })
+      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'documents' }, () =>
+        qc.invalidateQueries({ queryKey: keys.documents })
+      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'activities' }, () =>
+        qc.invalidateQueries({ queryKey: activitiesKey as unknown as readonly string[] })
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [qc]);
 }
 
 function Chrome({ profile, children }: { profile: Tables<'profiles'>; children: React.ReactNode }) {
   const pathname = usePathname();
+  const { t, locale, toggle } = useLocale();
   const [searchOpen, setSearchOpen] = useState(false);
+  useRealtimeSync();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -109,49 +160,66 @@ function Chrome({ profile, children }: { profile: Tables<'profiles'>; children: 
     return () => document.removeEventListener('keydown', onKey);
   }, []);
 
+  const navLink = (item: { href: string; key: DictKey }, mobile = false) => (
+    <Link
+      key={item.href}
+      href={item.href}
+      aria-current={pathname === item.href ? 'page' : undefined}
+      className={`rounded-sm transition-colors focus-visible:ring-2 focus-visible:ring-pulse-orange/60 focus:outline-none ${
+        mobile ? 'flex-1 py-2.5 text-center text-xs' : 'px-3 py-1.5 text-sm'
+      } ${
+        pathname === item.href
+          ? 'bg-pulse-orange/15 text-pulse-orange'
+          : 'text-gray-light hover:text-snow'
+      }`}
+    >
+      {t(item.key)}
+    </Link>
+  );
+
   return (
-    <div className="min-h-screen">
-      <a
-        href="#main"
-        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-pulse-orange focus:px-3 focus:py-1"
-      >
-        تخطي إلى المحتوى
+    <div className="min-h-screen pb-16 md:pb-0">
+      <a href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-pulse-orange focus:px-3 focus:py-1">
+        {t('chrome.skip')}
       </a>
-      <header className="flex items-center gap-6 border-b border-gray-dark px-6 py-3">
+      <header className="flex items-center gap-3 border-b border-gray-dark px-4 py-3 md:gap-6 md:px-6">
         <span className="font-black text-pulse-orange text-lg">AGMA OS</span>
-        <nav aria-label="التنقل الرئيسي" className="flex gap-1">
-          {NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={pathname === item.href ? 'page' : undefined}
-              className={`rounded-sm px-3 py-1.5 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-pulse-orange/60 focus:outline-none ${
-                pathname === item.href
-                  ? 'bg-pulse-orange/15 text-pulse-orange'
-                  : 'text-gray-light hover:text-snow'
-              }`}
-            >
-              {item.label}
-            </Link>
-          ))}
+        <nav aria-label="main" className="hidden gap-1 md:flex">
+          {NAV.map((i) => navLink(i))}
         </nav>
-        <button
-          onClick={() => setSearchOpen(true)}
-          className="ms-auto flex items-center gap-2 rounded-sm border border-gray-dark px-3 py-1.5 text-xs text-gray-medium hover:text-gray-light focus-visible:ring-2 focus-visible:ring-pulse-orange/60 focus:outline-none"
-        >
-          بحث… <kbd className="rounded-sm bg-gray-dark px-1.5 font-sans">⌘K</kbd>
-        </button>
-        <div className="flex items-center gap-3 text-sm text-gray-medium">
-          <span>{profile.full_name || profile.email}</span>
+        <div className="ms-auto flex items-center gap-2">
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="hidden items-center gap-2 rounded-sm border border-gray-dark px-3 py-1.5 text-xs text-gray-medium hover:text-gray-light focus-visible:ring-2 focus-visible:ring-pulse-orange/60 focus:outline-none sm:flex"
+          >
+            {t('chrome.search')} <kbd className="rounded-sm bg-gray-dark px-1.5 font-sans">⌘K</kbd>
+          </button>
+          <ActivitiesBell />
+          <button
+            onClick={toggle}
+            aria-label={locale === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
+            className="rounded-sm border border-gray-dark px-2 py-1 text-xs text-gray-light hover:text-snow focus-visible:ring-2 focus-visible:ring-pulse-orange/60 focus:outline-none"
+          >
+            {locale === 'ar' ? 'EN' : 'ع'}
+          </button>
+          <span className="hidden text-sm text-gray-medium lg:inline">
+            {profile.full_name || profile.email}
+          </span>
           <button
             onClick={() => getSupabase().auth.signOut()}
-            className="rounded-sm text-gray-medium hover:text-snow focus-visible:ring-2 focus-visible:ring-pulse-orange/60 focus:outline-none"
+            className="rounded-sm text-sm text-gray-medium hover:text-snow focus-visible:ring-2 focus-visible:ring-pulse-orange/60 focus:outline-none"
           >
-            خروج
+            {t('chrome.signout')}
           </button>
         </div>
       </header>
-      <main id="main" className="p-6">{children}</main>
+      <main id="main" className="p-4 md:p-6">{children}</main>
+      {/* Mobile bottom navigation */}
+      <nav aria-label="mobile"
+        className="fixed inset-x-0 bottom-0 z-40 flex border-t border-gray-dark bg-pure-ink/95 backdrop-blur md:hidden">
+        {NAV.map((i) => navLink(i, true))}
+      </nav>
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   );
@@ -166,6 +234,7 @@ interface SearchHit {
 }
 
 function GlobalSearch({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useLocale();
   const [q, setQ] = useState('');
   const [hits, setHits] = useState<SearchHit[]>([]);
   const [busy, setBusy] = useState(false);
@@ -181,7 +250,7 @@ function GlobalSearch({ open, onClose }: { open: boolean; onClose: () => void })
       setHits([]);
       return;
     }
-    const t = setTimeout(async () => {
+    const timer = setTimeout(async () => {
       setBusy(true);
       const supabase = getSupabase();
       const like = `%${q.trim()}%`;
@@ -203,23 +272,19 @@ function GlobalSearch({ open, onClose }: { open: boolean; onClose: () => void })
       ]);
       setBusy(false);
     }, 250);
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
   }, [q, open]);
 
   const KIND_AR = { lead: 'محتمل', client: 'عميل', document: 'مستند' } as const;
 
   return (
-    <Modal open={open} onClose={onClose} title="بحث سريع">
-      <Input
-        autoFocus
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        placeholder="ابحث في العملاء والمحتملين والمستندات…"
-      />
+    <Modal open={open} onClose={onClose} title={t('search.title')}>
+      <Input autoFocus value={q} onChange={(e) => setQ(e.target.value)}
+        placeholder={t('search.placeholder')} />
       <div className="mt-3 space-y-1">
         {busy && <Spinner />}
         {!busy && q.length >= 2 && hits.length === 0 && (
-          <p className="py-4 text-center text-sm text-gray-medium">لا نتائج</p>
+          <p className="py-4 text-center text-sm text-gray-medium">{t('search.empty')}</p>
         )}
         {hits.map((h) => (
           <button
@@ -263,26 +328,15 @@ function LoginForm() {
         <h1 className="text-2xl font-black">
           <span className="text-pulse-orange">AGMA</span> OS
         </h1>
-        <Input
-          type="email"
-          required
-          dir="ltr"
-          label="البريد الإلكتروني"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <Input
-          type="password"
-          required
-          dir="ltr"
-          label="كلمة المرور"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          error={error ?? undefined}
-        />
-        <Button type="submit" loading={busy} className="w-full">
-          دخول
-        </Button>
+        <Input type="email" required dir="ltr" label="البريد الإلكتروني"
+          value={email} onChange={(e) => setEmail(e.target.value)} />
+        <Input type="password" required dir="ltr" label="كلمة المرور"
+          value={password} onChange={(e) => setPassword(e.target.value)}
+          error={error ?? undefined} />
+        <Button type="submit" loading={busy} className="w-full">دخول</Button>
+        <Link href="/reset/" className="block text-center text-xs text-gray-medium hover:text-snow">
+          نسيت كلمة المرور؟
+        </Link>
       </form>
     </div>
   );

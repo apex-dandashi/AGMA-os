@@ -95,6 +95,11 @@ the local stack (Docker), never on a second hosted project — see supabase/READ
       audit trail verified via data dump. Original instruction:
       `supabase db reset` (local) → `supabase link --project-ref <PROD_REF> && supabase db push`
 - [ ] Personal access token for CI: account → Access Tokens → `SUPABASE_ACCESS_TOKEN`
+- [ ] **MFA (Sprint B):** project → Authentication → Multi-Factor → ensure TOTP
+      is enabled (team logins now REQUIRE 2FA enrollment on first sign-in)
+- [ ] **SMTP for invites/resets:** Authentication → Emails — default Supabase
+      sender is heavily rate-limited; configure custom SMTP (SendGrid, §6)
+      before inviting the team
 
 ## 4. Cloudflare R2
 

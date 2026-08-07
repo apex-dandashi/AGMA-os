@@ -29,9 +29,11 @@ import { LEAD_STAGES, type Enums, type Tables } from '@agma/db';
 import { leadInputSchema } from '@agma/db/schemas';
 import { getSupabase } from '../lib/supabase';
 import { keys, useAppMutation, useLeads, useMoveLeadStage } from '../lib/queries';
+import { activitiesKey, useOpenActivities } from './ActivitiesBell';
 
 type Lead = Tables<'leads'>;
 type Stage = Enums<'lead_stage'>;
+type Activity = Tables<'activities'>;
 
 const STAGE_LABELS: Record<Stage, string> = {
   discovery_call: 'مكالمة استكشافية',
@@ -51,6 +53,7 @@ const SOURCE_LABELS: Record<Enums<'lead_source'>, string> = {
 
 export default function PipelineBoard() {
   const { data: leads, isLoading, error } = useLeads();
+  const { data: openActivities } = useOpenActivities();
   const move = useMoveLeadStage();
   const toast = useToast();
   const [query, setQuery] = useState('');
@@ -72,6 +75,25 @@ export default function PipelineBoard() {
       (l) => l.name.includes(q) || (l.company ?? '').includes(q) || (l.notes ?? '').includes(q)
     );
   }, [leads, query]);
+
+  // Next open activity per lead — the Pipedrive discipline signal.
+  const nextActivityByLead = useMemo(() => {
+    const map = new Map<string, Activity>();
+    for (const a of openActivities ?? []) {
+      if (!a.lead_id) continue;
+      const cur = map.get(a.lead_id);
+      if (!cur || a.due_at < cur.due_at) map.set(a.lead_id, a);
+    }
+    return map;
+  }, [openActivities]);
+
+  const pipelineValue = useMemo(
+    () =>
+      (leads ?? [])
+        .filter((l) => l.outcome === 'open' && l.value)
+        .reduce((s, l) => s + Number(l.value), 0),
+    [leads]
+  );
 
   const convert = useAppMutation(
     async (lead: Lead) => {
@@ -116,6 +138,11 @@ export default function PipelineBoard() {
         <Button variant="outline" size="sm" onClick={() => setShowNew(true)}>
           + عميل محتمل
         </Button>
+        {pipelineValue > 0 && (
+          <Badge variant="outline" aria-label="قيمة المسار المفتوح">
+            قيمة المسار: <b dir="ltr">SAR {pipelineValue.toLocaleString('en-US')}</b>
+          </Badge>
+        )}
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -146,6 +173,7 @@ export default function PipelineBoard() {
                 key={stage}
                 stage={stage}
                 leads={filtered.filter((l) => l.stage === stage)}
+                nextActivityByLead={nextActivityByLead}
                 onEdit={setEditing}
                 onConvert={setConverting}
               />
@@ -176,11 +204,13 @@ export default function PipelineBoard() {
 function StageColumn({
   stage,
   leads,
+  nextActivityByLead,
   onEdit,
   onConvert,
 }: {
   stage: Stage;
   leads: Lead[];
+  nextActivityByLead: Map<string, Activity>;
   onEdit: (l: Lead) => void;
   onConvert: (l: Lead) => void;
 }) {
@@ -198,20 +228,49 @@ function StageColumn({
       </h2>
       <div className="space-y-2">
         {leads.map((lead) => (
-          <LeadCard key={lead.id} lead={lead} onEdit={onEdit} onConvert={onConvert} />
+          <LeadCard key={lead.id} lead={lead}
+            nextActivity={nextActivityByLead.get(lead.id)}
+            onEdit={onEdit} onConvert={onConvert} />
         ))}
       </div>
     </div>
   );
 }
 
+/** Next-action chip: the Pipedrive rule — an open deal without a scheduled
+ *  next step is a stalled deal, and it glows. */
+function NextActionChip({ lead, activity }: { lead: Lead; activity?: Activity }) {
+  if (lead.outcome === 'won') return <Badge variant="accent">فوز 🏆</Badge>;
+  if (lead.outcome === 'lost') return <Badge>خسارة</Badge>;
+  if (!activity) {
+    return (
+      <span className="rounded-full border border-pulse-orange/60 px-2 py-0.5 text-xs text-pulse-orange">
+        ⚠ لا خطوة تالية
+      </span>
+    );
+  }
+  const overdue = new Date(activity.due_at) < new Date();
+  return (
+    <span
+      className={`rounded-full px-2 py-0.5 text-xs ${
+        overdue ? 'bg-pulse-orange/20 text-pulse-orange' : 'bg-gray-dark text-gray-light'
+      }`}
+      title={activity.title}
+    >
+      ⏰ {new Date(activity.due_at).toLocaleDateString('ar-SA', { day: 'numeric', month: 'short' })}
+    </span>
+  );
+}
+
 function LeadCard({
   lead,
+  nextActivity,
   overlay,
   onEdit,
   onConvert,
 }: {
   lead: Lead;
+  nextActivity?: Activity;
   overlay?: boolean;
   onEdit: (l: Lead) => void;
   onConvert: (l: Lead) => void;
@@ -238,11 +297,19 @@ function LeadCard({
         )}
       </div>
       {lead.company && <p className="text-gray-light">{lead.company}</p>}
+      {lead.value != null && Number(lead.value) > 0 && (
+        <p dir="ltr" className="mt-0.5 text-xs font-bold text-snow">
+          SAR {Number(lead.value).toLocaleString('en-US')}
+        </p>
+      )}
       {lead.notes && (
-        <p className="mt-1 line-clamp-3 whitespace-pre-line text-xs text-gray-medium">
+        <p className="mt-1 line-clamp-2 whitespace-pre-line text-xs text-gray-medium">
           {lead.notes}
         </p>
       )}
+      <div className="mt-1.5">
+        <NextActionChip lead={lead} activity={nextActivity} />
+      </div>
       <div className="mt-2 flex gap-2">
         <button
           onClick={() => onEdit(lead)}
@@ -316,6 +383,13 @@ function EditLeadModal({ lead, onClose }: { lead: Lead | null; onClose: () => vo
   const [name, setName] = useState('');
   const [company, setCompany] = useState('');
   const [stage, setStage] = useState<Stage>('discovery_call');
+  const [value, setValue] = useState<number>(0);
+  const [expectedClose, setExpectedClose] = useState('');
+  const [outcome, setOutcome] = useState<Enums<'lead_outcome'>>('open');
+  const [lostReason, setLostReason] = useState('');
+  const [tags, setTags] = useState('');
+  const [nextTitle, setNextTitle] = useState('');
+  const [nextDue, setNextDue] = useState('');
 
   // Sync form when a lead is opened.
   const [last, setLast] = useState<string | null>(null);
@@ -325,41 +399,98 @@ function EditLeadModal({ lead, onClose }: { lead: Lead | null; onClose: () => vo
     setCompany(lead.company ?? '');
     setNotes(lead.notes ?? '');
     setStage(lead.stage);
+    setValue(lead.value ? Number(lead.value) : 0);
+    setExpectedClose(lead.expected_close ?? '');
+    setOutcome(lead.outcome);
+    setLostReason(lead.lost_reason ?? '');
+    setTags((lead.tags ?? []).join('، '));
+    setNextTitle('');
+    setNextDue('');
   }
 
   const save = useAppMutation(
     async () => {
       if (!lead) return;
-      const { error } = await getSupabase()
+      const supabase = getSupabase();
+      const { error } = await supabase
         .from('leads')
-        .update({ name, company: company || null, notes: notes || null, stage })
+        .update({
+          name,
+          company: company || null,
+          notes: notes || null,
+          stage,
+          value: value > 0 ? value : null,
+          expected_close: expectedClose || null,
+          outcome,
+          lost_reason: outcome === 'lost' ? lostReason || null : null,
+          tags: tags.split(/[،,]/).map((t) => t.trim()).filter(Boolean),
+        })
         .eq('id', lead.id);
       if (error) throw new Error(error.message);
+      // Optional next action in the same save (Pipedrive discipline).
+      if (nextTitle.trim() && nextDue) {
+        const { error: e2 } = await supabase.from('activities').insert({
+          title: nextTitle.trim(),
+          kind: 'followup',
+          due_at: new Date(nextDue).toISOString(),
+          lead_id: lead.id,
+        });
+        if (e2) throw new Error(e2.message);
+      }
     },
-    { invalidate: [keys.leads], successMessage: 'تم الحفظ' }
+    {
+      invalidate: [keys.leads, activitiesKey as unknown as readonly string[]],
+      successMessage: 'تم الحفظ',
+    }
   );
 
   return (
-    <Modal open={!!lead} onClose={onClose} title="تعديل العميل المحتمل">
+    <Modal open={!!lead} onClose={onClose} title="تعديل العميل المحتمل" wide>
       <div className="space-y-3">
-        <Input label="الاسم" value={name} onChange={(e) => setName(e.target.value)} />
-        <Input label="الشركة" value={company} onChange={(e) => setCompany(e.target.value)} />
-        {/* Keyboard/touch fallback for moving stages — drag is not the only path */}
-        <Select label="المرحلة" value={stage} onChange={(e) => setStage(e.target.value as Stage)}>
-          {LEAD_STAGES.map((s) => (
-            <option key={s} value={s}>{STAGE_LABELS[s]}</option>
-          ))}
-        </Select>
-        <Textarea label="ملاحظات" rows={5} value={notes} onChange={(e) => setNotes(e.target.value)} />
-        <Button
-          size="sm"
-          className="w-full"
-          loading={save.isPending}
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Input label="الاسم" value={name} onChange={(e) => setName(e.target.value)} />
+          <Input label="الشركة" value={company} onChange={(e) => setCompany(e.target.value)} />
+          {/* Keyboard/touch fallback for moving stages — drag is not the only path */}
+          <Select label="المرحلة" value={stage} onChange={(e) => setStage(e.target.value as Stage)}>
+            {LEAD_STAGES.map((s) => (
+              <option key={s} value={s}>{STAGE_LABELS[s]}</option>
+            ))}
+          </Select>
+          <Select label="النتيجة" value={outcome}
+            onChange={(e) => setOutcome(e.target.value as Enums<'lead_outcome'>)}>
+            <option value="open">مفتوح</option>
+            <option value="won">فوز 🏆</option>
+            <option value="lost">خسارة</option>
+          </Select>
+          <Input label="قيمة الصفقة (SAR)" type="number" dir="ltr"
+            value={value || ''} onChange={(e) => setValue(Number(e.target.value))} />
+          <Input label="تاريخ الإغلاق المتوقع" type="date" dir="ltr"
+            value={expectedClose} onChange={(e) => setExpectedClose(e.target.value)} />
+        </div>
+        {outcome === 'lost' && (
+          <Input label="سبب الخسارة" value={lostReason}
+            onChange={(e) => setLostReason(e.target.value)}
+            placeholder="السعر · التوقيت · منافس · لا ميزانية…" />
+        )}
+        <Input label="وسوم" value={tags} onChange={(e) => setTags(e.target.value)}
+          hint="افصل بين الوسوم بفاصلة" placeholder="عقارات، أولوية عالية" />
+        <Textarea label="ملاحظات" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
+        <fieldset className="rounded-sm border border-gray-dark p-3">
+          <legend className="px-1 text-xs text-gray-light">الخطوة التالية (اختياري)</legend>
+          <div className="flex flex-wrap gap-2">
+            <div className="min-w-40 flex-1">
+              <Input value={nextTitle} onChange={(e) => setNextTitle(e.target.value)}
+                placeholder="مثال: مكالمة متابعة العرض" />
+            </div>
+            <Input type="datetime-local" dir="ltr" value={nextDue}
+              onChange={(e) => setNextDue(e.target.value)} className="w-52" />
+          </div>
+        </fieldset>
+        <Button size="sm" className="w-full" loading={save.isPending}
           onClick={async () => {
             await save.mutateAsync(undefined as never);
             onClose();
-          }}
-        >
+          }}>
           حفظ التعديلات
         </Button>
       </div>
