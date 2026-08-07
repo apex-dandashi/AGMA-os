@@ -15,12 +15,43 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 5 | Finance KSA | ✅ Done (2026-08-07) |
 | 6 | Notifications | ✅ Done (2026-08-07) |
 | 6.5a | **OS-core** (docs/10): vision/VTO, seats, primary_aims, rocks, issues+IDS, scorecard+digest, L10 meetings | ✅ Done (2026-08-07) |
-| 6.5b | ⬜ Next — **Safety+cash** (docs/10): pause checklists, Flag & Hold, huddles, Profit First allocations, Vault/drip, leak detection | ⬜ |
+| 6.5b | **Safety+cash** (docs/10): pause checklists, Flag & Hold, huddles, Profit First allocations, Vault/drip, leak detection | ✅ Done (2026-08-07) |
 | 6.5c | **Sellable** (docs/10): TVR scores, service_packages, custom-reason mining, playbook versions+grades, experiments, EMT/independence gauges | ⬜ |
 | 7 | Portal + onboarding + Drop Forms | ⬜ |
 | 8 | Content Engine | ⬜ |
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
+
+## Phase 6.5b log (2026-08-07)
+
+**Gawande (docs/10 §2.3):**
+- 10 checklists seeded: 5 DO-CONFIRM launch gates (campaign/website/content/
+  invoice/automation, ≤9 killer items enforced by check constraint) + 5
+  READ-DO runbooks (allocation ritual, ZATCA day, security incident, PDPL
+  deletion, partner absence).
+- Launch task-templates in market-phase stages carry checklist_key; a DB
+  trigger REFUSES marking them done without a passed run, and refuses while
+  a Flag & Hold stands.
+- **Flag & Hold**: anyone flags with a reason → run blocked + Issue auto-filed
+  + team notified. Huddle card in the run modal names each assignee and their
+  piece («اعتراضات؟» — أصغر عضو له سلطة الإيقاف). Per-item checker+timestamp
+  recorded.
+- Verified: done-without-checklist rejected with «نقطة توقف…» · pass→done
+  succeeds · flag filed issue + notification.
+
+**Profit First (docs/10 §2.4):**
+- allocation_rules with CAP→TAP (placeholder %s marked قرار شركاء),
+  allocations generated on the 10th & 25th by the daily cron from
+  **payments only — wallet ad-money provably excluded** (verified: 20k wallet
+  spend invisible to a 10k allocation → 500/300/1500/1500/6200 = exact).
+- Ritual UX: pending card with amounts + READ-DO transfer checklist +
+  confirm (audited); vault-months meter (reserve ÷ 90-day OpEx avg);
+  quarterly profit-distribution event (50/50 default).
+- 4 new scorecard metrics: allocation_on_time · vault_months ·
+  scope_leak_sar (untemplated task hours × cost rate) · flags_raised
+  («الصفر الدائم إشارة سيئة»). Sunday cron now computes 12 metrics.
+
+All gates green; production migration applied (crons updated to v2).
 
 ## Operating System adoption (2026-08-07)
 

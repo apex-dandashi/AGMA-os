@@ -21,6 +21,7 @@ import {
   type InvoicePayload,
   type QuotePayload,
 } from '@agma/legal-templates';
+import AllocationsTab from './AllocationsTab';
 import { getSupabase } from '../lib/supabase';
 import { keys, useAppMutation, useClients, useDocuments, usePaymentAccounts } from '../lib/queries';
 
@@ -59,6 +60,7 @@ export default function FinancePanel() {
           { key: 'retainers', label: 'الاشتراكات' },
           { key: 'expenses', label: 'المصروفات' },
           { key: 'wallets', label: 'محافظ الإعلانات' },
+          { key: 'allocations', label: 'التوزيعات' },
         ]}
       />
       <div className="mt-4">
@@ -66,6 +68,7 @@ export default function FinancePanel() {
         {tab === 'retainers' && <RetainersTab />}
         {tab === 'expenses' && <ExpensesTab />}
         {tab === 'wallets' && <WalletsTab />}
+        {tab === 'allocations' && <AllocationsTab />}
       </div>
     </div>
   );

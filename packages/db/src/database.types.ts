@@ -115,6 +115,77 @@ export type Database = {
           },
         ]
       }
+      allocation_rules: {
+        Row: {
+          bucket: string
+          cap_pct: number
+          name_ar: string
+          sort: number
+          tap_pct: number
+        }
+        Insert: {
+          bucket: string
+          cap_pct: number
+          name_ar: string
+          sort?: number
+          tap_pct: number
+        }
+        Update: {
+          bucket?: string
+          cap_pct?: number
+          name_ar?: string
+          sort?: number
+          tap_pct?: number
+        }
+        Relationships: []
+      }
+      allocations: {
+        Row: {
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          id: string
+          income: number
+          note: string | null
+          period_start: string
+          rows: Json
+          run_date: string
+          status: string
+        }
+        Insert: {
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          id?: string
+          income?: number
+          note?: string | null
+          period_start: string
+          rows?: Json
+          run_date: string
+          status?: string
+        }
+        Update: {
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          id?: string
+          income?: number
+          note?: string | null
+          period_start?: string
+          rows?: Json
+          run_date?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "allocations_confirmed_by_fkey"
+            columns: ["confirmed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       approvals: {
         Row: {
           client_id: string
@@ -198,6 +269,77 @@ export type Database = {
           table_name?: string
         }
         Relationships: []
+      }
+      checklist_runs: {
+        Row: {
+          allocation_id: string | null
+          checklist_key: string
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          flag_reason: string | null
+          flagged_by: string | null
+          id: string
+          states: Json
+          status: Database["public"]["Enums"]["checklist_run_status"]
+          task_id: string | null
+        }
+        Insert: {
+          allocation_id?: string | null
+          checklist_key: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          flag_reason?: string | null
+          flagged_by?: string | null
+          id?: string
+          states?: Json
+          status?: Database["public"]["Enums"]["checklist_run_status"]
+          task_id?: string | null
+        }
+        Update: {
+          allocation_id?: string | null
+          checklist_key?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          flag_reason?: string | null
+          flagged_by?: string | null
+          id?: string
+          states?: Json
+          status?: Database["public"]["Enums"]["checklist_run_status"]
+          task_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklist_runs_checklist_key_fkey"
+            columns: ["checklist_key"]
+            isOneToOne: false
+            referencedRelation: "pause_checklists"
+            referencedColumns: ["key"]
+          },
+          {
+            foreignKeyName: "checklist_runs_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_runs_flagged_by_fkey"
+            columns: ["flagged_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_runs_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       clause_library: {
         Row: {
@@ -1079,6 +1221,33 @@ export type Database = {
           },
         ]
       }
+      pause_checklists: {
+        Row: {
+          active: boolean
+          items: Json
+          key: string
+          kind: string
+          last_caught: Json
+          name_ar: string
+        }
+        Insert: {
+          active?: boolean
+          items?: Json
+          key: string
+          kind?: string
+          last_caught?: Json
+          name_ar: string
+        }
+        Update: {
+          active?: boolean
+          items?: Json
+          key?: string
+          kind?: string
+          last_caught?: Json
+          name_ar?: string
+        }
+        Relationships: []
+      }
       payment_accounts: {
         Row: {
           active: boolean
@@ -1330,6 +1499,44 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profit_distributions: {
+        Row: {
+          amount_distributed: number
+          amount_retained: number
+          created_at: string
+          created_by: string | null
+          distributed_on: string
+          id: string
+          note: string | null
+        }
+        Insert: {
+          amount_distributed: number
+          amount_retained: number
+          created_at?: string
+          created_by?: string | null
+          distributed_on?: string
+          id?: string
+          note?: string | null
+        }
+        Update: {
+          amount_distributed?: number
+          amount_retained?: number
+          created_at?: string
+          created_by?: string | null
+          distributed_on?: string
+          id?: string
+          note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profit_distributions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1915,6 +2122,7 @@ export type Database = {
       }
       task_templates: {
         Row: {
+          checklist_key: string | null
           default_days: number
           id: string
           needs_client_approval: boolean
@@ -1925,6 +2133,7 @@ export type Database = {
           title_en: string
         }
         Insert: {
+          checklist_key?: string | null
           default_days?: number
           id?: string
           needs_client_approval?: boolean
@@ -1935,6 +2144,7 @@ export type Database = {
           title_en: string
         }
         Update: {
+          checklist_key?: string | null
           default_days?: number
           id?: string
           needs_client_approval?: boolean
@@ -1945,6 +2155,13 @@ export type Database = {
           title_en?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "task_templates_checklist_key_fkey"
+            columns: ["checklist_key"]
+            isOneToOne: false
+            referencedRelation: "pause_checklists"
+            referencedColumns: ["key"]
+          },
           {
             foreignKeyName: "task_templates_stage_id_fkey"
             columns: ["stage_id"]
@@ -2292,6 +2509,8 @@ export type Database = {
         Returns: boolean
       }
       compute_scorecard: { Args: never; Returns: undefined }
+      compute_scorecard_extras: { Args: { v_week: string }; Returns: undefined }
+      compute_scorecard_v2: { Args: never; Returns: undefined }
       create_project_from_playbook: {
         Args: { p_client_id: string; p_name: string; p_playbook_slug: string }
         Returns: string
@@ -2312,6 +2531,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      generate_allocation: { Args: never; Returns: undefined }
       is_admin: { Args: never; Returns: boolean }
       is_project_member: { Args: { pid: string }; Returns: boolean }
       is_strategist_plus: { Args: never; Returns: boolean }
@@ -2332,6 +2552,7 @@ export type Database = {
         Returns: string
       }
       run_daily_jobs: { Args: never; Returns: undefined }
+      run_daily_jobs_v2: { Args: never; Returns: undefined }
     }
     Enums: {
       activity_kind: "call" | "meeting" | "task" | "deadline" | "followup"
@@ -2342,6 +2563,7 @@ export type Database = {
         | "report"
         | "task"
       approval_status: "pending" | "approved" | "rejected"
+      checklist_run_status: "in_progress" | "passed" | "flagged"
       client_status: "active" | "paused" | "archived"
       document_status:
         | "draft"
@@ -2529,6 +2751,7 @@ export const Constants = {
       activity_kind: ["call", "meeting", "task", "deadline", "followup"],
       approval_item_type: ["scope", "roadmap", "deliverable", "report", "task"],
       approval_status: ["pending", "approved", "rejected"],
+      checklist_run_status: ["in_progress", "passed", "flagged"],
       client_status: ["active", "paused", "archived"],
       document_status: ["draft", "sent", "signed", "active", "expired", "void"],
       document_type: [

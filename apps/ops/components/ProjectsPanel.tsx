@@ -16,6 +16,7 @@ import {
   Spinner,
 } from '@agma/ui';
 import { FolderKanban, Lock, ShieldCheck, Timer } from 'lucide-react';
+import ChecklistRunModal from './ChecklistRunModal';
 import { METHOD_PHASES, type Enums, type Tables } from '@agma/db';
 import { getSupabase } from '../lib/supabase';
 import { keys, useAppMutation, useClients } from '../lib/queries';
@@ -240,16 +241,22 @@ function ProjectDetail({ project, clientName, onBack }:
     queryKey: detailKey,
     queryFn: async () => {
       const supabase = getSupabase();
-      const [tasks, stages, members] = await Promise.all([
+      const [tasks, stages, members, templates] = await Promise.all([
         supabase.from('tasks').select('*').eq('project_id', project.id).order('sort'),
         supabase.from('playbook_stages').select('*').eq('playbook_id', project.playbook_id).order('sort'),
         supabase.from('profiles').select('id, full_name, email').neq('role', 'client'),
+        supabase.from('task_templates').select('id, checklist_key'),
       ]);
       if (tasks.error) throw new Error(tasks.error.message);
       return {
         tasks: tasks.data ?? [],
         stages: stages.data ?? [],
         members: members.data ?? [],
+        checklistByTemplate: new Map(
+          (templates.data ?? [])
+            .filter((t) => t.checklist_key)
+            .map((t) => [t.id, t.checklist_key as string])
+        ),
       };
     },
   });
@@ -292,13 +299,15 @@ function ProjectDetail({ project, clientName, onBack }:
             <StageBlock key={stage.id} stage={stage}
               tasks={data.tasks.filter((t) => t.stage_id === stage.id)}
               allTasks={data.tasks} members={data.members}
+              checklistByTemplate={data.checklistByTemplate}
               detailKey={detailKey} />
           ))}
           {data.tasks.filter((t) => !t.stage_id).length > 0 && (
             <StageBlock
               stage={{ id: 'none', name_ar: 'مهام إضافية', name_en: '', method_phase: 'analyze', playbook_id: '', sort: 999 } as Stage}
               tasks={data.tasks.filter((t) => !t.stage_id)}
-              allTasks={data.tasks} members={data.members} detailKey={detailKey} />
+              allTasks={data.tasks} members={data.members}
+              checklistByTemplate={data.checklistByTemplate} detailKey={detailKey} />
           )}
         </div>
       )}
@@ -306,11 +315,12 @@ function ProjectDetail({ project, clientName, onBack }:
   );
 }
 
-function StageBlock({ stage, tasks, allTasks, members, detailKey }: {
+function StageBlock({ stage, tasks, allTasks, members, checklistByTemplate, detailKey }: {
   stage: Stage;
   tasks: Task[];
   allTasks: Task[];
   members: { id: string; full_name: string | null; email: string | null }[];
+  checklistByTemplate: Map<string, string>;
   detailKey: readonly unknown[];
 }) {
   const doneCount = tasks.filter((t) => t.status === 'done').length;
@@ -324,20 +334,30 @@ function StageBlock({ stage, tasks, allTasks, members, detailKey }: {
       <div className="space-y-1.5">
         {tasks.map((task) => (
           <TaskRow key={task.id} task={task} allTasks={allTasks}
-            members={members} detailKey={detailKey} />
+            members={members} detailKey={detailKey}
+            checklistKey={task.template_id ? checklistByTemplate.get(task.template_id) : undefined}
+            stageAssignees={tasks
+              .filter((t) => t.assignee)
+              .map((t) => ({
+                name: members.find((m) => m.id === t.assignee)?.full_name ?? '؟',
+                taskTitle: t.title,
+              }))} />
         ))}
       </div>
     </section>
   );
 }
 
-function TaskRow({ task, allTasks, members, detailKey }: {
+function TaskRow({ task, allTasks, members, detailKey, checklistKey, stageAssignees }: {
   task: Task;
   allTasks: Task[];
   members: { id: string; full_name: string | null; email: string | null }[];
   detailKey: readonly unknown[];
+  checklistKey?: string;
+  stageAssignees?: { name: string; taskTitle: string }[];
 }) {
   const [logOpen, setLogOpen] = useState(false);
+  const [checklistOpen, setChecklistOpen] = useState(false);
   const blocker = task.blocked_by ? allTasks.find((t) => t.id === task.blocked_by) : null;
   const isBlocked = !!blocker && blocker.status !== 'done';
 
@@ -386,12 +406,22 @@ function TaskRow({ task, allTasks, members, detailKey }: {
             <option key={m.id} value={m.id}>{m.full_name || m.email}</option>
           ))}
         </Select>
+        {checklistKey && task.status !== 'done' && (
+          <Button variant="outline" size="xs" onClick={() => setChecklistOpen(true)}>
+            <ShieldCheck className="h-3.5 w-3.5" aria-hidden /> فحص الإطلاق
+          </Button>
+        )}
         <Button variant="ghost" size="xs" onClick={() => setLogOpen(true)}
           aria-label="تسجيل وقت">
           <Timer className="h-3.5 w-3.5" aria-hidden />
         </Button>
       </span>
       <TimeLogModal open={logOpen} onClose={() => setLogOpen(false)} task={task} />
+      {checklistKey && (
+        <ChecklistRunModal open={checklistOpen} onClose={() => setChecklistOpen(false)}
+          checklistKey={checklistKey} task={task}
+          stageAssignees={stageAssignees ?? []} invalidate={detailKey} />
+      )}
     </Card>
   );
 }
