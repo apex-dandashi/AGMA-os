@@ -128,6 +128,9 @@ develops against the **Twilio WhatsApp sandbox** (no registered sender needed).
 ## 6. SendGrid
 
 - [ ] Create account → API key with Mail Send → `SENDGRID_API_KEY`
+- [ ] **Activate the email channel (Phase 6):** dashboard → SQL Editor →
+      `select vault.create_secret('<THE KEY>', 'sendgrid_api_key');`
+      Queued emails start flowing on the next 5-minute dispatch cycle.
 - [ ] **Domain authentication** for `agma.com.sa` (CNAME records in DNS) so mail
       sends from `care@agma.com.sa` / `hello@agma.com.sa` without spoof flags
 - [ ] Single-sender verification as interim until DNS propagates

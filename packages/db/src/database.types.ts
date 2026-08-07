@@ -809,6 +809,114 @@ export type Database = {
           },
         ]
       }
+      notification_templates: {
+        Row: {
+          active: boolean
+          approved: boolean
+          body: string
+          channel: Database["public"]["Enums"]["notification_channel"]
+          key: string
+          locale: string
+          subject: string | null
+        }
+        Insert: {
+          active?: boolean
+          approved?: boolean
+          body: string
+          channel: Database["public"]["Enums"]["notification_channel"]
+          key: string
+          locale?: string
+          subject?: string | null
+        }
+        Update: {
+          active?: boolean
+          approved?: boolean
+          body?: string
+          channel?: Database["public"]["Enums"]["notification_channel"]
+          key?: string
+          locale?: string
+          subject?: string | null
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          channel: Database["public"]["Enums"]["notification_channel"]
+          client_id: string | null
+          created_at: string
+          dedupe_key: string | null
+          error: string | null
+          event_key: string
+          id: string
+          locale: string
+          payload: Json
+          read_at: string | null
+          recipient_email: string | null
+          recipient_phone: string | null
+          recipient_profile: string | null
+          request_id: number | null
+          scheduled_for: string
+          sent_at: string | null
+          status: Database["public"]["Enums"]["notification_status"]
+          template_key: string
+        }
+        Insert: {
+          channel: Database["public"]["Enums"]["notification_channel"]
+          client_id?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          error?: string | null
+          event_key: string
+          id?: string
+          locale?: string
+          payload?: Json
+          read_at?: string | null
+          recipient_email?: string | null
+          recipient_phone?: string | null
+          recipient_profile?: string | null
+          request_id?: number | null
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["notification_status"]
+          template_key: string
+        }
+        Update: {
+          channel?: Database["public"]["Enums"]["notification_channel"]
+          client_id?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          error?: string | null
+          event_key?: string
+          id?: string
+          locale?: string
+          payload?: Json
+          read_at?: string | null
+          recipient_email?: string | null
+          recipient_phone?: string | null
+          recipient_profile?: string | null
+          request_id?: number | null
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["notification_status"]
+          template_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_recipient_profile_fkey"
+            columns: ["recipient_profile"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_accounts: {
         Row: {
           active: boolean
@@ -1784,11 +1892,41 @@ export type Database = {
         Returns: string
       }
       current_client_id: { Args: never; Returns: string }
+      dispatch_notifications: { Args: never; Returns: undefined }
+      enqueue_notification: {
+        Args: {
+          p_channel: Database["public"]["Enums"]["notification_channel"]
+          p_client_id?: string
+          p_dedupe?: string
+          p_event: string
+          p_payload: Json
+          p_recipient_email?: string
+          p_recipient_profile?: string
+          p_scheduled_for?: string
+          p_template: string
+        }
+        Returns: undefined
+      }
       is_admin: { Args: never; Returns: boolean }
       is_project_member: { Args: { pid: string }; Returns: boolean }
       is_strategist_plus: { Args: never; Returns: boolean }
       is_team: { Args: never; Returns: boolean }
       next_document_number: { Args: { p_prefix: string }; Returns: string }
+      notify_team: {
+        Args: {
+          p_client?: string
+          p_dedupe_prefix?: string
+          p_event: string
+          p_payload: Json
+          p_template: string
+        }
+        Returns: undefined
+      }
+      render_template: {
+        Args: { p_body: string; p_payload: Json }
+        Returns: string
+      }
+      run_daily_jobs: { Args: never; Returns: undefined }
     }
     Enums: {
       activity_kind: "call" | "meeting" | "task" | "deadline" | "followup"
@@ -1831,6 +1969,13 @@ export type Database = {
       leave_kind: "annual" | "sick" | "unpaid" | "other"
       message_channel: "portal" | "whatsapp" | "email"
       method_phase: "analyze" | "generate" | "market" | "adapt"
+      notification_channel: "inapp" | "email" | "whatsapp"
+      notification_status:
+        | "queued"
+        | "sent"
+        | "failed"
+        | "skipped"
+        | "cancelled"
       payment_method: "transfer" | "cash" | "card" | "other"
       project_mode: "recurring" | "milestone"
       project_status:
@@ -2003,6 +2148,8 @@ export const Constants = {
       leave_kind: ["annual", "sick", "unpaid", "other"],
       message_channel: ["portal", "whatsapp", "email"],
       method_phase: ["analyze", "generate", "market", "adapt"],
+      notification_channel: ["inapp", "email", "whatsapp"],
+      notification_status: ["queued", "sent", "failed", "skipped", "cancelled"],
       payment_method: ["transfer", "cash", "card", "other"],
       project_mode: ["recurring", "milestone"],
       project_status: ["planning", "active", "paused", "completed", "archived"],

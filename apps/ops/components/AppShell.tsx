@@ -14,6 +14,7 @@ import { LocaleProvider, useLocale, type DictKey } from '../lib/i18n';
 import { keys } from '../lib/queries';
 import MfaGate from './MfaGate';
 import ActivitiesBell, { activitiesKey } from './ActivitiesBell';
+import NotificationsInbox, { inboxKey } from './NotificationsInbox';
 
 const NAV: { href: string; key: DictKey }[] = [
   { href: '/my-day/', key: 'nav.myday' },
@@ -141,6 +142,9 @@ function useRealtimeSync() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'activities' }, () =>
         qc.invalidateQueries({ queryKey: activitiesKey as unknown as readonly string[] })
       )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () =>
+        qc.invalidateQueries({ queryKey: inboxKey as unknown as readonly string[] })
+      )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
@@ -205,6 +209,7 @@ function Chrome({ profile, children }: { profile: Tables<'profiles'>; children: 
             {t('chrome.search')} <kbd className="rounded-sm bg-gray-dark px-1.5 font-sans">⌘K</kbd>
           </button>
           <ActivitiesBell />
+          <NotificationsInbox />
           <button
             onClick={toggle}
             aria-label={locale === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}

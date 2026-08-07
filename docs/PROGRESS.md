@@ -13,12 +13,43 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 3.5 | **Quality hardening** — docs/07 quality roadmap (owner verdict: 3/10 → target 9+) | ✅ Done — Sprints A+B+C (2026-08-07) |
 | 4 | Projects + playbooks + HR | ✅ Done (2026-08-07) |
 | 5 | Finance KSA | ✅ Done (2026-08-07) |
-| 6 | Notifications | ⬜ Next |
-| 6.5 | **EOS core** — rocks, issues/IDS, scorecard, L10 meetings (docs/09) | ⬜ |
+| 6 | Notifications | ✅ Done (2026-08-07) |
+| 6.5 | **EOS core** — rocks, issues/IDS, scorecard, L10 meetings (docs/09) | ⬜ Next |
 | 7 | Portal + onboarding + Drop Forms | ⬜ |
 | 8 | Content Engine | ⬜ |
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
+
+## Phase 6 log (2026-08-07)
+
+**Built (docs/05 §B8 — one event-driven engine, rule 6 enforced):**
+- Migration `20260807120000_notifications`: template registry (AR seed set for
+  invoice issued/due/overdue, 48h approval nudge, task overdue, wallet 80%,
+  retainer generated, quote expired) · unified queue+send-log table with
+  dedupe keys · `enqueue_notification()` / `notify_team()` helpers.
+- **Event triggers:** invoice finalized → client email + team in-app ·
+  approval created → 48h nudge scheduled (email to primary contact + in-app),
+  **auto-cancelled when the approval is decided**.
+- **`run_daily_jobs()`** (pg_cron 09:00 KSA): quote expiry sweep · retainer
+  auto-generation on day-of-month (draft invoice + team alert, monthly
+  dedupe) · due-tomorrow reminders · overdue chasing (weekly dedupe, client
+  email + team in-app) · per-assignee task-overdue digests · wallet-80%
+  crossings (once per wallet).
+- **`dispatch_notifications()`** (pg_cron every 5 min): in-app instantly;
+  email via pg_net→SendGrid with the key read from **Vault** — until the key
+  exists messages queue gracefully; quiet hours 08:00–20:00 Riyadh for
+  outbound; WhatsApp rows skip with a note (owner's deferred-Twilio call).
+- **ops UI:** inbox bell (unread badge, mark-all-read, realtime) + admin
+  سجل الإشعارات page (full audit log per §B8).
+
+**Verified locally:** fixture run — retainer generated draft invoice, overdue
+email queued (no key = graceful), team in-app sent, nudges scheduled then
+cancelled on approval, 2 crons installed · RLS harness · e2e · 33 tests ·
+builds. Production migration applied (crons + triggers live).
+
+**Activation (owner, SETUP §6):** one SQL line puts the SendGrid key in Vault
+→ email channel goes live on the next dispatch cycle. WhatsApp activates
+post-build per your decision (sender + Meta templates, SETUP §5).
 
 ## Phase 5 log (2026-08-07)
 
