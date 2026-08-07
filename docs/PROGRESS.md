@@ -14,11 +14,42 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 4 | Projects + playbooks + HR | ✅ Done (2026-08-07) |
 | 5 | Finance KSA | ✅ Done (2026-08-07) |
 | 6 | Notifications | ✅ Done (2026-08-07) |
-| 6.5 | **EOS core** — rocks, issues/IDS, scorecard, L10 meetings (docs/09) | ⬜ Next |
+| 6.5a | **OS-core** (docs/10): vision/VTO, seats, primary_aims, rocks, issues+IDS, scorecard+digest, L10 meetings | ⬜ Next |
+| 6.5b | **Safety+cash** (docs/10): pause checklists, Flag & Hold, huddles, Profit First allocations, Vault/drip, leak detection | ⬜ |
+| 6.5c | **Sellable** (docs/10): TVR scores, service_packages, custom-reason mining, playbook versions+grades, experiments, EMT/independence gauges | ⬜ |
 | 7 | Portal + onboarding + Drop Forms | ⬜ |
 | 8 | Content Engine | ⬜ |
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
+
+## Operating System adoption (2026-08-07)
+
+Owner supplied docs/10-operating-principles.md v2 — five frameworks fused
+(E-Myth · EOS · Checklist Manifesto · Profit First · Built to Sell).
+Supersedes docs/09. Phase 6.5 split into a/b/c (tracker above). The doc's
+Part-4 phase wiring predates phases 1–6 shipping, so its deltas are absorbed
+into the 6.5 arc instead:
+- 6.5a OS-core: vision/VTO · seats (one name per seat) · primary_aims
+  (private per partner) · rocks (3–5 cap enforced) · issues+IDS (root-cause
+  required, recur→reopen, auto-filed from 2-week-red scorecards) ·
+  scorecard_metrics/entries with Sunday 07:00 digest · L10/quarterly/annual
+  meeting packs.
+- 6.5b safety+cash: pause_checklists/checklist_runs at stage transitions ·
+  Flag & Hold (anyone; zero-flags-is-the-bad-sign metric) · huddle prompts ·
+  last_caught_at hygiene · allocation_rules/allocations on the 10th/25th ·
+  Vault months meter · OpEx drip · scope-creep leak report ·
+  media-wallets-never-allocated guard (wallets already pass-through).
+- 6.5c sellable: TVR scoring on the 32 services · service_packages (Launch
+  Kit = quote-00054 shape, Growth Retainer, AI Starter) · upfront-payment
+  default · why_no_package_fit mining · playbook_versions + documentation
+  grades (grade C unsellable) · experiments (Innovation→Quantification→
+  Orchestration) · Technician-% and owner-independence gauges.
+
+**BLOCKING INPUT — the seven partner decisions (docs/10 Part 5):** Primary
+Aims · Core Values + Core Focus wording · TAPs + comp split · scorecard
+targets · first quarter's Rocks · package pricing · the fixed weekly meeting
+slot. The 6.5a build ships with placeholder seeds clearly marked; the partner
+session locks them in.
 
 ## Phase 6 log (2026-08-07)
 
