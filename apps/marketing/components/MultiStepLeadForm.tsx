@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SUPABASE_URL } from '@/lib/publicConfig';
 import { 
   Check, 
   ChevronRight, 
@@ -255,9 +256,7 @@ export default function MultiStepLeadForm() {
       .join('، ');
 
     try {
-      const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      if (!base) throw new Error('lead intake not configured');
-      const res = await fetch(`${base}/functions/v1/lead-intake`, {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/lead-intake`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/publicConfig';
 
 interface PublishedClient {
   id: string;
@@ -20,9 +21,8 @@ export default function ClientLogos() {
   const [clients, setClients] = useState<PublishedClient[]>([]);
 
   useEffect(() => {
-    const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!base || !key) return;
+    const base = SUPABASE_URL;
+    const key = SUPABASE_ANON_KEY;
     fetch(
       `${base}/rest/v1/website_clients?select=id,display_name_ar,display_name_en,logo_url,sort&order=sort.asc`,
       { headers: { apikey: key, authorization: `Bearer ${key}` } }
