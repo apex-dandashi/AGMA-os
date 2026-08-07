@@ -10,7 +10,7 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 1 | Schema / RLS / seeds / auth / audit | ✅ Done (2026-08-07) |
 | 2 | CRM + Sales + website sync | ✅ Done (2026-08-07) |
 | 3 | Legal generators | ✅ Done (2026-08-07) |
-| 3.5 | **Quality hardening** — docs/07 quality roadmap (owner verdict: 3/10 → target 9+) | ⬜ Next |
+| 3.5 | **Quality hardening** — docs/07 quality roadmap (owner verdict: 3/10 → target 9+) | 🔶 Sprint A done (2026-08-07); B & C next |
 | 4 | Projects + playbooks + HR | ⬜ |
 | 5 | Finance KSA | ⬜ |
 | 6 | Notifications | ⬜ |
@@ -18,6 +18,41 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 8 | Content Engine | ⬜ |
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
+
+## Phase 3.5 Sprint A log (2026-08-07)
+
+**Built (the 3→7 foundation):**
+- **packages/ui**: 16-component design system — Input/Textarea/Select/Checkbox/
+  Switch with FormField chrome (label+error+hint, aria-invalid), Button
+  (loading + ghost + sizes), Badge, Spinner, Skeleton(+List), EmptyState,
+  Modal (esc/backdrop/focus), ConfirmDialog (busy-guarded), Toast system
+  (aria-live), Tabs, Table/Tr/Td. All RTL-first, focus-visible rings.
+- **Zod everywhere**: packages/db/schemas.ts (lead/client/contact/interaction/
+  scope/quote-draft, Arabic messages) used by ops forms with inline errors;
+  lead-intake edge function rewritten on zod (mirrored — deno can't import
+  the workspace package).
+- **Data layer**: TanStack Query + typed hooks (lib/queries.ts), optimistic
+  lead-stage moves with rollback, global mutation error→toast, skeletons.
+- **Pipeline**: true drag-and-drop Kanban (dnd-kit, pointer+keyboard sensors,
+  drag overlay, drop highlight) + stage select fallback in the edit modal
+  (touch/screen-reader path); lead search; convert-to-client behind
+  ConfirmDialog; empty state.
+- **Navigation**: ⌘K global search (leads/clients/documents), client deep
+  links (/clients/?id= survives refresh, Suspense-wrapped for static export),
+  documents type/status filters, skip-link, aria-current nav.
+- **Safety UX**: ConfirmDialogs on finalize/void/consent-withdrawal;
+  disabled-with-reason buttons; success/error toasts on every mutation.
+
+**Found & fixed:** Tailwind v4 doesn't scan workspace packages — `@source
+"../../../packages/ui/src"` in ops globals.css or ui classes silently vanish.
+
+**Verified:** full visual smoke on local stack (login → seeded pipeline →
+stage move via fallback + optimistic update + toast → documents filters/empty
+state) · builds · typechecks · 22 tests green.
+
+**Remaining for 9+:** Sprint B (realtime, EN toggle, auth lifecycle + 2FA,
+mobile, quote-builder depth, WCAG contrast) · Sprint C (e2e, RLS harness in
+CI, Sentry, rate limiting, security headers, backups, PR flow + lint gate).
 
 ## Phase 3 log (2026-08-07)
 

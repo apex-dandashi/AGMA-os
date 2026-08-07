@@ -1,7 +1,15 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { Button, Card } from '@agma/ui';
+import { useMemo, useState } from 'react';
+import {
+  Badge,
+  Button,
+  Card,
+  ConfirmDialog,
+  EmptyState,
+  Select,
+  SkeletonList,
+} from '@agma/ui';
 import type { Enums, Tables } from '@agma/db';
 import {
   renderContract,
@@ -10,10 +18,10 @@ import {
   type QuotePayload,
 } from '@agma/legal-templates';
 import { getSupabase } from '../lib/supabase';
+import { keys, useAppMutation, useClients, useDocuments } from '../lib/queries';
 import QuoteBuilder from './QuoteBuilder';
 
 type Doc = Tables<'documents'>;
-type Client = Tables<'clients'>;
 
 const TYPE_LABELS: Record<Enums<'document_type'>, string> = {
   quote: 'عرض سعر',
@@ -35,24 +43,54 @@ const STATUS_LABELS: Record<Enums<'document_status'>, string> = {
 };
 
 export default function DocumentsPanel() {
-  const [docs, setDocs] = useState<Doc[]>([]);
-  const [clients, setClients] = useState<Client[]>([]);
+  const { data: docs, isLoading } = useDocuments();
+  const { data: clients } = useClients();
   const [showBuilder, setShowBuilder] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [finalizing, setFinalizing] = useState<Doc | null>(null);
+  const [voiding, setVoiding] = useState<Doc | null>(null);
 
-  const load = useCallback(async () => {
-    const supabase = getSupabase();
-    const [d, c] = await Promise.all([
-      supabase.from('documents').select('*').order('created_at', { ascending: false }),
-      supabase.from('clients').select('*').order('company'),
-    ]);
-    setDocs(d.data ?? []);
-    setClients(c.data ?? []);
-  }, []);
+  const finalize = useAppMutation(
+    async (doc: Doc) => {
+      const supabase = getSupabase();
+      const { data: number, error: rpcErr } = await supabase.rpc('next_document_number', {
+        p_prefix: 'Q',
+      });
+      if (rpcErr || !number) throw new Error('تعذر حجز رقم المستند');
+      const payload = { ...(doc.payload as object), number } as never;
+      const { error } = await supabase
+        .from('documents')
+        .update({
+          number,
+          status: 'sent',
+          payload,
+          issued_on: new Date().toISOString().slice(0, 10),
+        })
+        .eq('id', doc.id);
+      if (error) throw new Error('فشل الاعتماد — راجع سجل التدقيق');
+      return number;
+    },
+    { invalidate: [keys.documents], successMessage: 'اعتُمد المستند ورُقّم' }
+  );
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  const setStatus = useAppMutation(
+    async ({ doc, status }: { doc: Doc; status: Enums<'document_status'> }) => {
+      const { error } = await getSupabase().from('documents').update({ status }).eq('id', doc.id);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [keys.documents] }
+  );
+
+  const visible = useMemo(
+    () =>
+      (docs ?? []).filter(
+        (d) =>
+          (statusFilter === 'all' || d.status === statusFilter) &&
+          (typeFilter === 'all' || d.type === typeFilter)
+      ),
+    [docs, statusFilter, typeFilter]
+  );
 
   function openPrint(doc: Doc) {
     const html =
@@ -65,98 +103,112 @@ export default function DocumentsPanel() {
     w.document.close();
   }
 
-  async function finalizeQuote(doc: Doc) {
-    setError(null);
-    const supabase = getSupabase();
-    const { data: number, error: rpcErr } = await supabase.rpc('next_document_number', {
-      p_prefix: 'Q',
-    });
-    if (rpcErr || !number) {
-      setError('تعذر حجز رقم المستند');
-      return;
-    }
-    const payload = { ...(doc.payload as object), number } as never;
-    const { error: upErr } = await supabase
-      .from('documents')
-      .update({
-        number,
-        status: 'sent',
-        payload,
-        issued_on: new Date().toISOString().slice(0, 10),
-      })
-      .eq('id', doc.id);
-    if (upErr) setError('فشل الاعتماد — الرقم محجوز، راجع السجل');
-    load();
-  }
-
-  async function setStatus(doc: Doc, status: Enums<'document_status'>) {
-    await getSupabase().from('documents').update({ status }).eq('id', doc.id);
-    load();
-  }
-
   return (
     <div>
-      <div className="mb-4 flex items-center gap-4">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
         <h1 className="text-xl font-black">المستندات</h1>
-        <Button variant="outline" className="px-4 py-1.5 text-sm" onClick={() => setShowBuilder((v) => !v)}>
+        <Button variant="outline" size="sm" onClick={() => setShowBuilder((v) => !v)}>
           {showBuilder ? 'إغلاق' : '+ عرض سعر'}
         </Button>
-        {error && <span className="text-sm text-pulse-orange">{error}</span>}
+        <div className="ms-auto flex gap-2">
+          <Select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} aria-label="تصفية بالنوع">
+            <option value="all">كل الأنواع</option>
+            {Object.entries(TYPE_LABELS).map(([k, v]) => (
+              <option key={k} value={k}>{v}</option>
+            ))}
+          </Select>
+          <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} aria-label="تصفية بالحالة">
+            <option value="all">كل الحالات</option>
+            {Object.entries(STATUS_LABELS).map(([k, v]) => (
+              <option key={k} value={k}>{v}</option>
+            ))}
+          </Select>
+        </div>
       </div>
 
       {showBuilder && (
-        <QuoteBuilder clients={clients} onDone={() => { setShowBuilder(false); load(); }} />
+        <QuoteBuilder clients={clients ?? []} onDone={() => setShowBuilder(false)} />
       )}
 
-      <div className="space-y-2">
-        {docs.map((doc) => {
-          const client = clients.find((c) => c.id === doc.client_id);
-          return (
-            <Card key={doc.id} className="flex flex-wrap items-center gap-3 p-3 text-sm">
-              <span className="rounded-full bg-gray-dark px-2 py-0.5 text-xs text-gray-light">
-                {TYPE_LABELS[doc.type]}
-              </span>
-              <b dir="ltr">{doc.number ?? '—'}</b>
-              <span className="text-gray-light">{client?.company}</span>
-              <span
-                className={`rounded-full px-2 py-0.5 text-xs ${
-                  doc.status === 'draft'
-                    ? 'bg-gray-dark text-gray-light'
-                    : 'bg-pulse-orange/20 text-pulse-orange'
-                }`}
-              >
-                {STATUS_LABELS[doc.status]}
-              </span>
-              <span className="ms-auto flex gap-2">
-                <button onClick={() => openPrint(doc)} className="text-xs text-gray-light hover:text-snow">
-                  معاينة / طباعة
-                </button>
-                {doc.type === 'quote' && doc.status === 'draft' && (
-                  <Button className="px-3 py-1 text-xs" onClick={() => finalizeQuote(doc)}>
-                    اعتماد وترقيم
+      {isLoading ? (
+        <SkeletonList rows={4} />
+      ) : visible.length === 0 ? (
+        <EmptyState
+          icon="📄"
+          title={docs?.length ? 'لا نتائج للتصفية الحالية' : 'لا مستندات بعد'}
+          hint={docs?.length ? undefined : 'أنشئ أول عرض سعر — سيحمل الرقم Q-00055.'}
+          action={
+            !docs?.length ? (
+              <Button size="sm" onClick={() => setShowBuilder(true)}>+ عرض سعر</Button>
+            ) : undefined
+          }
+        />
+      ) : (
+        <div className="space-y-2">
+          {visible.map((doc) => {
+            const client = (clients ?? []).find((c) => c.id === doc.client_id);
+            return (
+              <Card key={doc.id} className="flex flex-wrap items-center gap-3 p-3 text-sm">
+                <Badge>{TYPE_LABELS[doc.type]}</Badge>
+                <b dir="ltr">{doc.number ?? '—'}</b>
+                <span className="text-gray-light">{client?.company}</span>
+                <Badge variant={doc.status === 'draft' ? 'neutral' : 'accent'}>
+                  {STATUS_LABELS[doc.status]}
+                </Badge>
+                <span className="ms-auto flex items-center gap-2">
+                  <Button variant="ghost" size="xs" onClick={() => openPrint(doc)}>
+                    معاينة / طباعة
                   </Button>
-                )}
-                {doc.status === 'sent' && (
-                  <>
-                    <button onClick={() => setStatus(doc, 'signed')} className="text-xs text-pulse-orange">
-                      توقيع ✓
-                    </button>
-                    <button onClick={() => setStatus(doc, 'void')} className="text-xs text-gray-medium">
-                      إلغاء
-                    </button>
-                  </>
-                )}
-                {doc.status === 'signed' && (
-                  <button onClick={() => setStatus(doc, 'active')} className="text-xs text-pulse-orange">
-                    تفعيل
-                  </button>
-                )}
-              </span>
-            </Card>
-          );
-        })}
-        {docs.length === 0 && <p className="text-sm text-gray-medium">لا مستندات بعد</p>}
-      </div>
+                  {doc.type === 'quote' && doc.status === 'draft' && (
+                    <Button size="xs" onClick={() => setFinalizing(doc)}>
+                      اعتماد وترقيم
+                    </Button>
+                  )}
+                  {doc.status === 'sent' && (
+                    <>
+                      <Button variant="outline" size="xs"
+                        onClick={() => setStatus.mutate({ doc, status: 'signed' })}>
+                        توقيع ✓
+                      </Button>
+                      <Button variant="ghost" size="xs" onClick={() => setVoiding(doc)}>
+                        إلغاء
+                      </Button>
+                    </>
+                  )}
+                  {doc.status === 'signed' && (
+                    <Button variant="outline" size="xs"
+                      onClick={() => setStatus.mutate({ doc, status: 'active' })}>
+                      تفعيل
+                    </Button>
+                  )}
+                </span>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      <ConfirmDialog
+        open={!!finalizing}
+        onClose={() => setFinalizing(null)}
+        title="اعتماد وترقيم المستند"
+        message="سيُحجز الرقم التسلسلي التالي بشكل نهائي ولا يمكن التراجع — بعد الاعتماد يصبح المستند غير قابل للتعديل (التصحيح عبر نسخة جديدة فقط). متابعة؟"
+        confirmLabel="اعتماد"
+        onConfirm={async () => {
+          if (finalizing) await finalize.mutateAsync(finalizing);
+        }}
+      />
+      <ConfirmDialog
+        open={!!voiding}
+        onClose={() => setVoiding(null)}
+        title="إلغاء المستند"
+        danger
+        message={`سيتحول «${voiding?.number ?? 'المستند'}» إلى حالة ملغى نهائياً. الرقم التسلسلي يبقى محجوزاً في السجل (بدون فجوات). متابعة؟`}
+        confirmLabel="إلغاء المستند"
+        onConfirm={async () => {
+          if (voiding) await setStatus.mutateAsync({ doc: voiding, status: 'void' });
+        }}
+      />
     </div>
   );
 }

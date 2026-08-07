@@ -11,6 +11,8 @@
   "dependencies": {
     "@agma/db": "workspace:*",
     "@agma/legal-templates": "workspace:*",
+    "@dnd-kit/core": "^6.3.1",
+    "@tanstack/react-query": "^5.66.0",
     "@agma/ui": "workspace:*",
     "@supabase/supabase-js": "^2.49.0",
     "@tailwindcss/postcss": "^4.0.0",

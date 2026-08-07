@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Button } from '@agma/ui';
+import { Button, Checkbox, Input, Select, Textarea } from '@agma/ui';
 import type { Tables } from '@agma/db';
+import { quoteDraftSchema } from '@agma/db/schemas';
 import {
   COMPANY,
   renderQuote,
@@ -10,13 +11,9 @@ import {
   type QuotePayload,
 } from '@agma/legal-templates';
 import { getSupabase } from '../lib/supabase';
+import { keys, useAppMutation, useClauses, usePaymentAccounts } from '../lib/queries';
 
 type Client = Tables<'clients'>;
-type Account = Pick<
-  Tables<'payment_accounts'>,
-  'id' | 'iban' | 'bank_name' | 'beneficiary_name' | 'is_default'
->;
-type Clause = Tables<'clause_library'>;
 
 const AR_MONTHS = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 
@@ -29,6 +26,8 @@ const emptyItem = (): QuoteItem => ({ title: '', description: '', amount: 0 });
 
 export default function QuoteBuilder({ clients, onDone }:
   { clients: Client[]; onDone: () => void }) {
+  const { data: accounts } = usePaymentAccounts();
+  const { data: clauses } = useClauses();
   const [clientId, setClientId] = useState('');
   const [recipientName, setRecipientName] = useState('');
   const [projectName, setProjectName] = useState('');
@@ -36,37 +35,26 @@ export default function QuoteBuilder({ clients, onDone }:
   const [items, setItems] = useState<QuoteItem[]>([emptyItem()]);
   const [discountLabel, setDiscountLabel] = useState('');
   const [discountAmount, setDiscountAmount] = useState(0);
-  const [accounts, setAccounts] = useState<Account[]>([]);
   const [accountId, setAccountId] = useState('');
-  const [clauses, setClauses] = useState<Clause[]>([]);
   const [pickedClauses, setPickedClauses] = useState<Set<string>>(new Set());
   const [preview, setPreview] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | undefined>();
 
   useEffect(() => {
-    const supabase = getSupabase();
-    supabase
-      .from('payment_accounts')
-      .select('id, iban, bank_name, beneficiary_name, is_default')
-      .eq('active', true)
-      .then(({ data }) => {
-        setAccounts(data ?? []);
-        const def = data?.find((a) => a.is_default);
-        if (def) setAccountId(def.id);
-      });
-    supabase
-      .from('clause_library')
-      .select('*')
-      .eq('approved', true)
-      .order('sort')
-      .then(({ data }) => {
-        setClauses(data ?? []);
-        setPickedClauses(new Set((data ?? []).filter((c) => c.category === 'commercial').map((c) => c.id)));
-      });
-  }, []);
+    if (!accountId && accounts?.length) {
+      setAccountId(accounts.find((a) => a.is_default)?.id ?? accounts[0].id);
+    }
+  }, [accounts, accountId]);
+
+  useEffect(() => {
+    if (clauses && pickedClauses.size === 0) {
+      setPickedClauses(new Set(clauses.filter((c) => c.category === 'commercial').map((c) => c.id)));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clauses]);
 
   const payload = useMemo<QuotePayload | null>(() => {
-    const account = accounts.find((a) => a.id === accountId);
+    const account = accounts?.find((a) => a.id === accountId);
     const client = clients.find((c) => c.id === clientId);
     if (!account || !client) return null;
     return {
@@ -89,91 +77,107 @@ export default function QuoteBuilder({ clients, onDone }:
         bankName: account.bank_name,
         beneficiaryName: account.beneficiary_name,
       },
-      clauses: clauses
+      clauses: (clauses ?? [])
         .filter((c) => pickedClauses.has(c.id))
         .map((c) => ({ title: c.title_ar, body: c.body_ar })),
       totalPages: 2,
     };
   }, [accounts, accountId, clients, clientId, recipientName, projectName, intro, items, discountLabel, discountAmount, clauses, pickedClauses]);
 
+  const save = useAppMutation(
+    async () => {
+      const parsed = quoteDraftSchema.safeParse({
+        clientId,
+        recipientName,
+        projectName: projectName || 'مشروع جديد',
+        intro,
+        items: items.filter((i) => i.title || i.amount > 0),
+        discountLabel: discountLabel || undefined,
+        discountAmount: discountAmount || undefined,
+        accountId,
+      });
+      if (!parsed.success) {
+        const msg = parsed.error.issues[0]?.message ?? 'بيانات غير صالحة';
+        setErr(msg);
+        throw new Error(msg);
+      }
+      setErr(undefined);
+      const { error } = await getSupabase().from('documents').insert({
+        type: 'quote',
+        client_id: clientId,
+        payload: payload as never,
+        payment_account_id: accountId,
+      });
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [keys.documents], successMessage: 'حُفظت المسودة' }
+  );
+
   function setItem(i: number, patch: Partial<QuoteItem>) {
     setItems((prev) => prev.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
   }
 
-  async function saveDraft() {
-    if (!payload || !clientId) return;
-    setBusy(true);
-    await getSupabase().from('documents').insert({
-      type: 'quote',
-      client_id: clientId,
-      payload: payload as never,
-      payment_account_id: accountId,
-    });
-    setBusy(false);
-    onDone();
-  }
-
-  const inputCls =
-    'rounded-sm border border-gray-dark bg-transparent px-2 py-1.5 text-sm';
-
   return (
     <div className="mb-4 space-y-3 rounded-sm border border-gray-dark p-4">
-      <div className="flex flex-wrap gap-2">
-        <select value={clientId} onChange={(e) => setClientId(e.target.value)}
-          className={`${inputCls} bg-pure-ink`}>
-          <option value="">— العميل —</option>
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        <Select label="العميل" value={clientId} onChange={(e) => setClientId(e.target.value)}>
+          <option value="">— اختر —</option>
           {clients.map((c) => (
             <option key={c.id} value={c.id}>{c.company}</option>
           ))}
-        </select>
-        <input value={recipientName} onChange={(e) => setRecipientName(e.target.value)}
-          placeholder="اسم المستلم (السيد / ...)" className={inputCls} />
-        <input value={projectName} onChange={(e) => setProjectName(e.target.value)}
-          placeholder="اسم المشروع" className={inputCls} />
-        <select value={accountId} onChange={(e) => setAccountId(e.target.value)}
-          className={`${inputCls} bg-pure-ink`} dir="ltr">
-          {accounts.map((a) => (
+        </Select>
+        <Input label="اسم المستلم" value={recipientName}
+          onChange={(e) => setRecipientName(e.target.value)} placeholder="السيد / …" />
+        <Input label="اسم المشروع" value={projectName}
+          onChange={(e) => setProjectName(e.target.value)} />
+        <Select label="حساب التحويل" value={accountId} dir="ltr"
+          onChange={(e) => setAccountId(e.target.value)}>
+          {(accounts ?? []).map((a) => (
             <option key={a.id} value={a.id}>
               {a.iban.slice(0, 4)}…{a.iban.slice(-4)} — {a.bank_name}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
-      <textarea value={intro} onChange={(e) => setIntro(e.target.value)} rows={2}
-        placeholder="مقدمة العرض…" className={`${inputCls} w-full`} />
+      <Textarea label="مقدمة العرض" value={intro} onChange={(e) => setIntro(e.target.value)} rows={2} />
 
       <div className="space-y-2">
         {items.map((item, i) => (
-          <div key={i} className="flex flex-wrap items-center gap-2">
-            <span className="w-6 text-xs text-gray-medium">{String(i + 1).padStart(2, '0')}</span>
-            <input value={item.title} onChange={(e) => setItem(i, { title: e.target.value })}
-              placeholder="الخدمة" className={`${inputCls} w-44`} />
-            <input value={item.description ?? ''} onChange={(e) => setItem(i, { description: e.target.value })}
-              placeholder="الوصف (· بين الميزات)" className={`${inputCls} flex-1`} />
-            <input type="number" value={item.amount || ''} onChange={(e) => setItem(i, { amount: Number(e.target.value) })}
-              placeholder="SAR" className={`${inputCls} w-24`} dir="ltr" />
-            <input type="number" value={item.originalAmount || ''} onChange={(e) => setItem(i, { originalAmount: Number(e.target.value) || undefined })}
-              placeholder="قبل الخصم" className={`${inputCls} w-24`} dir="ltr" />
-            <label className="flex items-center gap-1 text-xs text-gray-medium">
-              <input type="checkbox" checked={!!item.noDiscount}
+          <div key={i} className="flex flex-wrap items-end gap-2">
+            <span className="pb-2 text-xs text-gray-medium">{String(i + 1).padStart(2, '0')}</span>
+            <Input label={i === 0 ? 'الخدمة' : undefined} value={item.title}
+              onChange={(e) => setItem(i, { title: e.target.value })} className="w-44" />
+            <div className="min-w-40 flex-1">
+              <Input label={i === 0 ? 'الوصف' : undefined} value={item.description ?? ''}
+                onChange={(e) => setItem(i, { description: e.target.value })}
+                placeholder="· بين الميزات" />
+            </div>
+            <Input label={i === 0 ? 'SAR' : undefined} type="number" dir="ltr" className="w-24"
+              value={item.amount || ''} onChange={(e) => setItem(i, { amount: Number(e.target.value) })} />
+            <Input label={i === 0 ? 'قبل الخصم' : undefined} type="number" dir="ltr" className="w-24"
+              value={item.originalAmount || ''}
+              onChange={(e) => setItem(i, { originalAmount: Number(e.target.value) || undefined })} />
+            <div className="pb-2">
+              <Checkbox label="بدون خصم" checked={!!item.noDiscount}
                 onChange={(e) => setItem(i, { noDiscount: e.target.checked })} />
-              بدون خصم
-            </label>
+            </div>
           </div>
         ))}
-        <div className="flex gap-2">
-          <Button variant="outline" className="px-3 py-1 text-xs"
-            onClick={() => setItems((p) => [...p, emptyItem()])}>+ بند</Button>
-          <input value={discountLabel} onChange={(e) => setDiscountLabel(e.target.value)}
-            placeholder="اسم الخصم (اختياري)" className={inputCls} />
-          <input type="number" value={discountAmount || ''} onChange={(e) => setDiscountAmount(Number(e.target.value))}
-            placeholder="قيمة الخصم" className={`${inputCls} w-28`} dir="ltr" />
+        <div className="flex flex-wrap items-end gap-2">
+          <Button variant="outline" size="xs" onClick={() => setItems((p) => [...p, emptyItem()])}>
+            + بند
+          </Button>
+          <Input value={discountLabel} onChange={(e) => setDiscountLabel(e.target.value)}
+            placeholder="اسم الخصم (اختياري)" className="w-44" />
+          <Input type="number" dir="ltr" value={discountAmount || ''}
+            onChange={(e) => setDiscountAmount(Number(e.target.value))}
+            placeholder="قيمة الخصم" className="w-28" />
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-1.5">
-        {clauses.map((c) => (
-          <button key={c.id} type="button"
+      <div className="flex flex-wrap gap-1.5" role="group" aria-label="بنود الشروط">
+        {(clauses ?? []).map((c) => (
+          <button key={c.id} type="button" aria-pressed={pickedClauses.has(c.id)}
             onClick={() =>
               setPickedClauses((prev) => {
                 const next = new Set(prev);
@@ -182,7 +186,7 @@ export default function QuoteBuilder({ clients, onDone }:
                 return next;
               })
             }
-            className={`rounded-full border px-2.5 py-1 text-xs ${
+            className={`rounded-full border px-2.5 py-1 text-xs transition-colors focus-visible:ring-2 focus-visible:ring-pulse-orange/60 focus:outline-none ${
               pickedClauses.has(c.id)
                 ? 'border-pulse-orange bg-pulse-orange/15 text-pulse-orange'
                 : 'border-gray-dark text-gray-light'
@@ -192,12 +196,18 @@ export default function QuoteBuilder({ clients, onDone }:
         ))}
       </div>
 
+      {err && <p role="alert" className="text-xs text-pulse-orange">{err}</p>}
+
       <div className="flex gap-2">
-        <Button onClick={saveDraft} disabled={busy || !payload || (payload.items.length === 0)}
-          className="px-4 py-1.5 text-sm">
+        <Button size="sm" loading={save.isPending}
+          disabled={!payload || payload.items.length === 0}
+          onClick={async () => {
+            await save.mutateAsync(undefined as never);
+            onDone();
+          }}>
           حفظ كمسودة
         </Button>
-        <Button variant="outline" className="px-4 py-1.5 text-sm" disabled={!payload}
+        <Button variant="outline" size="sm" disabled={!payload}
           onClick={() => setPreview((v) => !v)}>
           {preview ? 'إخفاء المعاينة' : 'معاينة'}
         </Button>
@@ -205,7 +215,7 @@ export default function QuoteBuilder({ clients, onDone }:
 
       {preview && payload && (
         <iframe
-          title="معاينة"
+          title="معاينة عرض السعر"
           srcDoc={renderQuote(payload)}
           className="h-[600px] w-full rounded-sm border border-gray-dark bg-white"
         />

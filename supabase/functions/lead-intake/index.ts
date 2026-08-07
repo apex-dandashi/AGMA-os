@@ -1,6 +1,7 @@
 // Lead intake: agma.com.sa contact form → leads table (docs/02 §3.1).
-// Public endpoint; validates, honeypot-guards, inserts with service role.
+// Public endpoint; Zod-validated, honeypot-guarded, inserts with service role.
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { z } from 'npm:zod@3';
 
 const ALLOWED_ORIGINS = new Set([
   'https://agma.com.sa',
@@ -8,6 +9,19 @@ const ALLOWED_ORIGINS = new Set([
   'https://staging.agma.com.sa',
   'http://localhost:3000',
 ]);
+
+// Mirror of packages/db/src/schemas.ts leadIntakeSchema (deno runtime can't
+// import the workspace package; keep the two in sync).
+const intakeSchema = z.object({
+  name: z.string().trim().min(2).max(200),
+  company: z.string().trim().max(200).optional(),
+  phone: z.string().trim().max(40).optional(),
+  email: z.string().trim().email().max(200).optional().or(z.literal('')),
+  services: z.string().trim().max(500).optional(),
+  budget: z.string().trim().max(100).optional(),
+  message: z.string().trim().max(2000).optional(),
+  website: z.string().optional(),
+});
 
 function corsHeaders(origin: string | null) {
   const allowed = origin && ALLOWED_ORIGINS.has(origin) ? origin : 'https://agma.com.sa';
@@ -19,12 +33,6 @@ function corsHeaders(origin: string | null) {
   };
 }
 
-const clean = (v: unknown, max: number): string | null => {
-  if (typeof v !== 'string') return null;
-  const s = v.trim();
-  return s.length === 0 ? null : s.slice(0, max);
-};
-
 Deno.serve(async (req) => {
   const headers = corsHeaders(req.headers.get('origin'));
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers });
@@ -32,36 +40,33 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: 'method_not_allowed' }), { status: 405, headers });
   }
 
-  let body: Record<string, unknown>;
+  let raw: unknown;
   try {
-    body = await req.json();
+    raw = await req.json();
   } catch {
     return new Response(JSON.stringify({ error: 'invalid_json' }), { status: 400, headers });
   }
 
+  const parsed = intakeSchema.safeParse(raw);
+  if (!parsed.success) {
+    return new Response(
+      JSON.stringify({ error: 'validation', field: parsed.error.issues[0]?.path?.[0] ?? null }),
+      { status: 400, headers }
+    );
+  }
+  const body = parsed.data;
+
   // Honeypot: real users never fill this hidden field.
-  if (clean(body.website, 100)) {
+  if (body.website && body.website.length > 0) {
     return new Response(JSON.stringify({ ok: true }), { status: 200, headers });
   }
 
-  const name = clean(body.name, 200);
-  if (!name) {
-    return new Response(JSON.stringify({ error: 'name_required' }), { status: 400, headers });
-  }
-
-  const company = clean(body.company, 200);
-  const phone = clean(body.phone, 40);
-  const email = clean(body.email, 200);
-  const services = clean(body.services, 500);
-  const budget = clean(body.budget, 100);
-  const message = clean(body.message, 2000);
-
   const notes = [
-    phone && `الهاتف: ${phone}`,
-    email && `البريد: ${email}`,
-    services && `الخدمات المطلوبة: ${services}`,
-    budget && `الميزانية: ${budget}`,
-    message && `الرسالة: ${message}`,
+    body.phone && `الهاتف: ${body.phone}`,
+    body.email && `البريد: ${body.email}`,
+    body.services && `الخدمات المطلوبة: ${body.services}`,
+    body.budget && `الميزانية: ${body.budget}`,
+    body.message && `الرسالة: ${body.message}`,
   ]
     .filter(Boolean)
     .join('\n');
@@ -72,8 +77,8 @@ Deno.serve(async (req) => {
   );
 
   const { error } = await supabase.from('leads').insert({
-    name,
-    company,
+    name: body.name,
+    company: body.company || null,
     source: 'site',
     notes: notes || null,
   });

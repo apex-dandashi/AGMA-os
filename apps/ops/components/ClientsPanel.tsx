@@ -1,14 +1,28 @@
 'use client';
 
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { Button, Card } from '@agma/ui';
+import { useState, type FormEvent } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import {
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  Input,
+  Select,
+  SkeletonList,
+  useToast,
+} from '@agma/ui';
 import type { Enums, Tables } from '@agma/db';
+import {
+  clientInputSchema,
+  contactInputSchema,
+  interactionInputSchema,
+} from '@agma/db/schemas';
 import { getSupabase } from '../lib/supabase';
+import { keys, useAppMutation, useClientDetail, useClients } from '../lib/queries';
 import ScopeBuilder from './ScopeBuilder';
 
 type Client = Tables<'clients'>;
-type Contact = Tables<'contacts'>;
-type Interaction = Tables<'interactions'>;
 type Scope = Tables<'scopes'>;
 
 const KIND_LABELS: Record<Enums<'interaction_kind'>, string> = {
@@ -27,102 +41,129 @@ const SCOPE_STATUS: Record<Enums<'scope_status'>, string> = {
 };
 
 export default function ClientsPanel() {
-  const [clients, setClients] = useState<Client[]>([]);
-  const [selected, setSelected] = useState<Client | null>(null);
+  const { data: clients, isLoading } = useClients();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const selectedId = searchParams.get('id');
+  const selected = clients?.find((c) => c.id === selectedId) ?? null;
   const [newCompany, setNewCompany] = useState('');
+  const [newError, setNewError] = useState<string | undefined>();
+  const [query, setQuery] = useState('');
 
-  const load = useCallback(async () => {
-    const { data } = await getSupabase().from('clients').select('*').order('company');
-    setClients(data ?? []);
-  }, []);
+  const addClient = useAppMutation(
+    async (company: string) => {
+      const { data, error } = await getSupabase()
+        .from('clients')
+        .insert({ company })
+        .select()
+        .single();
+      if (error) throw new Error(error.message);
+      return data;
+    },
+    { invalidate: [keys.clients], successMessage: 'أُضيف العميل' }
+  );
 
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  async function addClient(e: FormEvent) {
+  async function submitNew(e: FormEvent) {
     e.preventDefault();
-    if (!newCompany.trim()) return;
-    await getSupabase().from('clients').insert({ company: newCompany.trim() });
+    const parsed = clientInputSchema.safeParse({ company: newCompany });
+    if (!parsed.success) {
+      setNewError(parsed.error.issues[0]?.message);
+      return;
+    }
+    setNewError(undefined);
+    const client = (await addClient.mutateAsync(parsed.data.company)) as Client;
     setNewCompany('');
-    load();
+    router.replace(`/clients/?id=${client.id}`);
   }
 
+  const visible = (clients ?? []).filter((c) =>
+    query.trim() ? c.company.includes(query.trim()) : true
+  );
+
   return (
-    <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+    <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
       <div>
         <h1 className="mb-3 text-xl font-black">العملاء</h1>
-        <form onSubmit={addClient} className="mb-3 flex gap-2">
-          <input
+        <form onSubmit={submitNew} className="mb-2 flex gap-2">
+          <Input
             value={newCompany}
             onChange={(e) => setNewCompany(e.target.value)}
             placeholder="شركة جديدة…"
-            className="flex-1 rounded-sm border border-gray-dark bg-transparent px-2 py-1.5 text-sm"
+            error={newError}
           />
-          <Button type="submit" className="px-3 py-1.5 text-sm">+</Button>
+          <Button type="submit" size="sm" loading={addClient.isPending}>+</Button>
         </form>
-        <div className="space-y-1">
-          {clients.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => setSelected(c)}
-              className={`block w-full rounded-sm px-3 py-2 text-start text-sm ${
-                selected?.id === c.id
-                  ? 'bg-pulse-orange/15 text-pulse-orange'
-                  : 'text-gray-light hover:bg-gray-dark/40'
-              }`}
-            >
-              {c.company}
-            </button>
-          ))}
-          {clients.length === 0 && (
-            <p className="text-sm text-gray-medium">لا يوجد عملاء بعد</p>
-          )}
-        </div>
+        <Input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="بحث…"
+          className="mb-2"
+        />
+        {isLoading ? (
+          <SkeletonList rows={6} />
+        ) : (
+          <div className="space-y-1" role="listbox" aria-label="قائمة العملاء">
+            {visible.map((c) => (
+              <button
+                key={c.id}
+                role="option"
+                aria-selected={selectedId === c.id}
+                onClick={() => router.replace(`/clients/?id=${c.id}`)}
+                className={`block w-full rounded-sm px-3 py-2 text-start text-sm focus-visible:ring-2 focus-visible:ring-pulse-orange/60 focus:outline-none ${
+                  selectedId === c.id
+                    ? 'bg-pulse-orange/15 text-pulse-orange'
+                    : 'text-gray-light hover:bg-gray-dark/40'
+                }`}
+              >
+                {c.company}
+              </button>
+            ))}
+            {visible.length === 0 && (
+              <p className="px-2 py-4 text-sm text-gray-medium">
+                {query ? 'لا نتائج' : 'لا يوجد عملاء بعد'}
+              </p>
+            )}
+          </div>
+        )}
       </div>
       {selected ? (
         <ClientDetail key={selected.id} client={selected} />
       ) : (
-        <p className="pt-12 text-center text-gray-medium">اختر عميلاً من القائمة</p>
+        <EmptyState
+          icon="👥"
+          title="اختر عميلاً"
+          hint="اختر عميلاً من القائمة لعرض جهات الاتصال وسجل التواصل والنطاقات، أو أنشئ عميلاً جديداً."
+        />
       )}
     </div>
   );
 }
 
 function ClientDetail({ client }: { client: Client }) {
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [interactions, setInteractions] = useState<Interaction[]>([]);
-  const [scopes, setScopes] = useState<Scope[]>([]);
+  const { data, isLoading } = useClientDetail(client.id);
   const [showScopeBuilder, setShowScopeBuilder] = useState(false);
+  const toast = useToast();
 
-  const load = useCallback(async () => {
-    const supabase = getSupabase();
-    const [c, i, s] = await Promise.all([
-      supabase.from('contacts').select('*').eq('client_id', client.id).order('created_at'),
-      supabase.from('interactions').select('*').eq('client_id', client.id)
-        .order('occurred_at', { ascending: false }).limit(20),
-      supabase.from('scopes').select('*').eq('client_id', client.id)
-        .order('created_at', { ascending: false }),
-    ]);
-    setContacts(c.data ?? []);
-    setInteractions(i.data ?? []);
-    setScopes(s.data ?? []);
-  }, [client.id]);
+  const sendScope = useAppMutation(
+    async (scope: Scope) => {
+      const supabase = getSupabase();
+      const { error } = await supabase.from('scopes').update({ status: 'sent' }).eq('id', scope.id);
+      if (error) throw new Error(error.message);
+      const { error: e2 } = await supabase.from('approvals').insert({
+        client_id: client.id,
+        item_type: 'scope',
+        item_id: scope.id,
+      });
+      if (e2) throw new Error(e2.message);
+    },
+    {
+      invalidate: [keys.clientDetail(client.id)],
+      successMessage: 'أُرسل النطاق للاعتماد',
+    }
+  );
 
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  async function sendScope(scope: Scope) {
-    const supabase = getSupabase();
-    await supabase.from('scopes').update({ status: 'sent' }).eq('id', scope.id);
-    await supabase.from('approvals').insert({
-      client_id: client.id,
-      item_type: 'scope',
-      item_id: scope.id,
-    });
-    load();
-  }
+  if (isLoading || !data) return <SkeletonList rows={6} />;
+  const { contacts, interactions, scopes } = data;
 
   return (
     <div className="space-y-6">
@@ -131,26 +172,29 @@ function ClientDetail({ client }: { client: Client }) {
       <section>
         <div className="mb-2 flex items-center gap-3">
           <h3 className="font-bold text-gray-light">النطاقات (Scopes)</h3>
-          <Button variant="outline" className="px-3 py-1 text-xs"
-            onClick={() => setShowScopeBuilder((v) => !v)}>
+          <Button variant="outline" size="xs" onClick={() => setShowScopeBuilder((v) => !v)}>
             {showScopeBuilder ? 'إغلاق' : '+ نطاق جديد'}
           </Button>
         </div>
         {showScopeBuilder && (
-          <ScopeBuilder clientId={client.id} onDone={() => { setShowScopeBuilder(false); load(); }} />
+          <ScopeBuilder clientId={client.id} onDone={() => setShowScopeBuilder(false)} />
         )}
         <div className="space-y-2">
           {scopes.map((s) => (
             <Card key={s.id} className="flex items-center gap-3 p-3 text-sm">
-              <span className={`rounded-full px-2 py-0.5 text-xs ${
-                s.status === 'approved' ? 'bg-pulse-orange/20 text-pulse-orange' : 'bg-gray-dark text-gray-light'
-              }`}>
+              <Badge variant={s.status === 'approved' ? 'accent' : 'neutral'}>
                 {SCOPE_STATUS[s.status]}
-              </span>
+              </Badge>
               <span className="text-gray-light">{s.service_ids.length} خدمة</span>
               {s.timeline && <span className="text-gray-medium">{s.timeline}</span>}
               {s.status === 'draft' && (
-                <Button variant="outline" className="ms-auto px-3 py-1 text-xs" onClick={() => sendScope(s)}>
+                <Button
+                  variant="outline"
+                  size="xs"
+                  className="ms-auto"
+                  loading={sendScope.isPending}
+                  onClick={() => sendScope.mutate(s)}
+                >
                   إرسال للاعتماد
                 </Button>
               )}
@@ -163,85 +207,120 @@ function ClientDetail({ client }: { client: Client }) {
       </section>
 
       <section className="grid gap-6 md:grid-cols-2">
-        <ContactsBlock clientId={client.id} contacts={contacts} onChange={load} />
-        <InteractionsBlock clientId={client.id} interactions={interactions} onChange={load} />
+        <ContactsBlock clientId={client.id} contacts={contacts} isFirst={contacts.length === 0} />
+        <InteractionsBlock clientId={client.id} interactions={interactions} />
       </section>
     </div>
   );
 }
 
-function ContactsBlock({ clientId, contacts, onChange }:
-  { clientId: string; contacts: Contact[]; onChange: () => void }) {
+function ContactsBlock({
+  clientId,
+  contacts,
+  isFirst,
+}: {
+  clientId: string;
+  contacts: Tables<'contacts'>[];
+  isFirst: boolean;
+}) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [err, setErr] = useState<string | undefined>();
 
-  async function add(e: FormEvent) {
+  const add = useAppMutation(
+    async (input: { name: string; phone?: string }) => {
+      const { error } = await getSupabase().from('contacts').insert({
+        client_id: clientId,
+        name: input.name,
+        phone: input.phone ?? null,
+        is_primary: isFirst,
+      });
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [keys.clientDetail(clientId)], successMessage: 'أُضيفت جهة الاتصال' }
+  );
+
+  async function submit(e: FormEvent) {
     e.preventDefault();
-    if (!name.trim()) return;
-    await getSupabase().from('contacts').insert({
-      client_id: clientId,
-      name: name.trim(),
-      phone: phone || null,
-      is_primary: contacts.length === 0,
-    });
+    const parsed = contactInputSchema.safeParse({ name, phone });
+    if (!parsed.success) {
+      setErr(parsed.error.issues[0]?.message);
+      return;
+    }
+    setErr(undefined);
+    await add.mutateAsync({ name: parsed.data.name, phone: parsed.data.phone });
     setName('');
     setPhone('');
-    onChange();
   }
 
   return (
     <div>
       <h3 className="mb-2 font-bold text-gray-light">جهات الاتصال</h3>
-      <form onSubmit={add} className="mb-2 flex gap-2">
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="الاسم"
-          className="flex-1 rounded-sm border border-gray-dark bg-transparent px-2 py-1 text-sm" />
-        <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="الهاتف" dir="ltr"
-          className="w-32 rounded-sm border border-gray-dark bg-transparent px-2 py-1 text-sm" />
-        <Button type="submit" className="px-3 py-1 text-sm">+</Button>
+      <form onSubmit={submit} className="mb-2 flex gap-2">
+        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="الاسم" error={err} />
+        <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="الهاتف" dir="ltr" className="w-36" />
+        <Button type="submit" size="sm" loading={add.isPending}>+</Button>
       </form>
       <ul className="space-y-1 text-sm">
         {contacts.map((c) => (
           <li key={c.id} className="flex gap-2 text-gray-light">
             <span>{c.name}</span>
-            {c.is_primary && <span className="text-xs text-pulse-orange">رئيسي</span>}
+            {c.is_primary && <Badge variant="accent">رئيسي</Badge>}
             {c.phone && <span dir="ltr" className="text-gray-medium">{c.phone}</span>}
           </li>
         ))}
+        {contacts.length === 0 && <li className="text-sm text-gray-medium">لا جهات اتصال</li>}
       </ul>
     </div>
   );
 }
 
-function InteractionsBlock({ clientId, interactions, onChange }:
-  { clientId: string; interactions: Interaction[]; onChange: () => void }) {
+function InteractionsBlock({
+  clientId,
+  interactions,
+}: {
+  clientId: string;
+  interactions: Tables<'interactions'>[];
+}) {
   const [kind, setKind] = useState<Enums<'interaction_kind'>>('call');
   const [summary, setSummary] = useState('');
+  const [err, setErr] = useState<string | undefined>();
 
-  async function add(e: FormEvent) {
+  const add = useAppMutation(
+    async (input: { kind: Enums<'interaction_kind'>; summary: string }) => {
+      const { error } = await getSupabase().from('interactions').insert({
+        client_id: clientId,
+        kind: input.kind,
+        summary: input.summary,
+      });
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [keys.clientDetail(clientId)], successMessage: 'سُجّل التواصل' }
+  );
+
+  async function submit(e: FormEvent) {
     e.preventDefault();
-    if (!summary.trim()) return;
-    await getSupabase().from('interactions').insert({
-      client_id: clientId,
-      kind,
-      summary: summary.trim(),
-    });
+    const parsed = interactionInputSchema.safeParse({ kind, summary });
+    if (!parsed.success) {
+      setErr(parsed.error.issues[0]?.message);
+      return;
+    }
+    setErr(undefined);
+    await add.mutateAsync(parsed.data);
     setSummary('');
-    onChange();
   }
 
   return (
     <div>
       <h3 className="mb-2 font-bold text-gray-light">سجل التواصل</h3>
-      <form onSubmit={add} className="mb-2 flex gap-2">
-        <select value={kind} onChange={(e) => setKind(e.target.value as Enums<'interaction_kind'>)}
-          className="rounded-sm border border-gray-dark bg-pure-ink px-2 py-1 text-sm">
+      <form onSubmit={submit} className="mb-2 flex gap-2">
+        <Select value={kind} onChange={(e) => setKind(e.target.value as Enums<'interaction_kind'>)} className="w-28">
           {(Object.keys(KIND_LABELS) as Enums<'interaction_kind'>[]).map((k) => (
             <option key={k} value={k}>{KIND_LABELS[k]}</option>
           ))}
-        </select>
-        <input value={summary} onChange={(e) => setSummary(e.target.value)} placeholder="ملخص…"
-          className="flex-1 rounded-sm border border-gray-dark bg-transparent px-2 py-1 text-sm" />
-        <Button type="submit" className="px-3 py-1 text-sm">+</Button>
+        </Select>
+        <Input value={summary} onChange={(e) => setSummary(e.target.value)} placeholder="ملخص…" error={err} />
+        <Button type="submit" size="sm" loading={add.isPending}>+</Button>
       </form>
       <ul className="space-y-1 text-sm">
         {interactions.map((i) => (
@@ -249,6 +328,7 @@ function InteractionsBlock({ clientId, interactions, onChange }:
             <span className="text-xs text-gray-medium">{KIND_LABELS[i.kind]}</span> — {i.summary}
           </li>
         ))}
+        {interactions.length === 0 && <li className="text-sm text-gray-medium">لا سجلات بعد</li>}
       </ul>
     </div>
   );

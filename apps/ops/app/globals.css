@@ -1,5 +1,8 @@
 @import "tailwindcss";
 @import "@agma/ui/tokens.css";
+/* Tailwind v4 skips workspace packages during source detection — include the
+   shared component library explicitly or its classes never get generated. */
+@source "../../../packages/ui/src";
 
 html, body {
   background-color: var(--color-pure-ink);

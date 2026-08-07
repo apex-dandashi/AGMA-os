@@ -1,55 +1,64 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { Button } from '@agma/ui';
-import type { Tables } from '@agma/db';
+import { useMemo, useState } from 'react';
+import { Button, Input, SkeletonList, Textarea } from '@agma/ui';
+import { scopeInputSchema } from '@agma/db/schemas';
 import { getSupabase } from '../lib/supabase';
-
-type Category = Tables<'service_categories'>;
-type Service = Tables<'services_catalog'>;
+import { keys, useAppMutation, useCatalog } from '../lib/queries';
 
 /**
  * Scope builder (docs/02 §3.1): pick from the 32-service catalog →
- * SoW draft preview → save as draft scope. Default commercial terms from
- * docs/06 §3.5. The Phase 3 legal generator turns approved scopes into
- * real documents; this preview is the working draft.
+ * SoW draft preview → save as draft scope (docs/06 §3.5 default terms).
  */
 export default function ScopeBuilder({ clientId, onDone }:
   { clientId: string; onDone: () => void }) {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [services, setServices] = useState<Service[]>([]);
+  const { data: catalog, isLoading } = useCatalog();
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [timeline, setTimeline] = useState('');
   const [responsibilities, setResponsibilities] = useState('');
-  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | undefined>();
 
-  useEffect(() => {
-    const supabase = getSupabase();
-    supabase.from('service_categories').select('*').order('sort')
-      .then(({ data }) => setCategories(data ?? []));
-    supabase.from('services_catalog').select('*').eq('active', true).order('sort')
-      .then(({ data }) => setServices(data ?? []));
-  }, []);
+  const save = useAppMutation(
+    async () => {
+      const parsed = scopeInputSchema.safeParse({
+        service_ids: [...picked],
+        timeline,
+        responsibilities,
+      });
+      if (!parsed.success) {
+        setErr(parsed.error.issues[0]?.message);
+        throw new Error(parsed.error.issues[0]?.message ?? 'بيانات غير صالحة');
+      }
+      const { error } = await getSupabase().from('scopes').insert({
+        client_id: clientId,
+        service_ids: parsed.data.service_ids,
+        timeline: parsed.data.timeline ?? null,
+        responsibilities: parsed.data.responsibilities ?? null,
+      });
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [keys.clientDetail(clientId)], successMessage: 'حُفظ النطاق كمسودة' }
+  );
 
   const sowPreview = useMemo(() => {
-    const chosen = services.filter((s) => picked.has(s.id));
+    if (!catalog) return '';
+    const chosen = catalog.services.filter((s) => picked.has(s.id));
     if (chosen.length === 0) return '';
-    const lines = chosen.map((s, i) => `${i + 1}. ${s.name_ar}`);
     return [
       'مسودة نطاق العمل (SoW)',
       '',
       'الخدمات المتفق عليها:',
-      ...lines,
+      ...chosen.map((s, i) => `${i + 1}. ${s.name_ar}`),
       '',
-      timeline && `الإطار الزمني: ${timeline}`,
-      responsibilities && `المسؤوليات: ${responsibilities}`,
+      timeline ? `الإطار الزمني: ${timeline}` : '',
+      responsibilities ? `المسؤوليات: ${responsibilities}` : '',
       '',
       'الشروط التجارية الافتراضية: دفعة ٥٠٪ عند التوقيع، ٢٥٪ عند اعتماد التصميم،',
       '٢٥٪ عند التسليم · صلاحية العرض ٣٠ يوماً · تنتقل الملكية الفكرية بعد السداد الكامل.',
     ]
-      .filter((l) => typeof l === 'string')
+      .filter((l) => l !== '')
       .join('\n');
-  }, [services, picked, timeline, responsibilities]);
+  }, [catalog, picked, timeline, responsibilities]);
 
   function toggle(id: string) {
     setPicked((prev) => {
@@ -60,35 +69,25 @@ export default function ScopeBuilder({ clientId, onDone }:
     });
   }
 
-  async function save() {
-    if (picked.size === 0) return;
-    setBusy(true);
-    await getSupabase().from('scopes').insert({
-      client_id: clientId,
-      service_ids: [...picked],
-      timeline: timeline || null,
-      responsibilities: responsibilities || null,
-    });
-    setBusy(false);
-    onDone();
-  }
+  if (isLoading || !catalog) return <SkeletonList rows={3} />;
 
   return (
     <div className="mb-4 rounded-sm border border-gray-dark p-4">
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="space-y-3">
-          {categories.map((cat) => (
+          {catalog.categories.map((cat) => (
             <div key={cat.id}>
               <p className="mb-1 text-sm font-bold text-pulse-orange">{cat.name_ar}</p>
-              <div className="flex flex-wrap gap-1.5">
-                {services
+              <div className="flex flex-wrap gap-1.5" role="group" aria-label={cat.name_ar}>
+                {catalog.services
                   .filter((s) => s.category_id === cat.id)
                   .map((s) => (
                     <button
                       key={s.id}
                       type="button"
+                      aria-pressed={picked.has(s.id)}
                       onClick={() => toggle(s.id)}
-                      className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${
+                      className={`rounded-full border px-2.5 py-1 text-xs transition-colors focus-visible:ring-2 focus-visible:ring-pulse-orange/60 focus:outline-none ${
                         picked.has(s.id)
                           ? 'border-pulse-orange bg-pulse-orange/15 text-pulse-orange'
                           : 'border-gray-dark text-gray-light hover:border-gray-medium'
@@ -100,22 +99,30 @@ export default function ScopeBuilder({ clientId, onDone }:
               </div>
             </div>
           ))}
-          <input
+          <Input
+            label="الإطار الزمني"
             value={timeline}
             onChange={(e) => setTimeline(e.target.value)}
-            placeholder="الإطار الزمني (مثال: ٨ أسابيع)"
-            className="w-full rounded-sm border border-gray-dark bg-transparent px-2 py-1.5 text-sm"
+            placeholder="مثال: ٨ أسابيع"
           />
-          <textarea
+          <Textarea
+            label="المسؤوليات"
             value={responsibilities}
             onChange={(e) => setResponsibilities(e.target.value)}
-            placeholder="المسؤوليات…"
             rows={2}
-            className="w-full rounded-sm border border-gray-dark bg-transparent px-2 py-1.5 text-sm"
           />
-          <Button onClick={save} disabled={busy || picked.size === 0} className="px-4 py-1.5 text-sm">
+          <Button
+            size="sm"
+            loading={save.isPending}
+            disabled={picked.size === 0}
+            onClick={async () => {
+              await save.mutateAsync(undefined as never);
+              onDone();
+            }}
+          >
             حفظ كمسودة ({picked.size} خدمة)
           </Button>
+          {err && <p role="alert" className="text-xs text-pulse-orange">{err}</p>}
         </div>
         <pre className="overflow-auto whitespace-pre-wrap rounded-sm bg-gray-dark/30 p-3 text-xs leading-relaxed text-gray-light">
           {sowPreview || 'اختر خدمات لعرض مسودة نطاق العمل…'}
