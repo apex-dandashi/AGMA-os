@@ -1,8 +1,9 @@
 'use client';
 
+import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { Badge, Card, EmptyState, Select, SkeletonList } from '@agma/ui';
-import { Sunrise } from 'lucide-react';
+import { Card, EmptyState, Select, SkeletonList } from '@agma/ui';
+import { ArrowUpLeft, Sunrise } from 'lucide-react';
 import type { Enums, Tables } from '@agma/db';
 import { getSupabase } from '../lib/supabase';
 import { useAppMutation } from '../lib/queries';
@@ -61,6 +62,7 @@ export default function MyDayPanel() {
       <h1 className="mb-1 text-xl font-black">يومي</h1>
       <p className="mb-4 text-sm text-gray-medium">
         {data.tasks.length} مهمة مفتوحة · {overdue.length} متأخرة · {myActivities.length} نشاط مجدول
+        — انقر اسم المشروع بجانب أي مهمة لفتح تفاصيلها وتعديلها
       </p>
 
       {data.tasks.length === 0 ? (
@@ -83,7 +85,14 @@ export default function MyDayPanel() {
                   ))}
                 </Select>
                 <span>{task.title}</span>
-                {project && <Badge variant="outline">{project.name}</Badge>}
+                {project && (
+                  <Link href={`/projects/?id=${project.id}`}
+                    className="inline-flex items-center gap-1 rounded-full border border-gray-dark px-2 py-0.5 text-xs text-gray-light transition-colors hover:border-pulse-orange hover:text-pulse-orange"
+                    title="افتح المشروع — التفاصيل والتعليقات والتعديل هناك">
+                    {project.name}
+                    <ArrowUpLeft className="h-3 w-3" aria-hidden />
+                  </Link>
+                )}
                 {task.due && (
                   <span dir="ltr"
                     className={`ms-auto text-xs ${isOverdue ? 'font-bold text-pulse-orange' : 'text-gray-medium'}`}>

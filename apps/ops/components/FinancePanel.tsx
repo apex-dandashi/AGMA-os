@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo, useState, type FormEvent } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -255,7 +256,13 @@ function InvoicesTab() {
               <Card key={doc.id} className="flex flex-wrap items-center gap-3 p-3 text-sm">
                 <Badge>{doc.type === 'credit_note' ? 'إشعار دائن' : 'فاتورة'}</Badge>
                 <b dir="ltr">{doc.number ?? '—'}</b>
-                <span className="text-gray-light">{client?.company}</span>
+                {client && (
+                  <Link href={`/clients/?id=${client.id}`}
+                    className="text-gray-light underline-offset-2 hover:text-pulse-orange hover:underline"
+                    title="افتح ملف العميل — الرصيد وكشف الحساب هناك">
+                    {client.company}
+                  </Link>
+                )}
                 {doc.total != null && (
                   <span dir="ltr" className="font-bold">SAR {fmt(Number(doc.total))}</span>
                 )}

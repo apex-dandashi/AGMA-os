@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import {
   Badge,
@@ -201,7 +202,13 @@ export default function DocumentsPanel() {
                 <Badge>{TYPE_LABELS[doc.type]}</Badge>
                 <b dir="ltr">{doc.number ?? '—'}</b>
                 {doc.version > 1 && <Badge variant="outline">v{doc.version}</Badge>}
-                <span className="text-gray-light">{client?.company}</span>
+                {client && (
+                  <Link href={`/clients/?id=${client.id}`}
+                    className="text-gray-light underline-offset-2 hover:text-pulse-orange hover:underline"
+                    title="افتح ملف العميل">
+                    {client.company}
+                  </Link>
+                )}
                 <Badge variant={doc.status === 'draft' ? 'neutral' : 'accent'}>
                   {STATUS_LABELS[doc.status]}
                 </Badge>

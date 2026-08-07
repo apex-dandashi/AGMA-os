@@ -242,7 +242,7 @@ function Chrome({ profile, children }: { profile: Tables<'profiles'>; children: 
 }
 
 interface SearchHit {
-  kind: 'lead' | 'client' | 'document';
+  kind: 'lead' | 'client' | 'document' | 'project' | 'task';
   id: string;
   label: string;
   sub?: string;
@@ -270,14 +270,23 @@ function GlobalSearch({ open, onClose }: { open: boolean; onClose: () => void })
       setBusy(true);
       const supabase = getSupabase();
       const like = `%${q.trim()}%`;
-      const [leads, clients, docs] = await Promise.all([
+      const [leads, clients, docs, projects, tasks] = await Promise.all([
         supabase.from('leads').select('id, name, company').or(`name.ilike.${like},company.ilike.${like}`).limit(5),
         supabase.from('clients').select('id, company').ilike('company', like).limit(5),
         supabase.from('documents').select('id, number, type').ilike('number', like).limit(5),
+        supabase.from('projects').select('id, name').ilike('name', like).limit(5),
+        supabase.from('tasks').select('id, title, project_id').ilike('title', like).limit(5),
       ]);
       setHits([
         ...(clients.data ?? []).map((c): SearchHit => ({
           kind: 'client', id: c.id, label: c.company, href: `/clients/?id=${c.id}`,
+        })),
+        ...(projects.data ?? []).map((p): SearchHit => ({
+          kind: 'project', id: p.id, label: p.name, href: `/projects/?id=${p.id}`,
+        })),
+        ...(tasks.data ?? []).map((t): SearchHit => ({
+          kind: 'task', id: t.id, label: t.title,
+          href: t.project_id ? `/projects/?id=${t.project_id}` : '/projects/',
         })),
         ...(leads.data ?? []).map((l): SearchHit => ({
           kind: 'lead', id: l.id, label: l.name, sub: l.company ?? undefined, href: '/',
@@ -291,7 +300,10 @@ function GlobalSearch({ open, onClose }: { open: boolean; onClose: () => void })
     return () => clearTimeout(timer);
   }, [q, open]);
 
-  const KIND_AR = { lead: 'محتمل', client: 'عميل', document: 'مستند' } as const;
+  const KIND_AR = {
+    lead: 'محتمل', client: 'عميل', document: 'مستند',
+    project: 'مشروع', task: 'مهمة',
+  } as const;
 
   return (
     <Modal open={open} onClose={onClose} title={t('search.title')}>

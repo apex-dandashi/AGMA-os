@@ -74,6 +74,18 @@ stamp/signature + per-user signatures, and «أين أدخل السجل التج
   where to enter client CR/VAT — discoverability fix).
 - Gauntlet green; migration pushed to production.
 
+## Navigation round log (2026-08-08)
+
+Owner on يومي: «ما أعرف وين أروح أعدل الأهداف» — dead-end screens fixed with
+cross-links (deep-link params existed since Sprint A, now actually used):
+
+- My Day: project badge is now a link into the project detail (+ explainer in
+  the subtitle). A task's edit/comments/details live in its project.
+- Documents + Finance: client names on every row link to the client profile.
+- ⌘K global search now also covers projects and tasks (a task hit opens its
+  project) — five entity kinds total.
+- No migration; gauntlet green; shipped both branches.
+
 ## Roles 2.1 log (2026-08-07) — the full set, derived from docs/11–13
 
 Owner: «إلخ = افترض باقي الأدوار المهمة بالمنطق والمراجع». Five more roles,
