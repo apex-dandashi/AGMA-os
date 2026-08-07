@@ -97,11 +97,15 @@ test('login, enroll MFA, work the pipeline, open documents', async ({ page }) =>
   await page.getByPlaceholder('بحث بالاسم أو الشركة…').fill('E2E');
   await expect(page.getByText('عميل الاختبار الشامل').first()).toBeVisible();
 
-  // -- documents page renders (empty state or list)
-  await page.getByRole('link', { name: 'المستندات' }).first().click();
-  await expect(page.getByRole('heading', { name: 'المستندات' })).toBeVisible({ timeout: 20_000 });
+  // -- documents page renders (goto: immune to dev-server cold-compile races)
+  await page.goto('/documents/', { waitUntil: 'domcontentloaded' });
+  await expect(page.getByRole('heading', { name: 'المستندات' })).toBeVisible({ timeout: 30_000 });
+
+  // -- finance page renders
+  await page.goto('/finance/', { waitUntil: 'domcontentloaded' });
+  await expect(page.getByRole('heading', { name: 'المالية' })).toBeVisible({ timeout: 30_000 });
 
   // -- team page renders the roster
-  await page.getByRole('link', { name: 'الفريق' }).first().click();
-  await expect(page.getByText(EMAIL)).toBeVisible({ timeout: 20_000 });
+  await page.goto('/team/', { waitUntil: 'domcontentloaded' });
+  await expect(page.getByText(EMAIL)).toBeVisible({ timeout: 30_000 });
 });

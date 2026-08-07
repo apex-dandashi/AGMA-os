@@ -32,6 +32,8 @@ const TYPE_LABELS: Record<Enums<'document_type'>, string> = {
   msa: 'اتفاقية رئيسية',
   amc: 'عقد صيانة',
   coc: 'مدونة سلوك',
+  invoice: 'فاتورة',
+  credit_note: 'إشعار دائن',
 };
 
 const STATUS_LABELS: Record<Enums<'document_status'>, string> = {
@@ -105,6 +107,7 @@ export default function DocumentsPanel() {
     () =>
       (docs ?? []).filter(
         (d) =>
+          d.type !== 'invoice' && d.type !== 'credit_note' && // finance owns these
           (statusFilter === 'all' || d.status === statusFilter) &&
           (typeFilter === 'all' || d.type === typeFilter)
       ),

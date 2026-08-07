@@ -2,6 +2,8 @@ export { COMPANY, DOC_COLORS, toArabicDigits, formatSAR, formatIBAN } from './co
 export { computeQuoteTotals } from './totals';
 export { renderQuote } from './renderQuote';
 export { renderContract } from './renderContract';
+export { renderInvoice, computeInvoiceTotal } from './renderInvoice';
+export type { InvoicePayload } from './renderInvoice';
 export type {
   QuotePayload,
   QuoteItem,

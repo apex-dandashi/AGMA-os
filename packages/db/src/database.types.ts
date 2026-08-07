@@ -353,6 +353,7 @@ export type Database = {
           scope_id: string | null
           status: Database["public"]["Enums"]["document_status"]
           supersedes: string | null
+          total: number | null
           type: Database["public"]["Enums"]["document_type"]
           updated_at: string
           valid_until: string | null
@@ -370,6 +371,7 @@ export type Database = {
           scope_id?: string | null
           status?: Database["public"]["Enums"]["document_status"]
           supersedes?: string | null
+          total?: number | null
           type: Database["public"]["Enums"]["document_type"]
           updated_at?: string
           valid_until?: string | null
@@ -387,6 +389,7 @@ export type Database = {
           scope_id?: string | null
           status?: Database["public"]["Enums"]["document_status"]
           supersedes?: string | null
+          total?: number | null
           type?: Database["public"]["Enums"]["document_type"]
           updated_at?: string
           valid_until?: string | null
@@ -426,6 +429,47 @@ export type Database = {
             columns: ["supersedes"]
             isOneToOne: false
             referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          created_by: string | null
+          expense_date: string
+          id: string
+          note: string | null
+          supplier: string | null
+        }
+        Insert: {
+          amount: number
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          expense_date?: string
+          id?: string
+          note?: string | null
+          supplier?: string | null
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          expense_date?: string
+          id?: string
+          note?: string | null
+          supplier?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -801,6 +845,67 @@ export type Database = {
         }
         Relationships: []
       }
+      payments: {
+        Row: {
+          amount: number
+          bank_ref: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          invoice_id: string
+          method: Database["public"]["Enums"]["payment_method"]
+          note: string | null
+          paid_on: string
+          payment_account_id: string | null
+        }
+        Insert: {
+          amount: number
+          bank_ref?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_id: string
+          method?: Database["public"]["Enums"]["payment_method"]
+          note?: string | null
+          paid_on?: string
+          payment_account_id?: string | null
+        }
+        Update: {
+          amount?: number
+          bank_ref?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_id?: string
+          method?: Database["public"]["Enums"]["payment_method"]
+          note?: string | null
+          paid_on?: string
+          payment_account_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_payment_account_id_fkey"
+            columns: ["payment_account_id"]
+            isOneToOne: false
+            referencedRelation: "payment_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       playbook_stages: {
         Row: {
           id: string
@@ -1011,6 +1116,63 @@ export type Database = {
           window_start?: string
         }
         Relationships: []
+      }
+      recurring_invoices: {
+        Row: {
+          active: boolean
+          amount: number
+          client_id: string
+          created_at: string
+          day_of_month: number
+          id: string
+          last_generated: string | null
+          note: string | null
+          payment_account_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          amount: number
+          client_id: string
+          created_at?: string
+          day_of_month?: number
+          id?: string
+          last_generated?: string | null
+          note?: string | null
+          payment_account_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          amount?: number
+          client_id?: string
+          created_at?: string
+          day_of_month?: number
+          id?: string
+          last_generated?: string | null
+          note?: string | null
+          payment_account_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_invoices_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_invoices_payment_account_id_fkey"
+            columns: ["payment_account_id"]
+            isOneToOne: false
+            referencedRelation: "payment_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reports: {
         Row: {
@@ -1473,6 +1635,86 @@ export type Database = {
           },
         ]
       }
+      wallet_entries: {
+        Row: {
+          amount: number
+          campaign: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          spend_date: string
+          wallet_id: string
+        }
+        Insert: {
+          amount: number
+          campaign?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          spend_date?: string
+          wallet_id: string
+        }
+        Update: {
+          amount?: number
+          campaign?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          spend_date?: string
+          wallet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_entries_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wallet_entries_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wallets: {
+        Row: {
+          budget: number
+          client_id: string
+          created_at: string
+          id: string
+          note: string | null
+          updated_at: string
+        }
+        Insert: {
+          budget: number
+          client_id: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          budget?: number
+          client_id?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallets_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       website_clients: {
         Row: {
           client_id: string
@@ -1565,7 +1807,16 @@ export type Database = {
         | "active"
         | "expired"
         | "void"
-      document_type: "quote" | "sow" | "nda" | "sla" | "msa" | "amc" | "coc"
+      document_type:
+        | "quote"
+        | "sow"
+        | "nda"
+        | "sla"
+        | "msa"
+        | "amc"
+        | "coc"
+        | "invoice"
+        | "credit_note"
       interaction_kind: "call" | "whatsapp" | "email" | "meeting" | "note"
       kpi_direction: "up" | "down"
       lead_outcome: "open" | "won" | "lost"
@@ -1580,6 +1831,7 @@ export type Database = {
       leave_kind: "annual" | "sick" | "unpaid" | "other"
       message_channel: "portal" | "whatsapp" | "email"
       method_phase: "analyze" | "generate" | "market" | "adapt"
+      payment_method: "transfer" | "cash" | "card" | "other"
       project_mode: "recurring" | "milestone"
       project_status:
         | "planning"
@@ -1725,7 +1977,17 @@ export const Constants = {
       approval_status: ["pending", "approved", "rejected"],
       client_status: ["active", "paused", "archived"],
       document_status: ["draft", "sent", "signed", "active", "expired", "void"],
-      document_type: ["quote", "sow", "nda", "sla", "msa", "amc", "coc"],
+      document_type: [
+        "quote",
+        "sow",
+        "nda",
+        "sla",
+        "msa",
+        "amc",
+        "coc",
+        "invoice",
+        "credit_note",
+      ],
       interaction_kind: ["call", "whatsapp", "email", "meeting", "note"],
       kpi_direction: ["up", "down"],
       lead_outcome: ["open", "won", "lost"],
@@ -1741,6 +2003,7 @@ export const Constants = {
       leave_kind: ["annual", "sick", "unpaid", "other"],
       message_channel: ["portal", "whatsapp", "email"],
       method_phase: ["analyze", "generate", "market", "adapt"],
+      payment_method: ["transfer", "cash", "card", "other"],
       project_mode: ["recurring", "milestone"],
       project_status: ["planning", "active", "paused", "completed", "archived"],
       scope_status: ["draft", "sent", "approved", "rejected"],

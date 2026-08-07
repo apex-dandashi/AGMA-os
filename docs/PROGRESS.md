@@ -12,12 +12,48 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 3 | Legal generators | ✅ Done (2026-08-07) |
 | 3.5 | **Quality hardening** — docs/07 quality roadmap (owner verdict: 3/10 → target 9+) | ✅ Done — Sprints A+B+C (2026-08-07) |
 | 4 | Projects + playbooks + HR | ✅ Done (2026-08-07) |
-| 5 | Finance KSA | ⬜ Next |
-| 6 | Notifications | ⬜ |
+| 5 | Finance KSA | ✅ Done (2026-08-07) |
+| 6 | Notifications | ⬜ Next |
 | 7 | Portal + onboarding + Drop Forms | ⬜ |
 | 8 | Content Engine | ⬜ |
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
+
+## Phase 5 log (2026-08-07)
+
+**Built (docs/05 §B3 · docs/06 §3 · docs/08 §3):**
+- Migrations `20260807110000/110100`: invoices + credit notes join the
+  immutable documents engine (document_type extended in its own txn);
+  `documents.total` frozen at finalization; `payments` with DB guards
+  (finalized invoices only, never exceed balance, no paying void docs);
+  `recurring_invoices` retainers; `expenses`; ad-spend `wallets` +
+  `wallet_entries` (client budgets never blend with revenue). Realtime on
+  payments.
+- **renderInvoice** in legal-templates: فاتورة / إشعار دائن on the reference
+  anatomy — sidebar payment details, paid/balance dark box, reserved VAT row
+  «—», recurring-renewal callout (docs/06 §3.6), source-quote reference,
+  negative-signed CN amounts. **11 new golden tests (33 total).**
+- **ops → المالية** (4 tabs):
+  - الفواتير: create from a finalized quote (payload carries over — no
+    retyping), finalize assigns INV number + freezes total + 14-day due date,
+    payment recording (bank ref, per-account, "كامل المتبقي"), status chips
+    (مسودة/مستحقة/جزئي/مدفوعة/متأخرة/ملغاة), **AR aging strip**
+    (current/30/60/90+), credit-note creation from any finalized invoice,
+    print with live paid/balance.
+  - الاشتراكات: retainers with day-of-month + "توليد فاتورة الآن" (Phase 6
+    cron automates); المصروفات: quick-add + month total; محافظ الإعلانات:
+    budget vs spend progress with 80% highlight.
+
+**Verified:** INV-00053 and CN-00001 issued in true sequence · overpay guard
+raises · migration replay · RLS harness · e2e (extended with finance page,
+switched nav assertions to goto after diagnosing a dev-compile race via the
+Playwright trace) · 33 generator tests · builds/typecheck. Production
+migrations applied.
+
+**Deferred:** ZATCA Phase 2 API (flagged, per §B3 — confirm wave with
+accountant) · payment reminders + retainer cron + wallet 80% alert → Phase 6 ·
+client statement PDF → with portal documents area (Phase 7) · line-level
+margin capture → when time-cost data accumulates.
 
 ## Phase 4 log (2026-08-07)
 
