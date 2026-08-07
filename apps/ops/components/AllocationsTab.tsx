@@ -8,6 +8,7 @@ import {
   Card,
   ConfirmDialog,
   EmptyState,
+  Hint,
   Input,
   Modal,
   SkeletonList,
@@ -79,15 +80,15 @@ export default function AllocationsTab() {
         <Card className="p-4 text-center">
           <VaultIcon className="mx-auto h-5 w-5 text-pulse-orange" aria-hidden />
           <p className="mt-1 text-2xl font-black" dir="ltr">{vaultMonths.toFixed(1)}</p>
-          <p className="text-xs text-gray-medium">كم شهراً يغطي الاحتياطي مصاريفنا؟ (الهدف ٣ أشهر)</p>
+          <p className="flex items-center justify-center gap-1 text-xs text-gray-medium">كم شهراً يغطي الاحتياطي مصاريفنا؟ (الهدف ٣ أشهر) <Hint text="الصيغة: الاحتياطي المتجمع ÷ متوسط المصاريف الشهرية لآخر ٩٠ يوماً. يرتفع بتأكيد الجولات وينخفض بتوزيع الأرباح وارتفاع المصاريف." /></p>
         </Card>
         <Card className="p-4 text-center">
           <p className="mt-1 text-2xl font-black" dir="ltr">SAR {fmt(Math.max(0, profitReserve))}</p>
-          <p className="text-xs text-gray-medium">احتياطي الربح المتجمّع</p>
+          <p className="flex items-center justify-center gap-1 text-xs text-gray-medium">احتياطي الربح المتجمّع <Hint text="مجموع بند «الربح» من كل الجولات المؤكدة، ناقص ما وُزّع على الشريكين. يكبر مع كل جولة تؤكدانها." /></p>
         </Card>
         <Card className="p-4 text-center">
           <p className="mt-1 text-2xl font-black" dir="ltr">SAR {fmt(Math.round(opexMonthly))}</p>
-          <p className="text-xs text-gray-medium">متوسط مصاريفنا الشهرية (آخر ٩٠ يوماً)</p>
+          <p className="flex items-center justify-center gap-1 text-xs text-gray-medium">متوسط مصاريفنا الشهرية (آخر ٩٠ يوماً) <Hint text="مجموع المصروفات المسجلة في آخر ٩٠ يوماً ÷ ٣. مصدره: المالية ← المصروفات — مصروف غير مسجّل يعني رقماً مضللاً هنا." /></p>
         </Card>
       </div>
 
@@ -123,7 +124,7 @@ export default function AllocationsTab() {
       )}
 
       <div>
-        <h3 className="mb-2 font-bold text-gray-light">نسب التوزيع: النسبة المطبّقة الآن ← النسبة التي نتدرج إليها</h3>
+        <h3 className="mb-2 flex items-center gap-1.5 font-bold text-gray-light">نسب التوزيع: النسبة المطبّقة الآن ← النسبة التي نتدرج إليها <Hint text="تُعدَّل من: الإعدادات ← نسب التوزيع (للشركاء). مجموع النسب المطبّقة يجب أن يساوي ١٠٠٪." /></h3>
         <div className="space-y-1.5">
           {data.rules.map((r) => (
             <Card key={r.bucket} className="flex items-center gap-3 p-2.5 text-sm">

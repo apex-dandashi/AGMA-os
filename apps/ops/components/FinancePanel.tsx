@@ -9,6 +9,7 @@ import {
   Checkbox,
   ConfirmDialog,
   EmptyState,
+  Hint,
   Input,
   Modal,
   Select,
@@ -214,7 +215,8 @@ function InvoicesTab() {
         <Button variant="outline" size="sm" onClick={() => setShowNew(true)}>
           + فاتورة من عرض سعر
         </Button>
-        <div className="ms-auto flex gap-2 text-xs" aria-label="أعمار الذمم">
+        <div className="ms-auto flex items-center gap-2 text-xs" aria-label="أعمار الذمم">
+          <Hint wide text="أعمار الذمم: أرصدة الفواتير غير المسددة مجمّعة بحسب عمرها منذ الإصدار. «حالية» أقل من ٣٠ يوماً، وكل شريحة أقدم أخطر — 90+ بالبرتقالي يحتاج تدخلاً فورياً. الأرقام تُبنى من الفواتير المعتمدة والدفعات المسجلة." />
           <Badge variant="outline">حالية: {fmt(aging.current)}</Badge>
           <Badge variant="outline">30+: {fmt(aging.d30)}</Badge>
           <Badge variant="outline">60+: {fmt(aging.d60)}</Badge>

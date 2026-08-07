@@ -7,6 +7,7 @@ import {
   Button,
   Card,
   EmptyState,
+  Hint,
   Input,
   Modal,
   Select,
@@ -76,6 +77,26 @@ function useScorecard() {
   });
 }
 
+/** مصدر كل مؤشر وطريقة حسابه — تظهر بأيقونة التوضيح بجانب اسمه. */
+const METRIC_HINTS: Record<string, string> = {
+  cash_collected: 'مجموع الدفعات المسجلة خلال الأسبوع — المصدر: المالية ← تسجيل دفعة.',
+  pipeline_value: 'مجموع قيم الصفقات المفتوحة في المسار — تُحدَّث قيمة الصفقة من بطاقتها.',
+  new_leads: 'عدد العملاء المحتملين الجدد هذا الأسبوع (من الموقع أو الإدخال اليدوي).',
+  proposals_sent: 'عروض الأسعار المعتمدة والمرقّمة هذا الأسبوع.',
+  approval_lag_h: 'متوسط الساعات بين إرسال طلب اعتماد للعميل وبتّه فيه — الهدف أقل من ٤٨.',
+  on_time_tasks_pct: 'نسبة المهام المنجزة في موعدها من كل المهام المستحقة هذا الأسبوع.',
+  overdue_ar: 'مجموع أرصدة الفواتير المتجاوزة استحقاقها — تفاصيلها في المالية ← أعمار الذمم.',
+  overdue_tasks: 'عدد المهام المتأخرة عن استحقاقها الآن.',
+  nps: 'رضا العملاء — يُدخل يدوياً من النموذج أعلى هذا الجدول بعد كل استبيان.',
+  allocation_on_time: '١ = جولة توزيع الدخل أُكّدت في موعدها (يومي ١٠ و٢٥)، ٠ = تأخرت.',
+  vault_months: 'الاحتياطي ÷ متوسط مصاريف ٩٠ يوماً — كم شهراً نصمد بلا دخل؟ الهدف ٣.',
+  scope_leak_sar: 'كلفة ساعات العمل على مهام خارج القوالب (عمل خارج الاتفاق) هذا الأسبوع.',
+  flags_raised: 'مرات «أوقِف وراجِع» هذا الأسبوع — الصفر الدائم إشارة سيئة لا جيدة.',
+  package_revenue_pct: 'نسبة الدخل المحصَّل من عملاء الباقات مقابل المخصص (آخر ٩٠ يوماً).',
+  owner_technician_pct: 'نسبة العمل التنفيذي من مهام الشريكين المنجزة — يجب أن تهبط كل ربع.',
+  delivery_by_team_pct: 'نسبة المهام المنجزة بغير الشريكين — مقياس استقلال الوكالة عنكما.',
+};
+
 function ScorecardTab() {
   const { data, isLoading } = useScorecard();
   const me = useProfile();
@@ -120,7 +141,12 @@ function ScorecardTab() {
             const seat = data.seats.find((s) => s.id === m.seat_id);
             return (
               <Tr key={m.key}>
-                <Td className="font-medium">{m.name_ar}</Td>
+                <Td className="font-medium">
+                  <span className="inline-flex items-center gap-1">
+                    {m.name_ar}
+                    {METRIC_HINTS[m.key] && <Hint text={METRIC_HINTS[m.key]} />}
+                  </span>
+                </Td>
                 <Td className="text-gray-light">{seat?.name_ar ?? '—'}</Td>
                 <Td dir="ltr" className="text-gray-medium">
                   {m.direction === 'up' ? '≥' : '≤'} {m.green_threshold ?? '؟'}

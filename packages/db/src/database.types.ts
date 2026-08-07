@@ -705,6 +705,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "documents_payment_account_id_fkey"
+            columns: ["payment_account_id"]
+            isOneToOne: false
+            referencedRelation: "payment_accounts_admin"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "documents_scope_id_fkey"
             columns: ["scope_id"]
             isOneToOne: false
@@ -1806,6 +1813,13 @@ export type Database = {
             referencedRelation: "payment_accounts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "payments_payment_account_id_fkey"
+            columns: ["payment_account_id"]
+            isOneToOne: false
+            referencedRelation: "payment_accounts_admin"
+            referencedColumns: ["id"]
+          },
         ]
       }
       people_reviews: {
@@ -2262,6 +2276,13 @@ export type Database = {
             columns: ["payment_account_id"]
             isOneToOne: false
             referencedRelation: "payment_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_invoices_payment_account_id_fkey"
+            columns: ["payment_account_id"]
+            isOneToOne: false
+            referencedRelation: "payment_accounts_admin"
             referencedColumns: ["id"]
           },
         ]
@@ -3410,6 +3431,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payment_accounts_admin: {
+        Row: {
+          active: boolean | null
+          bank_name: string | null
+          beneficiary_name: string | null
+          created_at: string | null
+          iban: string | null
+          id: string | null
+          internal_label: string | null
+          is_default: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          bank_name?: string | null
+          beneficiary_name?: string | null
+          created_at?: string | null
+          iban?: string | null
+          id?: string | null
+          internal_label?: string | null
+          is_default?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          bank_name?: string | null
+          beneficiary_name?: string | null
+          created_at?: string | null
+          iban?: string | null
+          id?: string | null
+          internal_label?: string | null
+          is_default?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       pipeline_analytics: {
         Row: {

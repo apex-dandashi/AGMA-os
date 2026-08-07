@@ -7,6 +7,7 @@ import {
   Button,
   Card,
   EmptyState,
+  Hint,
   Input,
   Modal,
   Select,
@@ -145,7 +146,7 @@ export function PackagesTab() {
       </div>
 
       <div>
-        <h3 className="mb-1 font-bold text-gray-light">فلتر TVR — قابلة للتعليم / ذات قيمة / قابلة للتكرار</h3>
+        <h3 className="mb-1 flex items-center gap-1.5 font-bold text-gray-light">فلتر TVR — قابلة للتعليم / ذات قيمة / قابلة للتكرار <Hint wide text="من كتاب Built to Sell: الخدمة الجاهزة لتصبح باقة هي التي يمكن تعليمها لموظف (قابلة للتعليم)، ويدفع العميل فيها سعراً مجزياً (ذات قيمة)، وتُنفَّذ بنفس الخطوات كل مرة (قابلة للتكرار). قيّموها في الجلسة الربعية." /></h3>
         <p className="mb-2 text-xs text-gray-medium">
           قيّم كل خدمة من ١ إلى ٥ في الجلسة الربعية — مجموع ١٢+ يرشّحها باقةً قادمة.
         </p>

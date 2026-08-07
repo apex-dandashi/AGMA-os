@@ -2,17 +2,31 @@
 
 import { useState, type FormEvent } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Badge, Button, Input, Select, SkeletonList, Table, Td, Tr, useToast } from '@agma/ui';
+import { Badge, Button, Hint, Input, Select, SkeletonList, Table, Td, Tr, useToast } from '@agma/ui';
 import type { Enums, Tables } from '@agma/db';
 import { getSupabase } from '../lib/supabase';
 import { keys, useAppMutation } from '../lib/queries';
 
+/**
+ * الأدوار هنا «مستويات صلاحية» أمنية ثلاثية (كلٌّ يشمل ما تحته) — أما
+ * الوظيفة الفعلية فمن «المسمى الوظيفي» و«المقاعد» (هيكل EOS في النظام ← الرؤية).
+ */
 const ROLE_LABELS: Record<Enums<'user_role'>, string> = {
-  admin: 'مدير النظام',
-  strategist: 'استراتيجي',
-  executor: 'منفّذ',
+  admin: 'شريك',
+  strategist: 'مدير عمليات',
+  executor: 'عضو تنفيذ',
   client: 'عميل',
 };
+
+const ROLE_MATRIX: { cap: string; admin: boolean; strategist: boolean; executor: boolean }[] = [
+  { cap: 'مهامه: تنفيذ وتعليق وتسجيل وقت ورفع ملفات', admin: true, strategist: true, executor: true },
+  { cap: 'فحوصات الإطلاق و«أوقِف وراجِع» وتسجيل المشاكل', admin: true, strategist: true, executor: true },
+  { cap: 'المبيعات والعملاء والمستندات والمشاريع كاملة', admin: true, strategist: true, executor: false },
+  { cap: 'اعتماد وترقيم الفواتير والعروض وتسجيل الدفعات', admin: true, strategist: true, executor: false },
+  { cap: 'توزيع الدخل: تأكيد الجولات وتوزيع الأرباح', admin: true, strategist: false, executor: false },
+  { cap: 'الإعدادات: حسابات بنكية، نسب، كتالوج، قوائم فحص', admin: true, strategist: false, executor: false },
+  { cap: 'الفريق: دعوات وأدوار وتقييم ربعي ورواتب/تكلفة', admin: true, strategist: false, executor: false },
+];
 
 export default function TeamPanel({ me }: { me: Tables<'profiles'> }) {
   const isAdmin = me.role === 'admin';
@@ -21,6 +35,14 @@ export default function TeamPanel({ me }: { me: Tables<'profiles'> }) {
     queryKey: ['profiles'],
     queryFn: async () => {
       const { data, error } = await getSupabase().from('profiles').select('*').order('created_at');
+      if (error) throw new Error(error.message);
+      return data;
+    },
+  });
+  const { data: seats } = useQuery({
+    queryKey: ['team-seats'],
+    queryFn: async () => {
+      const { data, error } = await getSupabase().from('seats').select('id, name_ar, holder').order('sort');
       if (error) throw new Error(error.message);
       return data;
     },
@@ -100,19 +122,32 @@ export default function TeamPanel({ me }: { me: Tables<'profiles'> }) {
           <Input label="البريد الإلكتروني" dir="ltr" type="email" required
             value={email} onChange={(e) => setEmail(e.target.value)} className="w-64" />
           <Input label="الاسم" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-48" />
-          <Select label="الدور" value={role} onChange={(e) => setRole(e.target.value as typeof role)}>
-            <option value="strategist">استراتيجي</option>
-            <option value="executor">منفّذ</option>
-            <option value="admin">مدير النظام</option>
+          <Select label="مستوى الصلاحية" value={role} onChange={(e) => setRole(e.target.value as typeof role)}>
+            <option value="strategist">مدير عمليات</option>
+            <option value="executor">عضو تنفيذ</option>
+            <option value="admin">شريك</option>
           </Select>
           <Button type="submit" size="sm" loading={inviting}>دعوة</Button>
         </form>
       )}
 
+      {isAdmin && <RoleMatrixCard />}
+
       {isLoading ? (
         <SkeletonList rows={3} />
       ) : (
-        <Table head={['الاسم', 'البريد', 'الدور', 'المسمى', 'التكلفة/س', 'العبء', 'الحالة']}>
+        <Table head={[
+          'الاسم', 'البريد',
+          <span key="r" className="inline-flex items-center gap-1">مستوى الصلاحية
+            <Hint wide text="ثلاثة مستويات أمنية يفرضها النظام على مستوى قاعدة البيانات: شريك (كل شيء)، مدير عمليات (كل التشغيل عدا المالية الحساسة والإعدادات)، عضو تنفيذ (مهامه ومشاريعه). الوظيفة الفعلية تُوصف بالمسمى والمقاعد، لا بهذا المستوى." /></span>,
+          'المسمى الوظيفي',
+          <span key="s" className="inline-flex items-center gap-1">المقاعد
+            <Hint text="مقاعد الهيكل التنظيمي (رؤية، تكامل، مبيعات، تسويق، تسليم، مالية) — كل مقعد له مسؤول واحد. يُعدَّل من: النظام ← الرؤية." /></span>,
+          <span key="c" className="inline-flex items-center gap-1">التكلفة/س
+            <Hint text="كلفة الساعة الداخلية (SAR) — تدخل في حساب كلفة عمل المشاريع ومؤشر «عمل خارج الاتفاق». لا يراها إلا الشركاء." /></span>,
+          <span key="w" className="inline-flex items-center gap-1">العبء
+            <Hint text="عدد المهام المفتوحة المسندة إليه الآن، من كل المشاريع — فوق ٨ يظهر بالبرتقالي." /></span>,
+          'الحالة']}>
           {(profiles ?? []).map((p) => {
             const isTeamRow = p.role !== 'client';
             const load = workload?.get(p.id) ?? 0;
@@ -130,9 +165,9 @@ export default function TeamPanel({ me }: { me: Tables<'profiles'> }) {
                       }
                       className="w-36"
                     >
-                      <option value="admin">مدير النظام</option>
-                      <option value="strategist">استراتيجي</option>
-                      <option value="executor">منفّذ</option>
+                      <option value="admin">شريك</option>
+                      <option value="strategist">مدير عمليات</option>
+                      <option value="executor">عضو تنفيذ</option>
                     </Select>
                   ) : (
                     <Badge variant={p.role === 'admin' ? 'accent' : 'neutral'}>
@@ -170,6 +205,18 @@ export default function TeamPanel({ me }: { me: Tables<'profiles'> }) {
                 </Td>
                 <Td>
                   {isTeamRow ? (
+                    <span className="flex flex-wrap gap-1">
+                      {(seats ?? []).filter((s) => s.holder === p.id).map((s) => (
+                        <Badge key={s.id} variant="outline">{s.name_ar}</Badge>
+                      ))}
+                      {(seats ?? []).every((s) => s.holder !== p.id) && (
+                        <span className="text-xs text-gray-medium">بلا مقعد</span>
+                      )}
+                    </span>
+                  ) : '—'}
+                </Td>
+                <Td>
+                  {isTeamRow ? (
                     <Badge variant={load > 8 ? 'accent' : 'neutral'}
                       title="مهام مفتوحة مكلّف بها">
                       {load}
@@ -191,6 +238,39 @@ export default function TeamPanel({ me }: { me: Tables<'profiles'> }) {
       <PeopleAnalyzer
         team={(profiles ?? []).filter((p) => p.role !== 'client' && p.active)}
         isAdmin={isAdmin} meId={me.id} />
+    </div>
+  );
+}
+
+/** «ماذا يستطيع كل مستوى؟» — الصلاحيات كما تفرضها قاعدة البيانات فعلاً. */
+function RoleMatrixCard() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mb-5">
+      <Button variant="ghost" size="xs" onClick={() => setOpen((v) => !v)}>
+        {open ? 'إخفاء صلاحيات المستويات' : 'ماذا يستطيع كل مستوى صلاحية؟'}
+      </Button>
+      {open && (
+        <div className="mt-2 overflow-x-auto">
+          <Table head={['القدرة', 'شريك', 'مدير عمليات', 'عضو تنفيذ']}>
+            {ROLE_MATRIX.map((r) => (
+              <Tr key={r.cap}>
+                <Td className="text-gray-light">{r.cap}</Td>
+                {([r.admin, r.strategist, r.executor] as const).map((ok, i) => (
+                  <Td key={i}>
+                    <span className={ok ? 'font-bold text-pulse-orange' : 'text-gray-medium'}>
+                      {ok ? '✓' : '—'}
+                    </span>
+                  </Td>
+                ))}
+              </Tr>
+            ))}
+          </Table>
+          <p className="mt-1 text-xs text-gray-medium">
+            هذه حدود يفرضها النظام على مستوى قاعدة البيانات، لا مجرد إخفاء أزرار.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -253,7 +333,7 @@ function PeopleAnalyzer({ team, isAdmin, meId }: {
         القاعدة: من لا يحقق «+ + +» على القيم يُناقش مقعده في الجلسة الربعية —
         الشريكان يقيّم أحدهما الآخر أولاً.
       </p>
-      <Table head={['العضو', ...data.values.map((v) => v.replace('(قرار شركاء) ', '')), 'G', 'W', 'C']}>
+      <Table head={['العضو', ...data.values.map((v) => v.replace('(قرار شركاء) ', '')), 'يفهم دوره', 'يريده', 'قادر عليه']}>
         {team.map((p) => {
           const r = data.reviews.find((x) => x.subject === p.id && x.reviewer === meId);
           const scores = (r?.value_scores as Record<string, string>) ?? {};

@@ -4,7 +4,7 @@ export { cn } from './cn';
 export { Button, buttonVariants } from './components/Button';
 export type { ButtonProps } from './components/Button';
 export { Card } from './components/Card';
-export { Spinner, Badge, Skeleton, SkeletonList, EmptyState } from './components/primitives';
+export { Spinner, Badge, Skeleton, SkeletonList, EmptyState, Hint } from './components/primitives';
 export {
   FormField,
   Input,

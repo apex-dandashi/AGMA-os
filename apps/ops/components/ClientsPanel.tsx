@@ -9,6 +9,7 @@ import {
   Card,
   ConfirmDialog,
   EmptyState,
+  Hint,
   Input,
   Select,
   SkeletonList,
@@ -169,20 +170,30 @@ function Client360Card({ clientId }: { clientId: string }) {
     },
   });
   if (!c360) return null;
-  const stat = (label: string, value: string, alert = false) => (
+  const stat = (label: string, value: string, hint: string, alert = false) => (
     <div className="text-center">
       <p dir="ltr" className={`text-sm font-black ${alert ? 'text-pulse-orange' : ''}`}>{value}</p>
-      <p className="text-[11px] text-gray-medium">{label}</p>
+      <p className="flex items-center justify-center gap-1 text-[11px] text-gray-medium">
+        {label} <Hint text={hint} />
+      </p>
     </div>
   );
   return (
     <Card className="flex flex-wrap items-center justify-between gap-3 p-3" aria-label="ملخص العميل 360">
-      {stat('المفوتر', fmtSAR(c360.invoiced_total))}
-      {stat('المحصَّل', fmtSAR(c360.paid_total))}
-      {stat('الرصيد المستحق', fmtSAR(c360.open_balance), Number(c360.open_balance) > 0)}
-      {stat('مشاريع نشطة', String(c360.active_projects ?? 0))}
-      {stat('اعتمادات معلّقة', String(c360.pending_approvals ?? 0), Number(c360.pending_approvals) > 0)}
-      {stat('آخر تواصل', fmtDate(c360.last_interaction_at))}
+      {stat('المفوتر', fmtSAR(c360.invoiced_total),
+        'مجموع فواتيره المعتمدة غير الملغاة — تُدار من المالية ← الفواتير.')}
+      {stat('المحصَّل', fmtSAR(c360.paid_total),
+        'مجموع الدفعات المسجلة على فواتيره — تُسجَّل من «تسجيل دفعة» على الفاتورة.')}
+      {stat('الرصيد المستحق', fmtSAR(c360.open_balance),
+        'المفوتر ناقص المحصَّل. البرتقالي يعني ديناً قائماً — سلّم التحصيل يعمل عليه تلقائياً.',
+        Number(c360.open_balance) > 0)}
+      {stat('مشاريع نشطة', String(c360.active_projects ?? 0),
+        'المشاريع بحالة «نشط» فقط — تفاصيلها في صفحة المشاريع.')}
+      {stat('اعتمادات معلّقة', String(c360.pending_approvals ?? 0),
+        'طلبات اعتماد أُرسلت له (نطاقات وتسليمات) ولم يبتّ فيها بعد.',
+        Number(c360.pending_approvals) > 0)}
+      {stat('آخر تواصل', fmtDate(c360.last_interaction_at),
+        'آخر سجل في «سجل التواصل» أدناه — أكثر من ٩٠ يوماً يظهر في فجوات جودة البيانات.')}
       {c360.bought_package && <Badge variant="accent">عميل باقات</Badge>}
     </Card>
   );

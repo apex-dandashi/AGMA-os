@@ -22,6 +22,34 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
 
+## Clarity round log (2026-08-07) — bug fix + hints + role re-engineering
+
+**Bug (owner report): الحسابات البنكية hung on skeletons.** Root cause:
+phase-0 column-level SELECT grants on payment_accounts (internal_label
+excluded by the «لا يظهر للعميل» rule, created_at ungranted) — the settings
+tab's select * + order by created_at hit permission-denied, and settings
+tabs had no error state. Fix (migration 20260808010000): definer view
+payment_accounts_admin (admins get everything, non-admins zero rows —
+verified both personas; base table stays column-restricted so Phase-7
+portal clients can never read internal labels) + created_at grant. All 7
+settings tabs now render a clear error + retry instead of eternal skeletons.
+
+**Hint icons everywhere (owner request):** new ui `Hint` component
+(hover/click tooltip, RTL, inline SVG, keyboard accessible). Wired: client
+360 stats (meaning + number source + where to edit), all 16 scorecard
+metrics (METRIC_HINTS: formula/source/target), allocation cards (reserve
+formula, months formula, where to edit ratios), AR aging, TVR heading,
+team table headers (صلاحية/مقاعد/تكلفة/عبء).
+
+**Roles re-engineered (owner: «استراتيجي ومنفذ ضعيفة وغير واضحة»):**
+the enum is a 3-tier SECURITY lattice, not job titles — the confusion was
+presenting it as roles. Now: شريك / مدير عمليات / عضو تنفيذ + a collapsible
+«ماذا يستطيع كل مستوى؟» capability matrix (mirrors actual RLS), the job
+described by المسمى الوظيفي + new المقاعد column (EOS seats held, edited in
+الرؤية), and People-Analyzer G/W/C headers renamed يفهم دوره/يريده/قادر عليه.
+No enum/RLS change — zero breakage. docs/11 source text also stored as
+docs/11-finance-platform-design-source.md.
+
 ## المالية ٢٫٠ log (2026-08-07) — docs/11 §ب, all six items
 
 1. **Deferred revenue & recognition (IFRS 15, agency-sized):**

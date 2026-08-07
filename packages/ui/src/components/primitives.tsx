@@ -83,3 +83,51 @@ export function EmptyState({
     </div>
   );
 }
+
+/* ------------------------------------------------------------------- Hint */
+
+/**
+ * أيقونة توضيح صغيرة: تشرح المعنى المقصود، مصدر الرقم، أو مكان التعديل.
+ * Hover opens it, click toggles (touch), Escape/blur closes. Inline SVG —
+ * no icon-lib dependency inside the ui package.
+ */
+export function Hint({ text, wide }: { text: string; wide?: boolean }) {
+  const [open, setOpen] = React.useState(false);
+  return (
+    <span className="relative inline-flex align-middle"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}>
+      <button
+        type="button"
+        aria-label={`توضيح: ${text.slice(0, 40)}`}
+        aria-expanded={open}
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((v) => !v);
+        }}
+        onBlur={() => setOpen(false)}
+        onKeyDown={(e) => e.key === 'Escape' && setOpen(false)}
+        className="rounded-full text-gray-medium transition-colors hover:text-pulse-orange focus-visible:ring-2 focus-visible:ring-pulse-orange/60 focus:outline-none"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+          strokeLinecap="round" strokeLinejoin="round" aria-hidden
+          className="h-3.5 w-3.5">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+          <path d="M12 17h.01" />
+        </svg>
+      </button>
+      {open && (
+        <span
+          role="tooltip"
+          className={cn(
+            'absolute bottom-full start-0 z-50 mb-1.5 rounded-sm border border-gray-dark bg-pure-ink p-2.5 text-start text-xs font-normal leading-relaxed text-gray-light shadow-xl',
+            wide ? 'w-72' : 'w-56'
+          )}
+        >
+          {text}
+        </span>
+      )}
+    </span>
+  );
+}

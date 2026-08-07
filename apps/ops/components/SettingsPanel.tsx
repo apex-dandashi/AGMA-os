@@ -65,17 +65,29 @@ export default function SettingsPanel() {
   );
 }
 
+/** خطأ تحميل واضح بدل هياكل تنتظر للأبد — على مستوى كل تبويب. */
+function LoadFailed({ error }: { error: Error }) {
+  return (
+    <EmptyState icon={<SettingsIcon className="h-8 w-8" aria-hidden />}
+      title="تعذر تحميل هذا القسم"
+      hint={error.message}
+      action={<Button size="sm" onClick={() => location.reload()}>أعد المحاولة</Button>} />
+  );
+}
+
 /* ------------------------------------------------------------- accounts */
 
 function AccountsTab() {
   const key = ['settings-accounts'];
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: key,
     queryFn: async () => {
+      // definer view: admins read everything incl. الوسم الداخلي —
+      // the base table stays column-restricted for Phase-7 portal clients.
       const { data, error } = await getSupabase()
-        .from('payment_accounts').select('*').order('created_at');
+        .from('payment_accounts_admin').select('*').order('created_at');
       if (error) throw new Error(error.message);
-      return data;
+      return (data ?? []) as unknown as Tables<'payment_accounts'>[];
     },
   });
   const [form, setForm] = useState({ iban: '', bank_name: '', beneficiary_name: '', internal_label: '' });
@@ -104,6 +116,7 @@ function AccountsTab() {
     { invalidate: [key] }
   );
 
+  if (error) return <LoadFailed error={error as Error} />;
   if (isLoading || !data) return <SkeletonList rows={3} />;
   return (
     <div className="space-y-4">
@@ -155,7 +168,7 @@ function AccountsTab() {
 
 function ClausesTab() {
   const key = ['settings-clauses'];
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: key,
     queryFn: async () => {
       const { data, error } = await getSupabase()
@@ -197,6 +210,7 @@ function ClausesTab() {
     { invalidate: [key] }
   );
 
+  if (error) return <LoadFailed error={error as Error} />;
   if (isLoading || !data) return <SkeletonList rows={4} />;
   const CAT: Record<string, string> = { commercial: 'تجاري', legal: 'قانوني', nda: 'عدم إفصاح' };
   return (
@@ -269,7 +283,7 @@ function ClausesTab() {
 
 function ChecklistsTab() {
   const key = ['settings-checklists'];
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: key,
     queryFn: async () => {
       const { data, error } = await getSupabase()
@@ -295,6 +309,7 @@ function ChecklistsTab() {
     { invalidate: [key], successMessage: 'حُدّثت القائمة — تسري على الفحوصات القادمة' }
   );
 
+  if (error) return <LoadFailed error={error as Error} />;
   if (isLoading || !data) return <SkeletonList rows={4} />;
   return (
     <div className="space-y-1.5">
@@ -348,7 +363,7 @@ function ChecklistsTab() {
 
 function RulesTab() {
   const key = ['settings-rules'];
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: key,
     queryFn: async () => {
       const { data, error } = await getSupabase()
@@ -380,6 +395,7 @@ function RulesTab() {
     { invalidate: [key], successMessage: 'حُفظت النسب — تسري من التوزيع القادم' }
   );
 
+  if (error) return <LoadFailed error={error as Error} />;
   if (isLoading || !data) return <SkeletonList rows={4} />;
   return (
     <div className="space-y-3">
@@ -418,7 +434,7 @@ function RulesTab() {
 
 function ServicesTab() {
   const key = ['settings-services'];
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: key,
     queryFn: async () => {
       const supabase = getSupabase();
@@ -458,6 +474,7 @@ function ServicesTab() {
     { invalidate: [key], successMessage: 'أُضيفت الخدمة — قيّمها TVR في الجلسة الربعية' }
   );
 
+  if (error) return <LoadFailed error={error as Error} />;
   if (isLoading || !data) return <SkeletonList rows={6} />;
   return (
     <div className="space-y-4">
@@ -545,7 +562,7 @@ const EMT_LABELS: Record<string, string> = {
 
 function TaskTemplatesTab() {
   const key = ['settings-task-templates'];
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: key,
     queryFn: async () => {
       const supabase = getSupabase();
@@ -575,6 +592,7 @@ function TaskTemplatesTab() {
     { invalidate: [key] }
   );
 
+  if (error) return <LoadFailed error={error as Error} />;
   if (isLoading || !data) return <SkeletonList rows={6} />;
   const stageById = new Map(data.stages.map((s) => [s.id, s]));
   const visible = data.templates.filter((t) => {
@@ -624,7 +642,7 @@ function TaskTemplatesTab() {
 
 function TemplatesTab() {
   const key = ['settings-templates'];
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: key,
     queryFn: async () => {
       const { data, error } = await getSupabase()
@@ -642,6 +660,7 @@ function TemplatesTab() {
     { invalidate: [key] }
   );
 
+  if (error) return <LoadFailed error={error as Error} />;
   if (isLoading || !data) return <SkeletonList rows={5} />;
   return (
     <div className="space-y-1.5">
