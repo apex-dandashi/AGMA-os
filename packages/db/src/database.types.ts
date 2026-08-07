@@ -451,6 +451,7 @@ export type Database = {
           city: string | null
           collections_hold: boolean
           company: string
+          company_norm: string | null
           cr_number: string | null
           created_at: string
           credit_limit: number | null
@@ -469,6 +470,7 @@ export type Database = {
           city?: string | null
           collections_hold?: boolean
           company: string
+          company_norm?: string | null
           cr_number?: string | null
           created_at?: string
           credit_limit?: number | null
@@ -487,6 +489,7 @@ export type Database = {
           city?: string | null
           collections_hold?: boolean
           company?: string
+          company_norm?: string | null
           cr_number?: string | null
           created_at?: string
           credit_limit?: number | null
@@ -622,6 +625,8 @@ export type Database = {
           client_id: string
           created_at: string
           created_by: string | null
+          dispute_reason: string | null
+          disputed_at: string | null
           id: string
           issued_on: string | null
           number: string | null
@@ -641,6 +646,8 @@ export type Database = {
           client_id: string
           created_at?: string
           created_by?: string | null
+          dispute_reason?: string | null
+          disputed_at?: string | null
           id?: string
           issued_on?: string | null
           number?: string | null
@@ -660,6 +667,8 @@ export type Database = {
           client_id?: string
           created_at?: string
           created_by?: string | null
+          dispute_reason?: string | null
+          disputed_at?: string | null
           id?: string
           issued_on?: string | null
           number?: string | null
@@ -1156,11 +1165,13 @@ export type Database = {
         Row: {
           client_id: string | null
           company: string | null
+          company_norm: string | null
           created_at: string
           expected_close: string | null
           id: string
           lost_reason: string | null
           name: string
+          name_norm: string | null
           notes: string | null
           outcome: Database["public"]["Enums"]["lead_outcome"]
           owner: string | null
@@ -1174,11 +1185,13 @@ export type Database = {
         Insert: {
           client_id?: string | null
           company?: string | null
+          company_norm?: string | null
           created_at?: string
           expected_close?: string | null
           id?: string
           lost_reason?: string | null
           name: string
+          name_norm?: string | null
           notes?: string | null
           outcome?: Database["public"]["Enums"]["lead_outcome"]
           owner?: string | null
@@ -1192,11 +1205,13 @@ export type Database = {
         Update: {
           client_id?: string | null
           company?: string | null
+          company_norm?: string | null
           created_at?: string
           expected_close?: string | null
           id?: string
           lost_reason?: string | null
           name?: string
+          name_norm?: string | null
           notes?: string | null
           outcome?: Database["public"]["Enums"]["lead_outcome"]
           owner?: string | null
@@ -3510,6 +3525,15 @@ export type Database = {
           },
         ]
       }
+      revenue_leakage: {
+        Row: {
+          client_id: string | null
+          company: string | null
+          est_value: number | null
+          signal: string | null
+        }
+        Relationships: []
+      }
       revenue_waterfall: {
         Row: {
           deferred_added: number | null
@@ -3567,6 +3591,7 @@ export type Database = {
       is_strategist_plus: { Args: never; Returns: boolean }
       is_team: { Args: never; Returns: boolean }
       next_document_number: { Args: { p_prefix: string }; Returns: string }
+      normalize_ar: { Args: { t: string }; Returns: string }
       normalize_digits: { Args: { t: string }; Returns: string }
       normalize_phone_sa: { Args: { t: string }; Returns: string }
       notify_team: {
@@ -3588,7 +3613,9 @@ export type Database = {
       run_daily_jobs_v2: { Args: never; Returns: undefined }
       run_daily_jobs_v3: { Args: never; Returns: undefined }
       run_daily_jobs_v4: { Args: never; Returns: undefined }
+      run_daily_jobs_v5: { Args: never; Returns: undefined }
       run_dunning: { Args: never; Returns: undefined }
+      send_contract_renewals: { Args: never; Returns: undefined }
       send_overdue_reminders: { Args: never; Returns: undefined }
       send_tax_reminders: { Args: never; Returns: undefined }
       show_limit: { Args: never; Returns: number }

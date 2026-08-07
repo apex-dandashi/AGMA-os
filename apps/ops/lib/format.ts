@@ -11,6 +11,10 @@ export const fmtNum = (n: number | string | null | undefined) =>
 export const fmtSAR = (n: number | string | null | undefined) =>
   `SAR ${fmtNum(n)}`;
 
+/** Arabic search normalization — mirrors SQL normalize_ar. */
+export const normalizeAr = (s: string) =>
+  s.replace(/[أإآ]/g, 'ا').replace(/ء/g, ' ').replace(/ة/g, 'ه').replace(/ى/g, 'ي');
+
 /** ISO timestamp/date → YYYY-MM-DD. */
 export const fmtDate = (iso: string | null | undefined) =>
   iso ? iso.slice(0, 10) : '—';

@@ -35,7 +35,7 @@ export function renderContract(payload: ContractPayload): string {
   .party b { font-size: 13px; }
   .party span { font-size: 10.5px; color: ${c.muted}; display: block; }
   .preamble { font-size: 12.5px; line-height: 2; margin-bottom: 6mm; }
-  .clause { background: ${c.card}; border-radius: 2mm; padding: 5mm 6mm; margin-bottom: 4mm; }
+  .clause { background: ; border-radius: 2mm; padding: 5mm 6mm; margin-bottom: 4mm; break-inside: avoid; }
   .clause h4 { color: ${c.accent}; font-size: 13px; margin-bottom: 1.5mm; }
   .clause h4 i { font-style: normal; color: ${c.muted}; font-size: 11px; }
   .clause p { font-size: 12px; line-height: 1.9; }

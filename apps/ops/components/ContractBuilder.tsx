@@ -37,6 +37,7 @@ export default function ContractBuilder({ clients, onDone }:
   const [clientId, setClientId] = useState('');
   const [secondPartyRep, setSecondPartyRep] = useState('');
   const [preamble, setPreamble] = useState('');
+  const [expiresOn, setExpiresOn] = useState('');
   const [picked, setPicked] = useState<Set<string> | null>(null);
   const [extraTitle, setExtraTitle] = useState('');
   const [extraBody, setExtraBody] = useState('');
@@ -94,6 +95,7 @@ export default function ContractBuilder({ clients, onDone }:
         type: docType,
         client_id: clientId,
         payload: payload as never,
+        valid_until: expiresOn || null,
       });
       if (error) throw new Error(error.message);
     },
@@ -117,6 +119,9 @@ export default function ContractBuilder({ clients, onDone }:
         </Select>
         <Input label="ممثل الطرف الثاني (اختياري)" value={secondPartyRep}
           onChange={(e) => setSecondPartyRep(e.target.value)} />
+        <Input label="تاريخ انتهاء العقد (تنبيه تجديد قبل ٦٠ و٣٠ يوماً)"
+          type="date" dir="ltr" value={expiresOn}
+          onChange={(e) => setExpiresOn(e.target.value)} />
       </div>
       {client && !client.cr_number && (
         <p className="text-xs text-gray-medium">

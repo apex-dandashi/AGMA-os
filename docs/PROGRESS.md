@@ -22,6 +22,34 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
 
+## Study-2 gap package log (2026-08-07) — docs/12 adopted items
+
+Second owner study («الهيكلية المرجعية للنظام المالي ودورة حياة العملاء»)
+ingested and compared against docs/11 → docs/12 with per-item verdicts.
+The five sized adoptions, all fixture-verified and shipped:
+
+1. **Invoice disputes**: disputed_at/reason on documents; the entire dunning
+   ladder skips disputed invoices (verified: zero actions, no hold);
+   «نزاع/حل النزاع» toggle + badge on the invoice row.
+2. **Revenue-leakage detection** (المال المنسي): revenue_leakage view — (a)
+   hours logged in 30d with no finalized invoice in 45d (est. value from
+   cost rates), (b) completed project with no invoice ever. Both signals
+   verified; surfaced in الإيراد tab with an orange «منفَّذ غير مفوتر» section.
+3. **Monthly light close**: seeded «الإقفال الشهري الخفيف» READ-DO checklist
+   (9 items: bank match, receipts, invoicing, allocation rounds, revenue
+   sanity, leakage review, statements, backup check, accountant export) —
+   the sized alternative to a full GL close.
+4. **Arabic search normalization**: normalize_ar (أ/إ/آ→ا، ة→ه، ى→ي) +
+   generated norm columns + trgm indexes on clients/leads; duplicate warning
+   now matches «شركه الابداع» ↔ «شركة الإبداع» (verified).
+5. **Contract renewal alerts**: contracts can carry an expiry date
+   (ContractBuilder field → valid_until); daily job v5 notifies at 60 and
+   30 days («قرروا التجديد أو الإنهاء») — verified at +60.
+
+Also: PDF pagination polish (thead repeats, rows/clauses never split across
+pages). Scheduled-with-triggers (docs/12 🟡): lead scoring, milestone-gated
+billing (portal), unapplied cash (PSP), utilization (first hire).
+
 ## Clarity round log (2026-08-07) — bug fix + hints + role re-engineering
 
 **Bug (owner report): الحسابات البنكية hung on skeletons.** Root cause:

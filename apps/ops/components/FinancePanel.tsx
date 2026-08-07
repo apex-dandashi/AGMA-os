@@ -18,9 +18,10 @@ import {
   Tabs,
   Table,
   Td,
+  Textarea,
   Tr,
 } from '@agma/ui';
-import { Download, Handshake, Link as LinkIcon, Pencil, Receipt, RefreshCw, Trash2, Wallet as WalletIcon } from 'lucide-react';
+import { Download, Handshake, Link as LinkIcon, Pencil, Receipt, RefreshCw, Scale, Trash2, Wallet as WalletIcon } from 'lucide-react';
 import { exportCsv } from '../lib/csv';
 import { newPaymentReference, paymentProvider } from '../lib/payments';
 import { fmtNum as fmt } from '../lib/format';
@@ -110,6 +111,7 @@ function InvoicesTab() {
   const [finalizing, setFinalizing] = useState<Doc | null>(null);
   const [linking, setLinking] = useState<Doc | null>(null);
   const [promising, setPromising] = useState<Doc | null>(null);
+  const [disputing, setDisputing] = useState<Doc | null>(null);
 
   const invoices = useMemo(
     () => (docs ?? []).filter((d) => d.type === 'invoice' || d.type === 'credit_note'),
@@ -280,7 +282,14 @@ function InvoicesTab() {
                       <Button variant="ghost" size="xs" onClick={() => setPromising(doc)}>
                         <Handshake className="h-3.5 w-3.5" aria-hidden /> وعد بالسداد
                       </Button>
+                      <Button variant="ghost" size="xs" onClick={() => setDisputing(doc)}>
+                        <Scale className="h-3.5 w-3.5" aria-hidden />
+                        {doc.disputed_at ? 'حل النزاع' : 'نزاع'}
+                      </Button>
                     </>
+                  )}
+                  {doc.disputed_at && (
+                    <Badge variant="accent" title={doc.dispute_reason ?? undefined}>نزاع — المطاردة موقوفة</Badge>
                   )}
                   {doc.type === 'invoice' && doc.status !== 'draft' && doc.status !== 'void' && (
                     <Button variant="ghost" size="xs" onClick={() => setCrediting(doc)}>
@@ -304,6 +313,9 @@ function InvoicesTab() {
       )}
       {promising && (
         <PromiseModal invoice={promising} onClose={() => setPromising(null)} />
+      )}
+      {disputing && (
+        <DisputeModal invoice={disputing} onClose={() => setDisputing(null)} />
       )}
       <ConfirmDialog open={!!finalizing} onClose={() => setFinalizing(null)}
         title="اعتماد وترقيم"
@@ -937,6 +949,54 @@ function PromiseModal({ invoice, onClose }: { invoice: Doc; onClose: () => void 
   );
 }
 
+/** نزاع الفاتورة (docs/12): يوقف مطاردة العميل فوراً، ويبقى الرصيد ظاهراً. */
+function DisputeModal({ invoice, onClose }: { invoice: Doc; onClose: () => void }) {
+  const [reason, setReason] = useState(invoice.dispute_reason ?? '');
+  const isDisputed = !!invoice.disputed_at;
+
+  const save = useAppMutation(
+    async () => {
+      const { error } = await getSupabase().from('documents').update(
+        isDisputed
+          ? { disputed_at: null, dispute_reason: null }
+          : { disputed_at: new Date().toISOString(), dispute_reason: reason.trim() }
+      ).eq('id', invoice.id);
+      if (error) throw new Error(error.message);
+    },
+    {
+      invalidate: [keys.documents],
+      successMessage: isDisputed
+        ? 'حُل النزاع — يعود سلّم التحصيل للعمل من الغد'
+        : 'سُجّل النزاع — توقفت رسائل المطالبة فوراً',
+    }
+  );
+
+  return (
+    <Modal open onClose={onClose}
+      title={`${isDisputed ? 'حل نزاع' : 'تسجيل نزاع'} — ${invoice.number ?? ''}`}>
+      <div className="space-y-3">
+        {isDisputed ? (
+          <p className="text-sm text-gray-light">
+            سبب النزاع المسجّل: {invoice.dispute_reason ?? '—'}. حلّه يعيد
+            الفاتورة لسلّم التحصيل الطبيعي.
+          </p>
+        ) : (
+          <Textarea label="ما اعتراض العميل؟ (يظهر لكل الفريق)" rows={2}
+            value={reason} onChange={(e) => setReason(e.target.value)} />
+        )}
+        <Button size="sm" className="w-full" loading={save.isPending}
+          disabled={!isDisputed && reason.trim().length < 5}
+          onClick={async () => {
+            await save.mutateAsync(undefined as never);
+            onClose();
+          }}>
+          {isDisputed ? 'حُل النزاع' : 'سجّل النزاع وأوقف المطاردة'}
+        </Button>
+      </div>
+    </Modal>
+  );
+}
+
 /* --------------------------------------------------------------- revenue */
 
 /** شلال الإيراد: المفوتر ← المثبت ← المؤجل، شهراً بشهر (docs/11 §ب-1). */
@@ -945,14 +1005,19 @@ function RevenueTab() {
     queryKey: ['revenue-waterfall'],
     queryFn: async () => {
       const supabase = getSupabase();
-      const [waterfall, pending] = await Promise.all([
+      const [waterfall, pending, leakage] = await Promise.all([
         supabase.from('revenue_waterfall').select('*').limit(12),
         supabase.from('revenue_schedules')
           .select('*, documents(number, client_id)')
           .is('recognized_at', null).order('period_end'),
+        supabase.from('revenue_leakage').select('*'),
       ]);
       if (waterfall.error) throw new Error(waterfall.error.message);
-      return { waterfall: waterfall.data ?? [], pending: pending.data ?? [] };
+      return {
+        waterfall: waterfall.data ?? [],
+        pending: pending.data ?? [],
+        leakage: leakage.data ?? [],
+      };
     },
   });
 
@@ -980,6 +1045,25 @@ function RevenueTab() {
           </Tr>
         ))}
       </Table>
+      {data.leakage.length > 0 && (
+        <div>
+          <h3 className="mb-1 flex items-center gap-1.5 font-bold text-pulse-orange">
+            منفَّذ غير مفوتر — مال منسي
+            <Hint wide text="عمل مسجّل (ساعات أو مشاريع مكتملة) لعملاء بلا فاتورة معتمدة تقابله — راجعه وأصدر الفواتير أو وثّق سبب عدم الفوترة. يُراجع في الإقفال الشهري." />
+          </h3>
+          <div className="space-y-1">
+            {data.leakage.map((l, i) => (
+              <Card key={i} className="flex flex-wrap items-center gap-3 border-pulse-orange/30 p-2.5 text-sm">
+                <b>{l.company}</b>
+                <span className="text-gray-light">{l.signal}</span>
+                {l.est_value != null && (
+                  <span dir="ltr" className="ms-auto text-pulse-orange">≈ SAR {fmt(Number(l.est_value))}</span>
+                )}
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
       {data.pending.length > 0 && (
         <div>
           <h3 className="mb-1.5 font-bold text-gray-light">جدول الإثبات القادم</h3>

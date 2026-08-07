@@ -67,6 +67,8 @@ export function renderStatement(payload: StatementPayload): string {
   thead th { text-align: start; color: ${c.accent}; font-size: 11px;
              border-bottom: 1.5px solid ${c.ink}; padding: 2.5mm 2mm; }
   tbody td { padding: 3mm 2mm; border-bottom: 1px solid #d8cfc2; }
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; }
   td.due { color: ${c.accent}; font-weight: 700; }
   .totals { margin-top: 8mm; margin-inline-start: auto; width: 70mm;
             background: ${c.card}; border-radius: 2mm; padding: 5mm 6mm; font-size: 12.5px; }

@@ -32,6 +32,7 @@ import { getSupabase } from '../lib/supabase';
 import { keys, useAppMutation, useLeads, useMoveLeadStage } from '../lib/queries';
 import { AlertTriangle, Clock, Download, KanbanSquare, Trophy } from 'lucide-react';
 import { exportCsv } from '../lib/csv';
+import { normalizeAr } from '../lib/format';
 import { activitiesKey, useOpenActivities } from './ActivitiesBell';
 
 type Lead = Tables<'leads'>;
@@ -391,8 +392,9 @@ function NewLeadModal({ open, onClose }: { open: boolean; onClose: () => void })
   const [notes, setNotes] = useState('');
   const [fieldError, setFieldError] = useState<string | null>(null);
 
-  // Duplicate detection (docs/08 §1): warn, never block.
-  const probe = (company || name).trim();
+  // Duplicate detection (docs/08 §1): warn, never block. Normalized Arabic
+  // matching (docs/12): «شركه الابداع» يطابق «شركة الإبداع».
+  const probe = normalizeAr((company || name).trim());
   const { data: dupes } = useQuery({
     queryKey: ['lead-dupes', probe],
     enabled: open && probe.length >= 3,
@@ -400,8 +402,9 @@ function NewLeadModal({ open, onClose }: { open: boolean; onClose: () => void })
       const supabase = getSupabase();
       const [leads, clients] = await Promise.all([
         supabase.from('leads').select('name, company')
-          .or(`name.ilike.%${probe}%,company.ilike.%${probe}%`).limit(3),
-        supabase.from('clients').select('company').ilike('company', `%${probe}%`).limit(3),
+          .or(`name_norm.ilike.%${probe}%,company_norm.ilike.%${probe}%`).limit(3),
+        supabase.from('clients').select('company')
+          .ilike('company_norm', `%${probe}%`).limit(3),
       ]);
       return [
         ...(leads.data ?? []).map((l) => l.company || l.name),
