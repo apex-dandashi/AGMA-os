@@ -15,6 +15,7 @@ All specifications live in `/docs` — read the relevant one before touching its
 - `docs/08-erp-crm-reference.md` — ERP/CRM functionality benchmark (adopt/skip per phase)
 - `docs/09-traction-eos.md` — EOS layer (SUPERSEDED by docs/10 — kept for the scorecard auto-metric details)
 - `docs/10-operating-principles.md` — **THE operating system**: E-Myth × EOS × Checklist Manifesto × Profit First × Built to Sell, one flywheel (binding for phases 6.5+)
+- `docs/11-finance-platform-design.md` — owner-supplied corporate finance target-state (31-page PDF), ingested with adopt/defer/skip verdicts — «المالية ٢٫٠» package derives from section ب
 - `docs/references/` — real quotation/invoice PDFs + CR certificate = visual ground truth for generator QA
 
 ## Stack
