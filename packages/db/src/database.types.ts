@@ -118,6 +118,42 @@ export type Database = {
         }
         Relationships: []
       }
+      clause_library: {
+        Row: {
+          approved: boolean
+          body_ar: string
+          category: string
+          created_at: string
+          id: string
+          key: string
+          sort: number
+          title_ar: string
+          updated_at: string
+        }
+        Insert: {
+          approved?: boolean
+          body_ar: string
+          category?: string
+          created_at?: string
+          id?: string
+          key: string
+          sort?: number
+          title_ar: string
+          updated_at?: string
+        }
+        Update: {
+          approved?: boolean
+          body_ar?: string
+          category?: string
+          created_at?: string
+          id?: string
+          key?: string
+          sort?: number
+          title_ar?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           budget_tier: string | null
@@ -201,6 +237,111 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_counters: {
+        Row: {
+          next_number: number
+          prefix: string
+        }
+        Insert: {
+          next_number: number
+          prefix: string
+        }
+        Update: {
+          next_number?: number
+          prefix?: string
+        }
+        Relationships: []
+      }
+      documents: {
+        Row: {
+          client_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          issued_on: string | null
+          number: string | null
+          payload: Json
+          payment_account_id: string | null
+          scope_id: string | null
+          status: Database["public"]["Enums"]["document_status"]
+          supersedes: string | null
+          type: Database["public"]["Enums"]["document_type"]
+          updated_at: string
+          valid_until: string | null
+          version: number
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          issued_on?: string | null
+          number?: string | null
+          payload?: Json
+          payment_account_id?: string | null
+          scope_id?: string | null
+          status?: Database["public"]["Enums"]["document_status"]
+          supersedes?: string | null
+          type: Database["public"]["Enums"]["document_type"]
+          updated_at?: string
+          valid_until?: string | null
+          version?: number
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          issued_on?: string | null
+          number?: string | null
+          payload?: Json
+          payment_account_id?: string | null
+          scope_id?: string | null
+          status?: Database["public"]["Enums"]["document_status"]
+          supersedes?: string | null
+          type?: Database["public"]["Enums"]["document_type"]
+          updated_at?: string
+          valid_until?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_payment_account_id_fkey"
+            columns: ["payment_account_id"]
+            isOneToOne: false
+            referencedRelation: "payment_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_scope_id_fkey"
+            columns: ["scope_id"]
+            isOneToOne: false
+            referencedRelation: "scopes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_supersedes_fkey"
+            columns: ["supersedes"]
+            isOneToOne: false
+            referencedRelation: "documents"
             referencedColumns: ["id"]
           },
         ]
@@ -1139,6 +1280,7 @@ export type Database = {
       is_project_member: { Args: { pid: string }; Returns: boolean }
       is_strategist_plus: { Args: never; Returns: boolean }
       is_team: { Args: never; Returns: boolean }
+      next_document_number: { Args: { p_prefix: string }; Returns: string }
     }
     Enums: {
       approval_item_type:
@@ -1149,6 +1291,14 @@ export type Database = {
         | "task"
       approval_status: "pending" | "approved" | "rejected"
       client_status: "active" | "paused" | "archived"
+      document_status:
+        | "draft"
+        | "sent"
+        | "signed"
+        | "active"
+        | "expired"
+        | "void"
+      document_type: "quote" | "sow" | "nda" | "sla" | "msa" | "amc" | "coc"
       interaction_kind: "call" | "whatsapp" | "email" | "meeting" | "note"
       kpi_direction: "up" | "down"
       lead_source: "call" | "whatsapp" | "email" | "site"
@@ -1304,6 +1454,8 @@ export const Constants = {
       approval_item_type: ["scope", "roadmap", "deliverable", "report", "task"],
       approval_status: ["pending", "approved", "rejected"],
       client_status: ["active", "paused", "archived"],
+      document_status: ["draft", "sent", "signed", "active", "expired", "void"],
+      document_type: ["quote", "sow", "nda", "sla", "msa", "amc", "coc"],
       interaction_kind: ["call", "whatsapp", "email", "meeting", "note"],
       kpi_direction: ["up", "down"],
       lead_source: ["call", "whatsapp", "email", "site"],

@@ -11,6 +11,7 @@ import { getSupabase } from '../lib/supabase';
 const NAV = [
   { href: '/', label: 'المسار' },
   { href: '/clients/', label: 'العملاء' },
+  { href: '/documents/', label: 'المستندات' },
   { href: '/website/', label: 'الموقع' },
 ] as const;
 

@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  transpilePackages: ['@agma/ui', '@agma/db'],
+  transpilePackages: ['@agma/ui', '@agma/db', '@agma/legal-templates'],
 };
 
 export default nextConfig;

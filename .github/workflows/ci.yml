@@ -31,3 +31,6 @@ jobs:
 
       - name: Typecheck
         run: pnpm typecheck
+
+      - name: Generator tests
+        run: pnpm test

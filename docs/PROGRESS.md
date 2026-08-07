@@ -9,7 +9,7 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 0 | Scaffold + CI/CD + migrate current site | ✅ Done (2026-08-06) |
 | 1 | Schema / RLS / seeds / auth / audit | ✅ Done (2026-08-07) |
 | 2 | CRM + Sales + website sync | ✅ Done (2026-08-07) |
-| 3 | Legal generators | ⬜ |
+| 3 | Legal generators | ✅ Done (2026-08-07) |
 | 4 | Projects + playbooks + HR | ⬜ |
 | 5 | Finance KSA | ⬜ |
 | 6 | Notifications | ⬜ |
@@ -17,6 +17,53 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 8 | Content Engine | ⬜ |
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
+
+## Phase 3 log (2026-08-07)
+
+**Built:**
+- Migration `20260807060000_legal_documents`: `documents` (immutable after
+  finalization — DB triggers block payload changes and deletes, status moves
+  forward only), `document_counters` with atomic gapless
+  `next_document_number()` (seeded Q=55, INV=53, CN=1 per docs/06 §3.1;
+  strategist+ only, counters table reachable only through the function),
+  `clause_library` seeded with the docs/06 §3.5 default commercial clause set.
+- **packages/legal-templates**: entity constants (docs/06 §1/1b), palette
+  sampled from the reference PDF, deterministic HTML renderers:
+  `renderQuote` reproduces quotation-00054 anatomy (RTL dark sidebar with
+  recipient/project/payment details, عرض سعر display title, numbered item
+  cards with strikethrough discounts, named discounts, option pills with ★,
+  reserved VAT row «—», footer strip, Arabic page numbers, closing line) and
+  `renderContract` (NDA/SoW/SLA/MSA/AMC/COC family).
+- **22 unit tests** incl. golden reproduction of reference 00054 totals
+  (net 6,620), determinism, VAT-off row, internal_label leak guard, HTML
+  escaping. Wired into CI (`pnpm test`).
+- **apps/ops → المستندات**: quote builder (client, items with discounts,
+  named discount, payment-account selector defaulting to Main, clause picker,
+  live preview iframe), finalize = atomic Q-number + status sent + frozen
+  payload, status transitions (sent→signed→active / void), print-to-PDF via
+  browser print.
+
+**Verified locally:** migration replay · Q-00055→Q-00056 sequential issue ·
+immutability guard blocks tamper + delete on finalized docs · all builds,
+typechecks, tests green.
+
+**Deferred/notes:**
+- Invoices + credit notes (INV/CN counters already live) land in Phase 5
+  Finance with ZATCA fields behind the vat_enabled flag.
+- Contract builder UI is minimal v1 (create via quote builder patterns);
+  richer per-type variable forms with Phase 5/7 integrations.
+- PDF is via browser print (deterministic HTML is the artifact of record);
+  server-side PDF rendering can come with the notifications phase if needed.
+- Page 2 (تفاصيل الخدمات per-item checklists) renders when payload provides
+  details — builder UI field for it TBD.
+
+**Manual test list:**
+1. ops → المستندات → + عرض سعر: build a quote for a client, preview —
+   compare against docs/references/quotation-00054.pdf side by side.
+2. حفظ كمسودة → اعتماد وترقيم → number must be **Q-00055**.
+3. Try another → Q-00056 (gapless, sequential).
+4. Print preview → A4 layout, sidebar + footer intact.
+5. Confirm a finalized quote's items can no longer be edited (immutable).
 
 ## Phase 2 log (2026-08-07)
 

@@ -2,8 +2,9 @@ packages:
   - apps/*
   - packages/*
 
-# pnpm 11 blocks dependency postinstall scripts by default; these two are
-# Next.js internals that legitimately compile native code.
+# pnpm 11 blocks dependency postinstall scripts by default; allowlisted:
+# sharp/unrs-resolver (Next.js internals), esbuild (vitest).
 allowBuilds:
+  esbuild: true
   sharp: true
   unrs-resolver: true
