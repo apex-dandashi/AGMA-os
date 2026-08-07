@@ -11,6 +11,8 @@ All specifications live in `/docs` — read the relevant one before touching its
 - `docs/04-module-architecture.md` — full module map, cross-module flows
 - `docs/05-master-blueprint.md` — infrastructure, AI routing, costs, compliance, build phases (THE master reference)
 - `docs/06-brand-standards.md` — entity constants, payment accounts, document anatomy, visual tokens (design contract for ALL generated documents/emails)
+- `docs/07-quality-roadmap.md` — quality gap analysis, hardening sprints, Definition of Done
+- `docs/08-erp-crm-reference.md` — ERP/CRM functionality benchmark (adopt/skip per phase)
 - `docs/references/` — real quotation/invoice PDFs + CR certificate = visual ground truth for generator QA
 
 ## Stack
