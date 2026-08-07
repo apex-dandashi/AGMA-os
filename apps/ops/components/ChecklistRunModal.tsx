@@ -46,7 +46,7 @@ export default function ChecklistRunModal({ open, onClose, checklistKey, task, s
       ]);
       if (checklist.error) throw new Error(checklist.error.message);
       let run = runs.data?.[0] ?? null;
-      if (!run || run.status === 'flagged') {
+      if (!run) {
         const items = (checklist.data.items as { text: string }[]).map(() => ({ checked: false }));
         const { data: created, error } = await supabase.from('checklist_runs')
           .insert({ checklist_key: checklistKey, task_id: task.id, states: items as never })
@@ -78,12 +78,24 @@ export default function ChecklistRunModal({ open, onClose, checklistKey, task, s
     { invalidate: [runKey, invalidate] }
   );
 
+  const restart = useAppMutation(
+    async () => {
+      if (!data) return;
+      const items = (data.checklist.items as { text: string }[]).map(() => ({ checked: false }));
+      const { error } = await getSupabase().from('checklist_runs')
+        .insert({ checklist_key: checklistKey, task_id: task.id, states: items as never });
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [runKey], successMessage: 'بدأ فحص جديد — من الصفر، بندًا بندًا' }
+  );
+
   if (!open) return null;
   const items = (data?.checklist.items as { text: string }[]) ?? [];
   const states = ((data?.run?.states as unknown as ItemState[]) ?? []);
   const allChecked = items.length > 0 && states.length === items.length &&
     states.every((s) => s.checked);
   const alreadyPassed = data?.run?.status === 'passed';
+  const isFlagged = data?.run?.status === 'flagged';
 
   async function toggle(idx: number) {
     const next = items.map((_, i) => ({
@@ -118,7 +130,7 @@ export default function ChecklistRunModal({ open, onClose, checklistKey, task, s
                 <Checkbox
                   label={item.text}
                   checked={states[i]?.checked ?? false}
-                  disabled={alreadyPassed}
+                  disabled={alreadyPassed || isFlagged}
                   onChange={() => toggle(i)}
                 />
                 {states[i]?.checked && states[i]?.by && (
@@ -128,7 +140,21 @@ export default function ChecklistRunModal({ open, onClose, checklistKey, task, s
             ))}
           </div>
 
-          {alreadyPassed ? (
+          {isFlagged ? (
+            <div className="space-y-2 rounded-sm border border-pulse-orange/50 bg-pulse-orange/5 p-3">
+              <p className="flex items-center gap-1.5 text-sm font-bold text-pulse-orange">
+                <Flag className="h-3.5 w-3.5" aria-hidden /> Flag & Hold قائم
+              </p>
+              <p className="text-sm text-gray-light">السبب: {data.run?.flag_reason ?? '—'}</p>
+              <p className="text-xs text-gray-medium">
+                فُتحت قضية تلقائياً — عالجوا السبب ثم أعيدوا الفحص كاملاً (لا استئناف جزئياً).
+              </p>
+              <Button size="sm" variant="outline" loading={restart.isPending}
+                onClick={() => restart.mutate(undefined as never)}>
+                إعادة الفحص من البداية
+              </Button>
+            </div>
+          ) : alreadyPassed ? (
             <Badge variant="accent">
               <ShieldCheck className="h-3 w-3" aria-hidden /> مُجتازة
             </Badge>

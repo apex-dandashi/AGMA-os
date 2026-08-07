@@ -467,6 +467,38 @@ export type Database = {
           },
         ]
       }
+      document_costs: {
+        Row: {
+          costs: Json
+          created_at: string
+          document_id: string
+          total_cost: number
+          updated_at: string
+        }
+        Insert: {
+          costs?: Json
+          created_at?: string
+          document_id: string
+          total_cost?: number
+          updated_at?: string
+        }
+        Update: {
+          costs?: Json
+          created_at?: string
+          document_id?: string
+          total_cost?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_costs_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: true
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_counters: {
         Row: {
           next_number: number
@@ -2833,6 +2865,8 @@ export type Database = {
       }
       run_daily_jobs: { Args: never; Returns: undefined }
       run_daily_jobs_v2: { Args: never; Returns: undefined }
+      run_daily_jobs_v3: { Args: never; Returns: undefined }
+      send_overdue_reminders: { Args: never; Returns: undefined }
     }
     Enums: {
       activity_kind: "call" | "meeting" | "task" | "deadline" | "followup"

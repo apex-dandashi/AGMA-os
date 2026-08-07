@@ -22,6 +22,46 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
 
+## Review round log (2026-08-07) — post-6.5, pre-Phase-7
+
+Code review of the 6.5 layer + audit against the docs/08 benchmark criteria.
+
+**Bugs found & fixed (migration 20260807160000_review_hardening):**
+- **Flag & Hold deadlock (critical):** the done-gate checked «any flagged run
+  ever», so a task once flagged could NEVER complete, even after a fresh
+  checklist run passed. Gate now judges the latest run only. Verified all
+  three paths: no-run → blocked · flagged latest → blocked · new passed run
+  → done succeeds.
+- **pause_checklists were frozen:** no write policy or grants existed — even
+  admins couldn't update a checklist after an incident, violating the
+  Gawande living-document rule. Admin-manage policy + grants added.
+- **Allocation confirmation tightened to admin-only** (bank transfers are a
+  partner act); team keeps read. UI hides the confirm button for others.
+- ChecklistRunModal: a flagged run silently spawned a fresh run on open,
+  hiding the flag reason. Now: flagged banner with reason + explicit
+  «إعادة الفحص من البداية» action; checkboxes frozen while flagged.
+- AllocationsTab: vault-reserve math simplified to match the SQL exactly.
+
+**Benchmark gaps closed (docs/08 «Adopt» items that had slipped):**
+- §1 Duplicate detection: new-lead form warns (never blocks) when a similar
+  lead/client name or company exists.
+- §2 Margin on quote lines: internal-only cost field per line + live margin %
+  (red < 40%) in QuoteBuilder. Costs stored in new team-only document_costs
+  table — deliberately OUT of documents.payload, which Phase-7 clients will
+  read. «داخلي — لا يظهر في العرض».
+- §3 Payment-reminder ladder: overdue +3d and +7d client emails join the
+  due-tomorrow reminder (send_overdue_reminders, run_daily_jobs_v3, cron
+  repointed) + in-app alert to partners. Verified via fixture.
+- §6 CSV export (PDPL + owner habit): exportCsv util (Excel-safe BOM) with
+  export buttons on pipeline, clients, invoices, and expenses lists.
+
+**Benchmark audit — confirmed already delivered:** next-action discipline,
+deal value/close/won-lost reasons, tags, UTM, quote supersede chain, quote
+expiry cron, recurring-invoice auto-draft, AR aging, ad wallets, my-day,
+dependencies, workload-lite, activities engine.
+**Still deferred (unchanged, honest):** client statement PDF, CSV import,
+ZATCA Phase-2 API, saved filters, portal items (Phase 7).
+
 ## Phase 6.5c log (2026-08-07)
 
 **Built to Sell + E-Myth (docs/10 §2.1 + §2.5):**

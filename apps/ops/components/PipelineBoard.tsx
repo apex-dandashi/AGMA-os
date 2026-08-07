@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState, type FormEvent } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   DndContext,
   DragOverlay,
@@ -29,7 +30,8 @@ import { LEAD_STAGES, type Enums, type Tables } from '@agma/db';
 import { leadInputSchema } from '@agma/db/schemas';
 import { getSupabase } from '../lib/supabase';
 import { keys, useAppMutation, useLeads, useMoveLeadStage } from '../lib/queries';
-import { AlertTriangle, Clock, KanbanSquare, Trophy } from 'lucide-react';
+import { AlertTriangle, Clock, Download, KanbanSquare, Trophy } from 'lucide-react';
+import { exportCsv } from '../lib/csv';
 import { activitiesKey, useOpenActivities } from './ActivitiesBell';
 
 type Lead = Tables<'leads'>;
@@ -150,6 +152,14 @@ export default function PipelineBoard() {
           placeholder="بحث بالاسم أو الشركة…"
           className="ms-auto w-56"
         />
+        <Button variant="ghost" size="xs" aria-label="تصدير CSV"
+          disabled={filtered.length === 0}
+          onClick={() => exportCsv('pipeline',
+            ['الاسم', 'الشركة', 'المرحلة', 'المصدر', 'القيمة', 'الإغلاق المتوقع', 'النتيجة', 'أنشئ في'],
+            filtered.map((l) => [l.name, l.company, STAGE_LABELS[l.stage], SOURCE_LABELS[l.source],
+              l.value, l.expected_close, l.outcome, l.created_at.slice(0, 10)]))}>
+          <Download className="h-3.5 w-3.5" aria-hidden /> CSV
+        </Button>
       </div>
 
       {isLoading ? (
@@ -339,6 +349,25 @@ function NewLeadModal({ open, onClose }: { open: boolean; onClose: () => void })
   const [notes, setNotes] = useState('');
   const [fieldError, setFieldError] = useState<string | null>(null);
 
+  // Duplicate detection (docs/08 §1): warn, never block.
+  const probe = (company || name).trim();
+  const { data: dupes } = useQuery({
+    queryKey: ['lead-dupes', probe],
+    enabled: open && probe.length >= 3,
+    queryFn: async () => {
+      const supabase = getSupabase();
+      const [leads, clients] = await Promise.all([
+        supabase.from('leads').select('name, company')
+          .or(`name.ilike.%${probe}%,company.ilike.%${probe}%`).limit(3),
+        supabase.from('clients').select('company').ilike('company', `%${probe}%`).limit(3),
+      ]);
+      return [
+        ...(leads.data ?? []).map((l) => l.company || l.name),
+        ...(clients.data ?? []).map((c) => c.company),
+      ];
+    },
+  });
+
   const create = useAppMutation(
     async (input: { name: string; company?: string; source: Enums<'lead_source'>; notes?: string }) => {
       const { error } = await getSupabase().from('leads').insert(input);
@@ -365,6 +394,11 @@ function NewLeadModal({ open, onClose }: { open: boolean; onClose: () => void })
       <form onSubmit={submit} className="space-y-3">
         <Input label="الاسم" value={name} onChange={(e) => setName(e.target.value)} error={fieldError ?? undefined} />
         <Input label="الشركة" value={company} onChange={(e) => setCompany(e.target.value)} />
+        {(dupes?.length ?? 0) > 0 && (
+          <p className="text-xs text-pulse-orange" role="status">
+            تنبيه: سجلات مشابهة موجودة — {dupes!.slice(0, 3).join(' · ')}. تحقّق قبل الإنشاء.
+          </p>
+        )}
         <Select label="المصدر" value={source} onChange={(e) => setSource(e.target.value as Enums<'lead_source'>)}>
           {(Object.keys(SOURCE_LABELS) as Enums<'lead_source'>[]).map((s) => (
             <option key={s} value={s}>{SOURCE_LABELS[s]}</option>

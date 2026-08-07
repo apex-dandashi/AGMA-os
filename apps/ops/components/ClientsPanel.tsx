@@ -20,7 +20,8 @@ import {
 } from '@agma/db/schemas';
 import { getSupabase } from '../lib/supabase';
 import { keys, useAppMutation, useClientDetail, useClients } from '../lib/queries';
-import { Users } from 'lucide-react';
+import { Download, Users } from 'lucide-react';
+import { exportCsv } from '../lib/csv';
 import ScopeBuilder from './ScopeBuilder';
 
 type Client = Tables<'clients'>;
@@ -94,12 +95,22 @@ export default function ClientsPanel() {
           />
           <Button type="submit" size="sm" loading={addClient.isPending}>+</Button>
         </form>
-        <Input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="بحث…"
-          className="mb-2"
-        />
+        <div className="mb-2 flex items-center gap-1.5">
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="بحث…"
+            className="flex-1"
+          />
+          <Button variant="ghost" size="xs" aria-label="تصدير CSV"
+            disabled={visible.length === 0}
+            onClick={() => exportCsv('clients',
+              ['الشركة', 'القطاع', 'الحالة', 'الوسوم', 'أنشئ في'],
+              visible.map((c) => [c.company, c.sector, c.status,
+                (c.tags ?? []).join(' | '), c.created_at.slice(0, 10)]))}>
+            <Download className="h-3.5 w-3.5" aria-hidden /> CSV
+          </Button>
+        </div>
         {isLoading ? (
           <SkeletonList rows={6} />
         ) : (

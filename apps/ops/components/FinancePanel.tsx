@@ -14,7 +14,8 @@ import {
   SkeletonList,
   Tabs,
 } from '@agma/ui';
-import { Receipt, RefreshCw, Wallet as WalletIcon } from 'lucide-react';
+import { Download, Receipt, RefreshCw, Wallet as WalletIcon } from 'lucide-react';
+import { exportCsv } from '../lib/csv';
 import type { Tables } from '@agma/db';
 import {
   renderInvoice,
@@ -204,6 +205,16 @@ function InvoicesTab() {
           <Badge variant="outline">60+: {fmt(aging.d60)}</Badge>
           <Badge variant={aging.d90 > 0 ? 'accent' : 'outline'}>90+: {fmt(aging.d90)}</Badge>
         </div>
+        <Button variant="ghost" size="xs" aria-label="تصدير CSV"
+          disabled={invoices.length === 0}
+          onClick={() => exportCsv('invoices',
+            ['الرقم', 'النوع', 'الحالة', 'الإجمالي', 'المسدد', 'المتبقي', 'تاريخ الإصدار', 'الاستحقاق'],
+            invoices.map((d) => [d.number, d.type, d.status, d.total,
+              paidByInvoice.get(d.id) ?? 0,
+              Number(d.total ?? 0) - (paidByInvoice.get(d.id) ?? 0),
+              d.issued_on, d.valid_until]))}>
+          <Download className="h-3.5 w-3.5" aria-hidden /> CSV
+        </Button>
       </div>
 
       {isLoading ? (
@@ -606,9 +617,18 @@ function ExpensesTab() {
         </div>
         <Button type="submit" size="sm" loading={add.isPending}>+ مصروف</Button>
       </form>
-      <p className="mb-3 text-sm text-gray-light">
-        مصروفات هذا الشهر: <b dir="ltr">SAR {monthTotal.toLocaleString('en-US')}</b>
-      </p>
+      <div className="mb-3 flex items-center gap-3">
+        <p className="text-sm text-gray-light">
+          مصروفات هذا الشهر: <b dir="ltr">SAR {monthTotal.toLocaleString('en-US')}</b>
+        </p>
+        <Button variant="ghost" size="xs" aria-label="تصدير CSV"
+          disabled={(expenses ?? []).length === 0}
+          onClick={() => exportCsv('expenses',
+            ['التاريخ', 'التصنيف', 'المورّد', 'SAR'],
+            (expenses ?? []).map((e) => [e.expense_date, e.category, e.supplier, e.amount]))}>
+          <Download className="h-3.5 w-3.5" aria-hidden /> CSV
+        </Button>
+      </div>
       <div className="space-y-1.5">
         {(expenses ?? []).map((e) => (
           <Card key={e.id} className="flex items-center gap-3 p-2.5 text-sm">

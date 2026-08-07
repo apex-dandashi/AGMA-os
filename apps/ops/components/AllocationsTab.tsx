@@ -62,14 +62,14 @@ export default function AllocationsTab() {
 
   if (isLoading || !data) return <SkeletonList rows={4} />;
 
-  // Vault math (mirrors compute_scorecard_extras)
+  // Vault math (mirrors compute_scorecard_extras): confirmed profit-bucket
+  // inflows minus what was actually paid out; retained amounts stay in reserve.
   const profitReserve = data.allocations
     .filter((a) => a.status === 'confirmed')
     .flatMap((a) => (a.rows as { bucket: string; amount: number }[]))
     .filter((r) => r.bucket === 'profit')
     .reduce((s, r) => s + Number(r.amount), 0)
-    - data.distributions.reduce((s, d) => s + Number(d.amount_distributed) + Number(d.amount_retained), 0)
-    + data.distributions.reduce((s, d) => s + Number(d.amount_retained), 0);
+    - data.distributions.reduce((s, d) => s + Number(d.amount_distributed), 0);
   const opexMonthly = data.expenses.reduce((s, e) => s + Number(e.amount), 0) / 3;
   const vaultMonths = opexMonthly > 0 ? profitReserve / opexMonthly : 0;
   const pending = data.allocations.find((a) => a.status === 'pending');
@@ -112,9 +112,13 @@ export default function AllocationsTab() {
             نفّذ التحويلات بحسب قائمة «طقس التوزيع» (READ-DO) ثم أكّد — أموال محافظ
             الإعلانات لا تدخل هذه الحسبة أبداً.
           </p>
-          <Button size="sm" className="mt-2" onClick={() => setConfirming(pending.id)}>
-            تمّت التحويلات — تأكيد
-          </Button>
+          {me.role === 'admin' ? (
+            <Button size="sm" className="mt-2" onClick={() => setConfirming(pending.id)}>
+              تمّت التحويلات — تأكيد
+            </Button>
+          ) : (
+            <p className="mt-2 text-xs text-gray-medium">التأكيد للشركاء فقط (التحويلات البنكية بيدهم).</p>
+          )}
         </Card>
       )}
 
@@ -190,7 +194,7 @@ function DistributeModal({ open, onClose, reserve, allocKey }:
       });
       if (error) throw new Error(error.message);
     },
-    { invalidate: [allocKey], successMessage: 'وُزّعت الأرباح — احتفلا 🎉'.replace(' 🎉', '') }
+    { invalidate: [allocKey], successMessage: 'وُزّعت الأرباح ووُثّقت — استحقّها الشريكان' }
   );
 
   return (

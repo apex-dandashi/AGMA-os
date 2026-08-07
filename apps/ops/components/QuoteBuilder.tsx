@@ -33,6 +33,9 @@ export default function QuoteBuilder({ clients, onDone }:
   const [projectName, setProjectName] = useState('');
   const [intro, setIntro] = useState('');
   const [items, setItems] = useState<QuoteItem[]>([emptyItem()]);
+  // Internal costs per line (docs/08 §2 margin) — NEVER part of the client
+  // payload; persisted to team-only document_costs.
+  const [costs, setCosts] = useState<number[]>([0]);
   const [discountLabel, setDiscountLabel] = useState('');
   const [discountAmount, setDiscountAmount] = useState(0);
   const [opt1, setOpt1] = useState({ label: 'الإجمالي · الخيار الأول', amount: 0 });
@@ -108,13 +111,23 @@ export default function QuoteBuilder({ clients, onDone }:
         throw new Error(msg);
       }
       setErr(undefined);
-      const { error } = await getSupabase().from('documents').insert({
+      const supabase = getSupabase();
+      const { data: doc, error } = await supabase.from('documents').insert({
         type: 'quote',
         client_id: clientId,
         payload: payload as never,
         payment_account_id: accountId,
-      });
+      }).select('id').single();
       if (error) throw new Error(error.message);
+      const totalCost = costs.reduce((s, c) => s + (c || 0), 0);
+      if (totalCost > 0) {
+        const { error: e2 } = await supabase.from('document_costs').insert({
+          document_id: doc.id,
+          costs: items.map((it, i) => ({ title: it.title, cost: costs[i] || 0 })) as never,
+          total_cost: totalCost,
+        });
+        if (e2) throw new Error(e2.message);
+      }
     },
     { invalidate: [keys.documents], successMessage: 'حُفظت المسودة' }
   );
@@ -124,14 +137,24 @@ export default function QuoteBuilder({ clients, onDone }:
   }
 
   function moveItem(i: number, dir: -1 | 1) {
+    const j = i + dir;
     setItems((prev) => {
-      const j = i + dir;
+      if (j < 0 || j >= prev.length) return prev;
+      const next = [...prev];
+      [next[i], next[j]] = [next[j], next[i]];
+      return next;
+    });
+    setCosts((prev) => {
       if (j < 0 || j >= prev.length) return prev;
       const next = [...prev];
       [next[i], next[j]] = [next[j], next[i]];
       return next;
     });
   }
+
+  const quoteTotal = items.reduce((s, i) => s + (i.amount || 0), 0) - (discountAmount || 0);
+  const totalCost = costs.reduce((s, c) => s + (c || 0), 0);
+  const marginPct = quoteTotal > 0 ? Math.round(((quoteTotal - totalCost) / quoteTotal) * 100) : 0;
 
   return (
     <div className="mb-4 space-y-3 rounded-sm border border-gray-dark p-4">
@@ -173,6 +196,9 @@ export default function QuoteBuilder({ clients, onDone }:
             <Input label={i === 0 ? 'قبل الخصم' : undefined} type="number" dir="ltr" className="w-24"
               value={item.originalAmount || ''}
               onChange={(e) => setItem(i, { originalAmount: Number(e.target.value) || undefined })} />
+            <Input label={i === 0 ? 'التكلفة (داخلي)' : undefined} type="number" dir="ltr" className="w-24"
+              value={costs[i] || ''}
+              onChange={(e) => setCosts((p) => p.map((c, idx) => (idx === i ? Number(e.target.value) : c)))} />
             <div className="pb-2">
               <Checkbox label="بدون خصم" checked={!!item.noDiscount}
                 onChange={(e) => setItem(i, { noDiscount: e.target.checked })} />
@@ -188,7 +214,10 @@ export default function QuoteBuilder({ clients, onDone }:
           </div>
         ))}
         <div className="flex flex-wrap items-end gap-2">
-          <Button variant="outline" size="xs" onClick={() => setItems((p) => [...p, emptyItem()])}>
+          <Button variant="outline" size="xs" onClick={() => {
+            setItems((p) => [...p, emptyItem()]);
+            setCosts((p) => [...p, 0]);
+          }}>
             + بند
           </Button>
           <Input value={discountLabel} onChange={(e) => setDiscountLabel(e.target.value)}
@@ -238,6 +267,14 @@ export default function QuoteBuilder({ clients, onDone }:
           </button>
         ))}
       </div>
+
+      {totalCost > 0 && quoteTotal > 0 && (
+        <p className="text-xs text-gray-medium">
+          الهامش (داخلي — لا يظهر في العرض): تكلفة <b dir="ltr">SAR {totalCost.toLocaleString('en-US')}</b>{' '}
+          من <b dir="ltr">SAR {quoteTotal.toLocaleString('en-US')}</b> ={' '}
+          <b dir="ltr" className={marginPct < 40 ? 'text-pulse-orange' : ''}>{marginPct}%</b>
+        </p>
+      )}
 
       {err && <p role="alert" className="text-xs text-pulse-orange">{err}</p>}
 

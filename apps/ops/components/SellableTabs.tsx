@@ -222,7 +222,8 @@ export function ImproveTab() {
 
   return (
     <div className="space-y-6">
-      <ExperimentsSection experiments={data.experiments} playbooks={data.playbooks} invalidate={key} />
+      <ExperimentsSection experiments={data.experiments} playbooks={data.playbooks}
+        canManage={me.role === 'admin' || me.role === 'strategist'} invalidate={key} />
       <PlaybookDocsSection playbooks={data.playbooks} versions={data.versions}
         isAdmin={me.role === 'admin'} invalidate={key} />
       <ReasonMiningSection customScopes={data.customScopes} />
@@ -237,9 +238,10 @@ const EXP_STATUS: Record<Enums<'experiment_status'>, { label: string; accent: bo
   lost: { label: 'خسرت', accent: false },
 };
 
-function ExperimentsSection({ experiments, playbooks, invalidate }: {
+function ExperimentsSection({ experiments, playbooks, canManage, invalidate }: {
   experiments: Tables<'experiments'>[];
   playbooks: Tables<'playbooks'>[];
+  canManage: boolean;
   invalidate: readonly string[];
 }) {
   const [showNew, setShowNew] = useState(false);
@@ -273,9 +275,11 @@ function ExperimentsSection({ experiments, playbooks, invalidate }: {
     <div>
       <div className="mb-2 flex items-center gap-3">
         <h3 className="font-bold text-gray-light">التجارب — ابتكار ← قياس ← ترسيخ</h3>
-        <Button variant="outline" size="xs" onClick={() => setShowNew(true)}>
-          <FlaskConical className="h-3.5 w-3.5" aria-hidden /> تجربة جديدة
-        </Button>
+        {canManage && (
+          <Button variant="outline" size="xs" onClick={() => setShowNew(true)}>
+            <FlaskConical className="h-3.5 w-3.5" aria-hidden /> تجربة جديدة
+          </Button>
+        )}
       </div>
       <p className="mb-2 text-xs text-gray-medium">
         لا شيء يتحسن بالانطباعات: كل تغيير في طريقة العمل يبدأ فرضيةً تُقاس —
