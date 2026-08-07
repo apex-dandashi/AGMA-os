@@ -19,6 +19,7 @@ import {
 } from '@agma/legal-templates';
 import { getSupabase } from '../lib/supabase';
 import { keys, useAppMutation, useClients, useDocuments } from '../lib/queries';
+import { FileText, PenLine } from 'lucide-react';
 import QuoteBuilder from './QuoteBuilder';
 
 type Doc = Tables<'documents'>;
@@ -152,7 +153,7 @@ export default function DocumentsPanel() {
         <SkeletonList rows={4} />
       ) : visible.length === 0 ? (
         <EmptyState
-          icon="📄"
+          icon={<FileText className="h-8 w-8" aria-hidden />}
           title={docs?.length ? 'لا نتائج للتصفية الحالية' : 'لا مستندات بعد'}
           hint={docs?.length ? undefined : 'أنشئ أول عرض سعر — سيحمل الرقم Q-00055.'}
           action={
@@ -187,7 +188,7 @@ export default function DocumentsPanel() {
                     <>
                       <Button variant="outline" size="xs"
                         onClick={() => setStatus.mutate({ doc, status: 'signed' })}>
-                        توقيع ✓
+                        <PenLine className="h-3.5 w-3.5" aria-hidden /> توقيع
                       </Button>
                       <Button variant="ghost" size="xs" onClick={() => setVoiding(doc)}>
                         إلغاء

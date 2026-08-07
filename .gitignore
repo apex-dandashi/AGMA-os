@@ -11,3 +11,5 @@ supabase/.temp/
 *.log
 
 supabase/.branches/
+
+*.tsbuildinfo

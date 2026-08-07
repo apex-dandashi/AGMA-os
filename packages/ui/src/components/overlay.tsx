@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { AlertTriangle, Check, Info, X } from 'lucide-react';
 import { cn } from '../cn';
 import { Button } from './Button';
 import { Spinner } from './primitives';
@@ -57,7 +58,7 @@ export function Modal({
             aria-label="إغلاق"
             className="rounded-sm px-2 py-1 text-gray-medium hover:text-snow focus-visible:ring-2 focus-visible:ring-pulse-orange/60 focus:outline-none"
           >
-            ✕
+            <X className="h-4 w-4" aria-hidden />
           </button>
         </div>
         {children}
@@ -156,7 +157,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             )}
           >
             <span aria-hidden>
-              {t.kind === 'success' ? '✓' : t.kind === 'error' ? '⚠' : 'ℹ'}
+              {t.kind === 'success' ? (
+                <Check className="h-4 w-4" />
+              ) : t.kind === 'error' ? (
+                <AlertTriangle className="h-4 w-4" />
+              ) : (
+                <Info className="h-4 w-4" />
+              )}
             </span>
             {t.message}
           </div>

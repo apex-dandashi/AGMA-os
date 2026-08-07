@@ -77,6 +77,27 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   );
 
+  // Rate limit: 5 submissions/hour per caller (salted IP hash — no raw PII).
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
+  const salt = Deno.env.get('RATE_SALT') ?? 'agma-intake';
+  const digest = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(`${salt}:${ip}`)
+  );
+  const callerHash = Array.from(new Uint8Array(digest))
+    .slice(0, 16)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+  const { data: allowed, error: rlErr } = await supabase.rpc('check_rate_limit', {
+    p_bucket: 'lead-intake',
+    p_caller_hash: callerHash,
+    p_max_per_hour: 5,
+  });
+  if (rlErr) console.error('rate limit check failed', rlErr.code);
+  if (allowed === false) {
+    return new Response(JSON.stringify({ error: 'rate_limited' }), { status: 429, headers });
+  }
+
   const { error } = await supabase.from('leads').insert({
     name: body.name,
     company: body.company || null,

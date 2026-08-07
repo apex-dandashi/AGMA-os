@@ -12,6 +12,7 @@ import {
   Switch,
 } from '@agma/ui';
 import type { Tables } from '@agma/db';
+import { Globe } from 'lucide-react';
 import { getSupabase } from '../lib/supabase';
 import { keys, useAppMutation, useClients, useWebsiteClients } from '../lib/queries';
 
@@ -59,7 +60,7 @@ export default function WebsiteManager() {
         فقط من فُعّل لديه الخياران معاً — سحب الموافقة يلغي النشر فوراً.
       </p>
       {(clients ?? []).length === 0 ? (
-        <EmptyState icon="🌐" title="لا يوجد عملاء بعد"
+        <EmptyState icon={<Globe className="h-8 w-8" aria-hidden />} title="لا يوجد عملاء بعد"
           hint="أنشئ عميلاً من صفحة العملاء أولاً، ثم فعّل ظهوره هنا." />
       ) : (
         <div className="space-y-2">

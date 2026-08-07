@@ -47,6 +47,7 @@ docs/ | .github/workflows/
 - TypeScript strict everywhere; Zod validation at every boundary (forms, edge functions, webhooks).
 - DB: snake_case tables/columns; migrations via `supabase migration new <name>`; seed files in `packages/db/seed/` (32 services, 8 playbooks, roles, payment accounts, role_profiles).
 - UI: shared components from `packages/ui` only; design tokens from brand standards; no one-off styling in apps.
+- **Icons, never emojis** — all UI glyphs come from lucide-react (or the brand SVG set); emoji characters are banned in rendered interfaces, documents, and notifications.
 - Commits: conventional (`feat:`, `fix:`, `chore:`); one phase = one PR to `staging`.
 - Tests: unit tests on generators (documents, signatures, ZATCA QR/XML) — these produce legal artifacts, they must be deterministic.
 

@@ -1,0 +1,62 @@
+# Deep quality gate (docs/07 Sprint C1): RLS persona harness + Playwright e2e
+# against a full local Supabase stack. Heavier than ci.yml — runs on staging
+# pushes and PRs touching app/db code.
+name: Quality
+
+on:
+  push:
+    branches: [staging]
+    paths:
+      - 'apps/**'
+      - 'packages/**'
+      - 'supabase/**'
+      - '.github/workflows/quality.yml'
+  pull_request:
+
+jobs:
+  rls-and-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start local Supabase stack
+        run: supabase start
+
+      - name: RLS persona harness
+        run: ./scripts/rls-check.sh
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Point ops at the local stack
+        run: |
+          cat > apps/ops/.env.local <<'EOF'
+          NEXT_PUBLIC_SUPABASE_URL="http://127.0.0.1:54321"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0"
+          EOF
+
+      - name: Install Playwright browser
+        run: pnpm --filter @agma/ops exec playwright install chromium --with-deps
+
+      - name: E2E golden path
+        run: pnpm --filter @agma/ops e2e
+
+      - name: Upload traces on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: apps/ops/test-results/
+          retention-days: 7

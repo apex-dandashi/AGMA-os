@@ -10,7 +10,7 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 1 | Schema / RLS / seeds / auth / audit | ✅ Done (2026-08-07) |
 | 2 | CRM + Sales + website sync | ✅ Done (2026-08-07) |
 | 3 | Legal generators | ✅ Done (2026-08-07) |
-| 3.5 | **Quality hardening** — docs/07 quality roadmap (owner verdict: 3/10 → target 9+) | 🔶 Sprints A+B done (2026-08-07); C next |
+| 3.5 | **Quality hardening** — docs/07 quality roadmap (owner verdict: 3/10 → target 9+) | ✅ Done — Sprints A+B+C (2026-08-07) |
 | 4 | Projects + playbooks + HR | ⬜ |
 | 5 | Finance KSA | ⬜ |
 | 6 | Notifications | ⬜ |
@@ -18,6 +18,51 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 8 | Content Engine | ⬜ |
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
+
+## Phase 3.5 Sprint C log (2026-08-07)
+
+**Brand & rules (owner directives):**
+- **Icons-never-emojis rule** added to CLAUDE.md conventions; full sweep of
+  ops + packages/ui replaced every emoji with lucide icons (Bell, Clock,
+  AlertTriangle, Trophy, Check, X, FileText, Users, Globe, KanbanSquare…).
+- AGMA logo (logo.svg) now brands the ops header, login, and reset pages;
+  favicon-agma.webp set as the ops favicon.
+
+**Security (C3):**
+- Security headers via shipped .htaccess on BOTH sites (HSTS, nosniff,
+  frame policies, Permissions-Policy, CSP scoped to self + Supabase;
+  ops additionally DENY-framed + noindex).
+- Rate limiting on lead-intake: pg `check_rate_limit()` (migration
+  20260807090000), 5/hour per caller via salted IP hash — no raw PII stored.
+- tsbuildinfo artifacts removed from git.
+
+**Observability (C2):**
+- `client-errors` edge function (deployed): browser error sink → Supabase
+  function logs; rate-capped, PII-free, Zod-validated. Ops installs window
+  error + unhandledrejection reporters (10/session cap). Sentry remains the
+  documented upgrade path when volume justifies it.
+
+**Testing (C1):**
+- **RLS persona harness**: supabase/tests/rls_checks.sql + scripts/rls-check.sh
+  — client/executor/strategist/anon visibility, internal_label column denial,
+  audit_log denial, website consent gate, documents immutability. Green.
+- **Playwright e2e** (apps/ops/e2e): full golden path — login → forced MFA
+  enrollment completing with a REAL computed TOTP → pipeline → validated lead
+  creation → search → documents → team roster. Green in 14s. Idempotent
+  fixtures via local admin API.
+- **Quality workflow** (.github/workflows/quality.yml): spins the full local
+  Supabase stack in CI, runs the RLS harness + e2e on staging pushes/PRs,
+  uploads traces on failure.
+
+**Ops (C4):**
+- backup.yml: weekly schema+data dumps as 90-day artifacts (secrets already
+  configured for Migrate).
+- uptime.yml: 30-min probes of all three sites + lead-intake preflight;
+  failures email via GitHub notifications. WhatsApp alerting lands Phase 6.
+
+**Deferred from C (honest):** lint gate re-enable (marketing's inherited code
+needs a cleanup pass first) · bundle-size check · PR-based flow (single-
+operator repo; revisit when a second contributor joins).
 
 ## Phase 3.5 Sprint B log (2026-08-07)
 

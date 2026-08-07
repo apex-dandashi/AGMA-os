@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Badge, Button, EmptyState, Input, Modal, Select, SkeletonList } from '@agma/ui';
+import { Bell, Check, CheckCircle2 } from 'lucide-react';
 import type { Enums, Tables } from '@agma/db';
 import { getSupabase } from '../lib/supabase';
 import { keys, useAppMutation } from '../lib/queries';
@@ -50,7 +51,7 @@ export default function ActivitiesBell() {
         .eq('id', a.id);
       if (error) throw new Error(error.message);
     },
-    { invalidate: [activitiesKey as unknown as readonly string[]], successMessage: 'أُنجزت ✓' }
+    { invalidate: [activitiesKey as unknown as readonly string[]], successMessage: 'أُنجزت' }
   );
 
   return (
@@ -60,7 +61,7 @@ export default function ActivitiesBell() {
         aria-label={t('chrome.activities')}
         className="relative rounded-sm px-2 py-1.5 text-gray-light hover:text-snow focus-visible:ring-2 focus-visible:ring-pulse-orange/60 focus:outline-none"
       >
-        ⏰
+        <Bell className="h-4 w-4" aria-hidden />
         {overdue > 0 && (
           <span className="absolute -top-0.5 start-5 rounded-full bg-pulse-orange px-1.5 text-xs font-bold text-snow">
             {overdue}
@@ -72,7 +73,7 @@ export default function ActivitiesBell() {
         {isLoading ? (
           <SkeletonList rows={3} />
         ) : (activities ?? []).length === 0 ? (
-          <EmptyState icon="✅" title="لا مهام مفتوحة"
+          <EmptyState icon={<CheckCircle2 className="h-8 w-8" aria-hidden />} title="لا مهام مفتوحة"
             hint="كل عميل محتمل نشط يجب أن يحمل خطوة تالية مجدولة — هذا هو الانضباط الذي يحرّك المسار." />
         ) : (
           <ul className="mt-3 space-y-2">
@@ -90,7 +91,7 @@ export default function ActivitiesBell() {
                   </span>
                   <Button variant="outline" size="xs" loading={markDone.isPending}
                     onClick={() => markDone.mutate(a)}>
-                    تم ✓
+                    <Check className="h-3.5 w-3.5" aria-hidden /> تم
                   </Button>
                 </li>
               );

@@ -1,0 +1,30 @@
+# Uptime checks (docs/05 §B11.10 lite). A failing run emails the repo owner
+# via GitHub's workflow-failure notification. WhatsApp alerting arrives with
+# the notifications phase.
+name: Uptime
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe public surfaces
+        run: |
+          set -e
+          for url in \
+            "https://agma.com.sa/" \
+            "https://staging.agma.com.sa/" \
+            "https://ops.agma.com.sa/"; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$url")
+            echo "$url → $code"
+            [ "$code" = "200" ] || { echo "::error::$url returned $code"; exit 1; }
+          done
+          fn=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -X OPTIONS \
+            -H 'origin: https://agma.com.sa' -H 'access-control-request-method: POST' \
+            "https://gjaheqlgheizvebvakfd.supabase.co/functions/v1/lead-intake")
+          echo "lead-intake preflight → $fn"
+          [ "$fn" = "204" ] || { echo "::error::lead-intake preflight returned $fn"; exit 1; }

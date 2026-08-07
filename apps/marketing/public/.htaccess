@@ -2,3 +2,14 @@
 # This file intentionally replaces the legacy Node-app proxy .htaccess
 # left in the web root by the pre-monorepo deployment.
 ErrorDocument 404 /404.html
+
+# Security headers (docs/07 Sprint C3)
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+  # CSP: self + Supabase (REST/functions/realtime) + inline styles (Next), data/blob images
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://gjaheqlgheizvebvakfd.supabase.co wss://gjaheqlgheizvebvakfd.supabase.co; frame-ancestors 'self'"
+</IfModule>

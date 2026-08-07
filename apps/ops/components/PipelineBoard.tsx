@@ -29,6 +29,7 @@ import { LEAD_STAGES, type Enums, type Tables } from '@agma/db';
 import { leadInputSchema } from '@agma/db/schemas';
 import { getSupabase } from '../lib/supabase';
 import { keys, useAppMutation, useLeads, useMoveLeadStage } from '../lib/queries';
+import { AlertTriangle, Clock, KanbanSquare, Trophy } from 'lucide-react';
 import { activitiesKey, useOpenActivities } from './ActivitiesBell';
 
 type Lead = Tables<'leads'>;
@@ -155,7 +156,7 @@ export default function PipelineBoard() {
         <SkeletonList rows={5} />
       ) : filtered.length === 0 && !query ? (
         <EmptyState
-          icon="📊"
+          icon={<KanbanSquare className="h-8 w-8" aria-hidden />}
           title="المسار فارغ"
           hint="أضف عميلاً محتملاً يدوياً، أو انتظر وصول الطلبات من نموذج الموقع."
           action={<Button size="sm" onClick={() => setShowNew(true)}>+ عميل محتمل</Button>}
@@ -240,12 +241,12 @@ function StageColumn({
 /** Next-action chip: the Pipedrive rule — an open deal without a scheduled
  *  next step is a stalled deal, and it glows. */
 function NextActionChip({ lead, activity }: { lead: Lead; activity?: Activity }) {
-  if (lead.outcome === 'won') return <Badge variant="accent">فوز 🏆</Badge>;
+  if (lead.outcome === 'won') return <Badge variant="accent"><Trophy className="h-3 w-3" aria-hidden /> فوز</Badge>;
   if (lead.outcome === 'lost') return <Badge>خسارة</Badge>;
   if (!activity) {
     return (
       <span className="rounded-full border border-pulse-orange/60 px-2 py-0.5 text-xs text-pulse-orange">
-        ⚠ لا خطوة تالية
+        <AlertTriangle className="-mt-0.5 me-0.5 inline h-3 w-3" aria-hidden /> لا خطوة تالية
       </span>
     );
   }
@@ -257,7 +258,7 @@ function NextActionChip({ lead, activity }: { lead: Lead; activity?: Activity })
       }`}
       title={activity.title}
     >
-      ⏰ {new Date(activity.due_at).toLocaleDateString('ar-SA', { day: 'numeric', month: 'short' })}
+      <Clock className="-mt-0.5 me-0.5 inline h-3 w-3" aria-hidden /> {new Date(activity.due_at).toLocaleDateString('ar-SA', { day: 'numeric', month: 'short' })}
     </span>
   );
 }
@@ -459,7 +460,7 @@ function EditLeadModal({ lead, onClose }: { lead: Lead | null; onClose: () => vo
           <Select label="النتيجة" value={outcome}
             onChange={(e) => setOutcome(e.target.value as Enums<'lead_outcome'>)}>
             <option value="open">مفتوح</option>
-            <option value="won">فوز 🏆</option>
+            <option value="won">فوز</option>
             <option value="lost">خسارة</option>
           </Select>
           <Input label="قيمة الصفقة (SAR)" type="number" dir="ltr"

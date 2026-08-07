@@ -9,6 +9,7 @@ import type { Session } from '@supabase/supabase-js';
 import { Button, Input, Modal, Spinner, ToastProvider } from '@agma/ui';
 import type { Tables } from '@agma/db';
 import { getSupabase } from '../lib/supabase';
+import { installErrorReporting } from '../lib/errorReporting';
 import { LocaleProvider, useLocale, type DictKey } from '../lib/i18n';
 import { keys } from '../lib/queries';
 import MfaGate from './MfaGate';
@@ -31,6 +32,7 @@ export function useProfile(): Tables<'profiles'> {
 }
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
+  useEffect(() => installErrorReporting(), []);
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -184,7 +186,11 @@ function Chrome({ profile, children }: { profile: Tables<'profiles'>; children: 
         {t('chrome.skip')}
       </a>
       <header className="flex items-center gap-3 border-b border-gray-dark px-4 py-3 md:gap-6 md:px-6">
-        <span className="font-black text-pulse-orange text-lg">AGMA OS</span>
+        <span className="flex items-center gap-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="AGMA" className="h-7 w-auto" />
+          <span className="font-black text-snow text-sm">OS</span>
+        </span>
         <nav aria-label="main" className="hidden gap-1 md:flex">
           {NAV.map((i) => navLink(i))}
         </nav>
@@ -325,9 +331,11 @@ function LoginForm() {
   return (
     <div className="grid min-h-screen place-items-center p-6">
       <form onSubmit={submit} className="w-full max-w-sm space-y-4">
-        <h1 className="text-2xl font-black">
-          <span className="text-pulse-orange">AGMA</span> OS
-        </h1>
+        <div className="flex items-center gap-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="AGMA" className="h-9 w-auto" />
+          <span className="text-2xl font-black text-snow">OS</span>
+        </div>
         <Input type="email" required dir="ltr" label="البريد الإلكتروني"
           value={email} onChange={(e) => setEmail(e.target.value)} />
         <Input type="password" required dir="ltr" label="كلمة المرور"

@@ -59,9 +59,11 @@ export default function ResetPage() {
   return (
     <div className="grid min-h-screen place-items-center p-6">
       <div className="w-full max-w-sm space-y-4">
-        <h1 className="text-2xl font-black">
-          <span className="text-pulse-orange">AGMA</span> OS
-        </h1>
+        <div className="flex items-center gap-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="AGMA" className="h-9 w-auto" />
+          <span className="text-2xl font-black text-snow">OS</span>
+        </div>
         {mode === 'request' && (
           <form onSubmit={request} className="space-y-4">
             <p className="text-sm text-gray-light">أدخل بريدك لإرسال رابط إعادة تعيين كلمة المرور.</p>

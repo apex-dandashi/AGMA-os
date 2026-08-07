@@ -1,0 +1,42 @@
+# Weekly logical backup of the production database (docs/05 §B11.3, docs/07 C4).
+# Dumps land as encrypted-at-rest GitHub artifacts (90-day retention).
+# R2→B2 mirroring joins when the storage phase lands.
+name: Backup
+
+on:
+  schedule:
+    - cron: '0 2 * * 1' # Mondays 02:00 UTC (05:00 KSA)
+  workflow_dispatch:
+
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link production project
+        run: supabase link --project-ref gjaheqlgheizvebvakfd
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+      - name: Dump schema + data
+        run: |
+          supabase db dump --linked -f schema.sql
+          supabase db dump --linked --data-only -f data.sql
+          gzip schema.sql data.sql
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: agma-os-backup-${{ github.run_id }}
+          path: |
+            schema.sql.gz
+            data.sql.gz
+          retention-days: 90

@@ -1,0 +1,13 @@
+# AGMA OS internal app — static export on LiteSpeed/Apache.
+ErrorDocument 404 /404.html
+
+# Security headers (docs/07 Sprint C3). Internal tool: no indexing, strict frame.
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set X-Robots-Tag "noindex, nofollow"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://gjaheqlgheizvebvakfd.supabase.co wss://gjaheqlgheizvebvakfd.supabase.co; frame-ancestors 'none'"
+</IfModule>

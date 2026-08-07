@@ -20,6 +20,7 @@ import {
 } from '@agma/db/schemas';
 import { getSupabase } from '../lib/supabase';
 import { keys, useAppMutation, useClientDetail, useClients } from '../lib/queries';
+import { Users } from 'lucide-react';
 import ScopeBuilder from './ScopeBuilder';
 
 type Client = Tables<'clients'>;
@@ -130,7 +131,7 @@ export default function ClientsPanel() {
         <ClientDetail key={selected.id} client={selected} />
       ) : (
         <EmptyState
-          icon="👥"
+          icon={<Users className="h-8 w-8" aria-hidden />}
           title="اختر عميلاً"
           hint="اختر عميلاً من القائمة لعرض جهات الاتصال وسجل التواصل والنطاقات، أو أنشئ عميلاً جديداً."
         />
