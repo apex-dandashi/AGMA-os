@@ -22,6 +22,26 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
 
+## Package B log (2026-08-07) — serious Saudi invoicing (parity push 2/3)
+
+- **ZATCA Phase-1 QR** (mandatory on Saudi tax invoices since 2021): TLV
+  encoder (tags 1–5: seller, VAT number 313630147, ISO timestamp, total incl.
+  VAT, VAT) → base64 → deterministic SVG QR via qrcode-generator (pure JS, no
+  network). Renders ONLY on numbered invoices carrying issuedAtIso (finalize
+  now stamps it) — never on drafts or credit notes. 4 new tests including a
+  TLV decode round-trip; suite now 39.
+- **Default service prices** (Odoo starts from a priced product): catalog
+  gained default_price, editable in settings/الخدمات; the scope builder shows
+  a live «تقدير مبدئي من أسعار الكتالوج»; quote-from-scope prefills line
+  amounts instead of zeros. NULL price = «تسعير حسب النطاق».
+- **Client statement PDF** (deferred since Phase 5, now closed):
+  renderStatement — finalized invoices & credit notes with paid/balance per
+  row, closing totals (CNs subtracted — verified 8,000/5,750/2,250 fixture),
+  same visual family, deterministic + tested. «كشف حساب» button on the
+  client's documents section.
+
+All gates green; pricing migration applied to production.
+
 ## Package A log (2026-08-07) — files & collaboration (parity push 1/3)
 
 Closing the first structural gap vs the reference systems: the OS now HOLDS

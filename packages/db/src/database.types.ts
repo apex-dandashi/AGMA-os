@@ -2586,6 +2586,7 @@ export type Database = {
           active: boolean
           category_id: string
           created_at: string
+          default_price: number | null
           id: string
           name_ar: string
           name_en: string
@@ -2600,6 +2601,7 @@ export type Database = {
           active?: boolean
           category_id: string
           created_at?: string
+          default_price?: number | null
           id?: string
           name_ar: string
           name_en: string
@@ -2614,6 +2616,7 @@ export type Database = {
           active?: boolean
           category_id?: string
           created_at?: string
+          default_price?: number | null
           id?: string
           name_ar?: string
           name_en?: string

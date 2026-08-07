@@ -22,9 +22,10 @@ import {
 } from '@agma/db/schemas';
 import { getSupabase } from '../lib/supabase';
 import { keys, useAppMutation, useCatalog, useClientDetail, useClients } from '../lib/queries';
-import { Download, Pencil, Trash2, Users } from 'lucide-react';
+import { Download, FileSpreadsheet, Pencil, Trash2, Users } from 'lucide-react';
 import { exportCsv } from '../lib/csv';
 import { fmtDate, fmtSAR } from '../lib/format';
+import { renderStatement } from '@agma/legal-templates';
 import ScopeBuilder from './ScopeBuilder';
 import AttachmentsBlock from './AttachmentsBlock';
 import QuoteBuilder from './QuoteBuilder';
@@ -374,7 +375,11 @@ function ClientDetail({ client }: { client: Client }) {
                 scopeId: quoteScope.id,
                 items: (catalog?.services ?? [])
                   .filter((sv) => quoteScope.service_ids.includes(sv.id))
-                  .map((sv) => ({ title: sv.name_ar, description: '', amount: 0 })),
+                  .map((sv) => ({
+                    title: sv.name_ar,
+                    description: '',
+                    amount: Number(sv.default_price ?? 0),
+                  })),
               }}
             />
           </div>
@@ -682,10 +687,53 @@ function ClientDocumentsSection({ clientId }: { clientId: string }) {
       return data;
     },
   });
+  const toast = useToast();
+
+  async function openStatement() {
+    const supabase = getSupabase();
+    const invoices = (docs ?? []).filter(
+      (d) => (d.type === 'invoice' || d.type === 'credit_note') && d.number && d.issued_on
+    );
+    if (invoices.length === 0) {
+      toast.info('لا فواتير معتمدة بعد لهذا العميل');
+      return;
+    }
+    const { data: payments } = await supabase.from('payments')
+      .select('invoice_id, amount').in('invoice_id', invoices.map((d) => d.id));
+    const paidBy = new Map<string, number>();
+    for (const p of payments ?? []) {
+      paidBy.set(p.invoice_id, (paidBy.get(p.invoice_id) ?? 0) + Number(p.amount));
+    }
+    const clientName = (await supabase.from('clients').select('company')
+      .eq('id', clientId).single()).data?.company ?? '';
+    const AR_MONTHS = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+    const now = new Date();
+    const html = renderStatement({
+      clientName,
+      issueDateAr: `${now.getDate()} ${AR_MONTHS[now.getMonth()]} ${now.getFullYear()}`,
+      rows: invoices.map((d) => ({
+        number: d.number!,
+        issuedOn: d.issued_on!,
+        kind: d.type === 'credit_note' ? 'credit_note' : 'invoice',
+        total: Number(d.total ?? 0),
+        paid: paidBy.get(d.id) ?? 0,
+      })),
+    });
+    const w = window.open('', '_blank');
+    if (!w) return;
+    w.document.write(html);
+    w.document.close();
+  }
+
   if (!docs?.length) return null;
   return (
     <section>
-      <h3 className="mb-2 font-bold text-gray-light">المستندات والفواتير</h3>
+      <div className="mb-2 flex items-center gap-3">
+        <h3 className="font-bold text-gray-light">المستندات والفواتير</h3>
+        <Button variant="outline" size="xs" onClick={openStatement}>
+          <FileSpreadsheet className="h-3.5 w-3.5" aria-hidden /> كشف حساب
+        </Button>
+      </div>
       <div className="space-y-1.5">
         {docs.map((d) => (
           <Card key={d.id} className="flex flex-wrap items-center gap-3 p-2.5 text-sm">

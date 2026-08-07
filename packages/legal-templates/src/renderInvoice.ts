@@ -1,4 +1,5 @@
 import { COMPANY, DOC_COLORS, formatIBAN, formatSAR, toArabicDigits } from './company';
+import { zatcaQrSvg } from './zatca';
 import type { PaymentAccountInfo, QuoteItem } from './types';
 
 const esc = (s: string) =>
@@ -25,6 +26,9 @@ export interface InvoicePayload {
   /** docs/06 §3.6 recurring-cost callout. */
   renewalNote?: string;
   dueDateAr?: string;
+  /** ISO issue timestamp — when present on a numbered invoice, the ZATCA
+   *  Phase-1 TLV QR renders (mandatory on Saudi tax invoices). */
+  issuedAtIso?: string;
 }
 
 export function computeInvoiceTotal(items: QuoteItem[]): number {
@@ -44,6 +48,18 @@ export function renderInvoice(payload: InvoicePayload): string {
   const balance = total + (payload.vatEnabled ? payload.vatAmount ?? 0 : 0) - paid;
   const title = payload.kind === 'invoice' ? 'فاتورة' : 'إشعار دائن';
   const sign = payload.kind === 'credit_note' ? '−' : '';
+
+  // ZATCA Phase-1 QR — only on issued (numbered) invoices with a timestamp.
+  const zatcaQr =
+    payload.kind === 'invoice' && payload.number && payload.issuedAtIso
+      ? zatcaQrSvg({
+          sellerName: COMPANY.legalNameAr,
+          vatNumber: COMPANY.taxNumber,
+          timestamp: payload.issuedAtIso,
+          total: total + (payload.vatEnabled ? payload.vatAmount ?? 0 : 0),
+          vat: payload.vatEnabled ? payload.vatAmount ?? 0 : 0,
+        })
+      : null;
 
   const items = payload.items
     .map(
@@ -169,6 +185,11 @@ export function renderInvoice(payload: InvoicePayload): string {
         </div>
       </div>
       ${payload.renewalNote ? `<div class="renewal">${esc(payload.renewalNote)}</div>` : ''}
+      ${zatcaQr ? `<div style="display:flex;align-items:center;gap:5mm;margin-top:8mm">
+        <div style="width:26mm;height:26mm">${zatcaQr}</div>
+        <p style="font-size:9.5px;color:${c.muted}">فاتورة ضريبية مبسطة — رمز الاستجابة وفق متطلبات
+        هيئة الزكاة والضريبة والجمارك (المرحلة الأولى)، الرقم الضريبي ${toArabicDigits(COMPANY.taxNumber)}.</p>
+      </div>` : ''}
       <p class="closing">«${COMPANY.closingLine}»</p>
       <div class="footer">
         <div>${COMPANY.legalNameAr} · السجل التجاري ${toArabicDigits(COMPANY.cr)} · الرقم الضريبي ${toArabicDigits(COMPANY.taxNumber)} · الرمز البريدي ${toArabicDigits(COMPANY.postalCode)}</div>

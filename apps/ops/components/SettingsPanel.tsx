@@ -487,6 +487,15 @@ function ServicesTab() {
                     <span className={s.active ? '' : 'text-gray-medium line-through'}>{s.name_ar}</span>
                     <span dir="ltr" className="text-xs text-gray-medium">{s.slug}</span>
                     <span className="ms-auto flex items-center gap-2">
+                      <Input aria-label={`السعر الافتراضي ${s.name_ar}`} type="number" dir="ltr"
+                        placeholder="السعر" className="w-24 py-1 text-xs"
+                        defaultValue={s.default_price ?? ''}
+                        onBlur={(e) => {
+                          const v = e.target.value === '' ? null : Number(e.target.value);
+                          if (v !== (s.default_price === null ? null : Number(s.default_price))) {
+                            patch.mutate({ id: s.id, p: { default_price: v } });
+                          }
+                        }} />
                       <Button variant="ghost" size="xs" aria-label={`تعديل ${s.name_ar}`}
                         onClick={() => { setEditingId(s.id); setEditName(s.name_ar); }}>
                         تعديل

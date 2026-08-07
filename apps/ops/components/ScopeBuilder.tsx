@@ -203,6 +203,17 @@ export default function ScopeBuilder({ clientId, onDone }:
               />
             </div>
           )}
+          {(() => {
+            const est = catalog.services
+              .filter((s) => picked.has(s.id))
+              .reduce((sum, s) => sum + Number(s.default_price ?? 0), 0);
+            return est > 0 ? (
+              <p className="text-xs text-gray-medium">
+                تقدير مبدئي من أسعار الكتالوج: <b dir="ltr">SAR {est.toLocaleString('en-US')}</b>
+                {' '}— يُضبط نهائياً في عرض السعر.
+              </p>
+            ) : null;
+          })()}
           <Button
             size="sm"
             loading={save.isPending}

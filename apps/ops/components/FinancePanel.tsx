@@ -148,7 +148,8 @@ function InvoicesTab() {
           number,
           status: 'sent',
           total,
-          payload: { ...payload, number } as never,
+          // issuedAtIso arms the ZATCA Phase-1 QR in the renderer.
+          payload: { ...payload, number, issuedAtIso: new Date().toISOString() } as never,
           issued_on: new Date().toISOString().slice(0, 10),
           valid_until: doc.type === 'invoice' ? due.toISOString().slice(0, 10) : null,
         })
