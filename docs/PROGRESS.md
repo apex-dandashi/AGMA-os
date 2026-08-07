@@ -74,6 +74,29 @@ stamp/signature + per-user signatures, and «أين أدخل السجل التج
   where to enter client CR/VAT — discoverability fix).
 - Gauntlet green; migration pushed to production.
 
+## God mode + all-tasks log (2026-08-08)
+
+Owner: «خلي مدير النظام عنده القدرة على تعديل أي شيء أو حذفه» + mid-turn
+«لازم يكون في خيار كل المهام».
+
+- `20260808120000_god_mode.sql` — «وضع التحرير الحر»: admin_overrides
+  (15-minute self-activation, admin-only RLS, audited — first attempt failed
+  because audit_trigger requires an `id` column; schema fixed to id-PK +
+  unique profile_id). `god_mode_active()` early-exits all five guards:
+  documents_guard (immutability incl. delete), document_review_gate,
+  invoice_tax_gate, scope_collections_guard, tasks_checklist_gate.
+  audit_log stays un-deletable even in god mode (verified permission denied).
+  Fixture-proved: admin blocked without activation, free payload-edit +
+  delete of a finalized numbered doc with it, non-admin activation rejected
+  by RLS, both actions present in audit_log.
+- Settings ← بيانات المنشأة: GodModeCard toggle with expiry time + honest
+  warning (numbered deletions leave sequence gaps; everything logged).
+- Documents: «حذف (الوضع الحر)» on every row while active, with a danger
+  ConfirmDialog spelling out the sequence-gap consequence.
+- My Day: «مهامي / كل المهام» segmented toggle (all-scope shows assignee
+  names; RLS still bounds executors to their projects).
+- Gauntlet green; migration pushed to production.
+
 ## Navigation round log (2026-08-08)
 
 Owner on يومي: «ما أعرف وين أروح أعدل الأهداف» — dead-end screens fixed with

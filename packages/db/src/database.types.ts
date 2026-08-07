@@ -129,6 +129,35 @@ export type Database = {
           },
         ]
       }
+      admin_overrides: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          profile_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_overrides_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       allocation_rules: {
         Row: {
           bucket: string
@@ -3711,6 +3740,7 @@ export type Database = {
         Returns: undefined
       }
       generate_allocation: { Args: never; Returns: undefined }
+      god_mode_active: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       is_biller: { Args: never; Returns: boolean }
       is_finance_lead: { Args: never; Returns: boolean }

@@ -19,7 +19,7 @@ import {
   type QuotePayload,
 } from '@agma/legal-templates';
 import { getSupabase } from '../lib/supabase';
-import { keys, useAppMutation, useClients, useDocuments } from '../lib/queries';
+import { keys, useAppMutation, useClients, useDocuments, useGodMode } from '../lib/queries';
 import { FileText, PenLine } from 'lucide-react';
 import QuoteBuilder from './QuoteBuilder';
 import { AttachmentsButton } from './AttachmentsBlock';
@@ -74,6 +74,16 @@ export default function DocumentsPanel() {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [finalizing, setFinalizing] = useState<Doc | null>(null);
   const [voiding, setVoiding] = useState<Doc | null>(null);
+  const [deleting, setDeleting] = useState<Doc | null>(null);
+  const { data: godMode } = useGodMode();
+
+  const hardDelete = useAppMutation(
+    async (doc: Doc) => {
+      const { error } = await getSupabase().from('documents').delete().eq('id', doc.id);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [keys.documents], successMessage: 'حُذف المستند — العملية مسجلة في سجل التدقيق' }
+  );
 
   const finalize = useAppMutation(
     async (doc: Doc) => {
@@ -242,6 +252,13 @@ export default function DocumentsPanel() {
                       تفعيل
                     </Button>
                   )}
+                  {godMode && (
+                    <Button variant="ghost" size="xs"
+                      className="text-pulse-orange"
+                      onClick={() => setDeleting(doc)}>
+                      حذف (الوضع الحر)
+                    </Button>
+                  )}
                   {doc.status !== 'draft' && (
                     <Button variant="ghost" size="xs" loading={newVersion.isPending}
                       onClick={() => newVersion.mutate(doc)}>
@@ -274,6 +291,17 @@ export default function DocumentsPanel() {
         confirmLabel="إلغاء المستند"
         onConfirm={async () => {
           if (voiding) await setStatus.mutateAsync({ doc: voiding, status: 'void' });
+        }}
+      />
+      <ConfirmDialog
+        open={!!deleting}
+        onClose={() => setDeleting(null)}
+        title="حذف نهائي (الوضع الحر)"
+        danger
+        message={`سيُحذف «${deleting?.number ?? TYPE_LABELS[deleting?.type ?? 'quote']}» نهائياً من القاعدة${deleting?.number ? ' وسيترك فجوة في التسلسل الرقمي' : ''}. العملية تُسجَّل في سجل التدقيق باسمك. متأكد؟`}
+        confirmLabel="حذف نهائي"
+        onConfirm={async () => {
+          if (deleting) await hardDelete.mutateAsync(deleting);
         }}
       />
     </div>

@@ -18,7 +18,7 @@ import {
 import { Building2, Landmark, ListChecks, ScrollText, Settings as SettingsIcon } from 'lucide-react';
 import type { Tables } from '@agma/db';
 import { getSupabase } from '../lib/supabase';
-import { useAppMutation } from '../lib/queries';
+import { useAppMutation, useGodMode } from '../lib/queries';
 import { readImageAsDataUri } from '../lib/images';
 import { useProfile } from './AppShell';
 
@@ -154,6 +154,7 @@ function OrgTab() {
         onClick={() => save.mutate(undefined as never)}>
         حفظ
       </Button>
+      <GodModeCard />
       <div className="mt-5 border-t border-gray-dark pt-4">
         <p className="mb-1 text-sm font-bold text-gray-light">الختم والتوقيع الرسمي</p>
         <p className="mb-3 text-xs text-gray-medium">
@@ -168,6 +169,51 @@ function OrgTab() {
         </div>
       </div>
     </Card>
+  );
+}
+
+/** وضع التحرير الحر — تفعيل مؤقت ١٥ دقيقة يفتح كل الحواجز (docs: god mode). */
+function GodModeCard() {
+  const me = useProfile();
+  const { data: activeUntil } = useGodMode();
+  const toggle = useAppMutation(
+    async (on: boolean) => {
+      const supabase = getSupabase();
+      if (on) {
+        const { error } = await supabase.from('admin_overrides').upsert({
+          profile_id: me.id,
+          expires_at: new Date(Date.now() + 15 * 60_000).toISOString(),
+        }, { onConflict: 'profile_id' });
+        if (error) throw new Error(error.message);
+      } else {
+        const { error } = await supabase.from('admin_overrides')
+          .delete().eq('profile_id', me.id);
+        if (error) throw new Error(error.message);
+      }
+    },
+    { invalidate: [['god-mode']] }
+  );
+  return (
+    <div className={`mt-5 rounded-sm border p-3 ${
+      activeUntil ? 'border-pulse-orange bg-pulse-orange/10' : 'border-gray-dark'}`}>
+      <div className="flex flex-wrap items-center gap-3">
+        <p className="text-sm font-bold">وضع التحرير الحر</p>
+        <Switch label={activeUntil ? 'نشط' : 'موقوف'} checked={!!activeUntil}
+          onChange={(v) => toggle.mutate(v as never)} />
+        {activeUntil && (
+          <span className="text-xs text-pulse-orange">
+            ينتهي {new Date(activeUntil).toLocaleTimeString('ar-SA',
+              { hour: '2-digit', minute: '2-digit' })}
+          </span>
+        )}
+      </div>
+      <p className="mt-1 text-xs text-gray-medium">
+        يفتح للشريك تعديل وحذف أي شيء لمدة ١٥ دقيقة — بما فيها المستندات
+        المعتمدة وتجاوز بوابات المراجعة والضريبة والتعليق. كل ما يحدث تحته
+        يبقى مسجلاً في سجل التدقيق، وسجل التدقيق نفسه لا يُمس. استخدمه
+        لتصحيح الأخطاء، لا للعمل اليومي.
+      </p>
+    </div>
   );
 }
 

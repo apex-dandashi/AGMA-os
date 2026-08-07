@@ -74,6 +74,20 @@ export const useClauses = () =>
       must(getSupabase().from('clause_library').select('*').eq('approved', true).order('sort')),
   });
 
+/** وضع التحرير الحر للشريك — نشط عندما يوجد تفعيل غير منتهٍ لي. */
+export const useGodMode = () =>
+  useQuery({
+    queryKey: ['god-mode'],
+    refetchInterval: 60_000,
+    queryFn: async () => {
+      const { data, error } = await getSupabase()
+        .from('admin_overrides').select('expires_at').maybeSingle();
+      if (error) return null;  // غير الشريك: صفر صفوف أو رفض — الوضع غير نشط
+      if (!data || new Date(data.expires_at) <= new Date()) return null;
+      return data.expires_at as string;
+    },
+  });
+
 /** هوية المنشأة — الطرف الأول في كل عقد (docs/14 §1). صف واحد. */
 export const useOrgSettings = () =>
   useQuery({
