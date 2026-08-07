@@ -18,6 +18,8 @@ import {
 import { Download, FolderKanban, Lock, Pencil, ShieldCheck, Timer, Trash2 } from 'lucide-react';
 import { exportCsv } from '../lib/csv';
 import ChecklistRunModal from './ChecklistRunModal';
+import { AttachmentsButton } from './AttachmentsBlock';
+import { TaskCommentsButton } from './TaskComments';
 import { METHOD_PHASES, type Enums, type Tables } from '@agma/db';
 import { getSupabase } from '../lib/supabase';
 import { keys, useAppMutation, useClients } from '../lib/queries';
@@ -509,6 +511,8 @@ function TaskRow({ task, allTasks, members, detailKey, checklistKey, stageAssign
           aria-label="تسجيل وقت">
           <Timer className="h-3.5 w-3.5" aria-hidden />
         </Button>
+        <AttachmentsButton entity="task" entityId={task.id} title={task.title} />
+        <TaskCommentsButton taskId={task.id} taskTitle={task.title} members={members} />
         {canManage && !editing && (
           <>
             <Button variant="ghost" size="xs" aria-label={`تعديل ${task.title}`}

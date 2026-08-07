@@ -22,6 +22,30 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
 
+## Package A log (2026-08-07) — files & collaboration (parity push 1/3)
+
+Closing the first structural gap vs the reference systems: the OS now HOLDS
+the work, not just its record.
+
+**Files everywhere (Supabase Storage, first use):**
+- Private bucket `attachments` (20MB cap), signed-URL downloads only, team
+  RLS on storage.objects; polymorphic attachments metadata table (audited).
+- Reusable AttachmentsBlock/AttachmentsButton wired into: tasks (paperclip
+  on every row), documents («ارفع النسخة الموقّعة» hint on signed ones —
+  closes yellow #18), expenses (receipt/supplier tax invoice), and a «الملفات»
+  section on the client page. Arabic filenames preserved in metadata, keys
+  ASCII-sanitized.
+
+**Record-level collaboration:**
+- task_comments (mentions uuid[], author-delete, audited) + thread modal on
+  every task row: discussion count badge, mention chips (@member), author/time.
+  «ابدأه هنا لا في واتساب».
+- Targeted notifications (fixture-verified): comment → mentioned users +
+  assignee (author excluded, deduped); assignee change → new assignee
+  notified. New templates task_comment / task_assigned.
+
+All gates green; migration applied to production.
+
 ## Orange package log (2026-08-07) — usability audit items 11–16
 
 11. **Manual scorecard entry**: admins record values for source='manual'

@@ -25,6 +25,7 @@ import {
   type QuotePayload,
 } from '@agma/legal-templates';
 import AllocationsTab from './AllocationsTab';
+import { AttachmentsButton } from './AttachmentsBlock';
 import { getSupabase } from '../lib/supabase';
 import { keys, useAppMutation, useClients, useDocuments, usePaymentAccounts } from '../lib/queries';
 
@@ -762,6 +763,8 @@ function ExpenseRow({ expense: e, invalidate }:
       <span className="text-gray-light">{e.supplier ?? '—'}</span>
       <span dir="ltr" className="ms-auto font-bold">SAR {fmt(Number(e.amount))}</span>
       <span dir="ltr" className="text-xs text-gray-medium">{e.expense_date}</span>
+      <AttachmentsButton entity="expense" entityId={e.id} title={e.category}
+        hint="أرفق الإيصال أو الفاتورة الضريبية للمورّد" />
       <span className="flex gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
         <Button variant="ghost" size="xs" aria-label="تعديل المصروف" onClick={() => setEditing(true)}>
           <Pencil className="h-3 w-3" aria-hidden />

@@ -26,6 +26,7 @@ import { Download, Pencil, Trash2, Users } from 'lucide-react';
 import { exportCsv } from '../lib/csv';
 import { fmtDate, fmtSAR } from '../lib/format';
 import ScopeBuilder from './ScopeBuilder';
+import AttachmentsBlock from './AttachmentsBlock';
 import QuoteBuilder from './QuoteBuilder';
 
 type Client = Tables<'clients'>;
@@ -385,6 +386,12 @@ function ClientDetail({ client }: { client: Client }) {
       <section className="grid gap-6 md:grid-cols-2">
         <ContactsBlock clientId={client.id} contacts={contacts} isFirst={contacts.length === 0} />
         <InteractionsBlock clientId={client.id} interactions={interactions} />
+      </section>
+
+      <section>
+        <h3 className="mb-2 font-bold text-gray-light">الملفات</h3>
+        <AttachmentsBlock entity="client" entityId={client.id}
+          hint="عقود ممسوحة، هويات بصرية، ملفات تعريفية…" />
       </section>
     </div>
   );
