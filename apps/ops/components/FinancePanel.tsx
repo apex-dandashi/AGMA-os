@@ -64,7 +64,7 @@ export default function FinancePanel() {
           { key: 'retainers', label: 'الاشتراكات' },
           { key: 'expenses', label: 'المصروفات' },
           { key: 'wallets', label: 'محافظ الإعلانات' },
-          { key: 'allocations', label: 'التوزيعات' },
+          { key: 'allocations', label: 'توزيع الدخل' },
         ]}
       />
       <div className="mt-4">
@@ -539,7 +539,7 @@ function RetainersTab() {
       {(retainers ?? []).length === 0 ? (
         <EmptyState icon={<RefreshCw className="h-8 w-8" aria-hidden />}
           title="لا اشتراكات بعد"
-          hint="الريتينرات الشهرية تُولّد فواتيرها من هنا — والأتمتة الكاملة تأتي مع محرك الإشعارات." />
+          hint="الاشتراكات الشهرية (مثل باقة النمو) تُولّد فواتيرها تلقائياً كل شهر من هنا." />
       ) : (
         <div className="space-y-2">
           {(retainers ?? []).map((r) => (

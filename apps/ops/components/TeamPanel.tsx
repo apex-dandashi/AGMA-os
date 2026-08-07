@@ -249,7 +249,7 @@ function PeopleAnalyzer({ team, isAdmin, meId }: {
     <section className="mt-8">
       <h2 className="mb-1 font-bold text-gray-light">محلّل الأشخاص — {quarter}</h2>
       <p className="mb-2 text-xs text-gray-medium">
-        انقر الرمز للتبديل (+ / ± / −). GWC: يفهمه · يريده · يقدر عليه.
+        انقر الرمز نفسه ليتبدّل بين (+ ممتاز / ± متذبذب / − ضعيف). الأعمدة الثلاثة الأخيرة: يفهم دوره · يريده فعلاً · قادر عليه.
         القاعدة: من لا يحقق «+ + +» على القيم يُناقش مقعده في الجلسة الربعية —
         الشريكان يقيّم أحدهما الآخر أولاً.
       </p>

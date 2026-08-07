@@ -86,7 +86,7 @@ export default function ChecklistRunModal({ open, onClose, checklistKey, task, s
         .insert({ checklist_key: checklistKey, task_id: task.id, states: items as never });
       if (error) throw new Error(error.message);
     },
-    { invalidate: [runKey], successMessage: 'بدأ فحص جديد — من الصفر، بندًا بندًا' }
+    { invalidate: [runKey], successMessage: 'بدأ فحص جديد من أول بند' }
   );
 
   if (!open) return null;
@@ -116,11 +116,11 @@ export default function ChecklistRunModal({ open, onClose, checklistKey, task, s
         <div className="space-y-4">
           {stageAssignees.length > 1 && (
             <div className="rounded-sm border border-pulse-orange/40 bg-pulse-orange/5 p-3 text-sm">
-              <p className="mb-1 font-bold text-pulse-orange">لحظة التجمّع (دقيقتان، بالأسماء):</p>
+              <p className="mb-1 font-bold text-pulse-orange">وقفة سريعة قبل الإطلاق (دقيقتان — كلٌّ باسمه):</p>
               {stageAssignees.map((a, i) => (
                 <p key={i} className="text-gray-light">• {a.name} — {a.taskTitle}</p>
               ))}
-              <p className="mt-1 text-xs text-gray-medium">«اعتراضات؟» — أصغر عضو له سلطة الإيقاف.</p>
+              <p className="mt-1 text-xs text-gray-medium">اسألوا بصوت عالٍ: «في أي ملاحظات؟» — أصغر عضو في الفريق له كامل الحق في إيقاف الإطلاق.</p>
             </div>
           )}
 
@@ -143,11 +143,11 @@ export default function ChecklistRunModal({ open, onClose, checklistKey, task, s
           {isFlagged ? (
             <div className="space-y-2 rounded-sm border border-pulse-orange/50 bg-pulse-orange/5 p-3">
               <p className="flex items-center gap-1.5 text-sm font-bold text-pulse-orange">
-                <Flag className="h-3.5 w-3.5" aria-hidden /> Flag & Hold قائم
+                <Flag className="h-3.5 w-3.5" aria-hidden /> الإطلاق موقوف — يوجد اعتراض قائم
               </p>
               <p className="text-sm text-gray-light">السبب: {data.run?.flag_reason ?? '—'}</p>
               <p className="text-xs text-gray-medium">
-                فُتحت قضية تلقائياً — عالجوا السبب ثم أعيدوا الفحص كاملاً (لا استئناف جزئياً).
+                سُجّلت مشكلة تلقائياً في نظام التشغيل — عالجوا السبب ثم أعيدوا الفحص من أوله (لا استكمال من المنتصف).
               </p>
               <Button size="sm" variant="outline" loading={restart.isPending}
                 onClick={() => restart.mutate(undefined as never)}>
@@ -160,17 +160,17 @@ export default function ChecklistRunModal({ open, onClose, checklistKey, task, s
             </Badge>
           ) : flagMode ? (
             <div className="space-y-2 rounded-sm border border-pulse-orange/50 p-3">
-              <Textarea label="سبب الإيقاف (يفتح قضية تلقائياً — لا لوم، القاعدة مكتوبة في COC)"
+              <Textarea label="سبب الإيقاف (تُسجَّل مشكلة تلقائياً — لا عتب على من يوقف، هذه القاعدة)"
                 rows={2} value={flagReason} onChange={(e) => setFlagReason(e.target.value)} />
               <div className="flex gap-2">
                 <Button size="sm" loading={save.isPending}
                   disabled={flagReason.trim().length < 5}
                   onClick={async () => {
                     await save.mutateAsync({ states, status: 'flagged' });
-                    toast.info('أُوقف الإطلاق وفُتحت قضية');
+                    toast.info('أُوقف الإطلاق وسُجّلت المشكلة');
                     onClose();
                   }}>
-                  <Flag className="h-3.5 w-3.5" aria-hidden /> إيقاف Flag & Hold
+                  <Flag className="h-3.5 w-3.5" aria-hidden /> أوقِف الإطلاق
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => setFlagMode(false)}>تراجع</Button>
               </div>
@@ -180,13 +180,13 @@ export default function ChecklistRunModal({ open, onClose, checklistKey, task, s
               <Button size="sm" loading={save.isPending} disabled={!allChecked}
                 onClick={async () => {
                   await save.mutateAsync({ states, status: 'passed' });
-                  toast.success('اجتازت نقطة التوقف — يمكن الإطلاق');
+                  toast.success('اكتمل الفحص — يمكن الإطلاق');
                   onClose();
                 }}>
                 <ShieldCheck className="h-3.5 w-3.5" aria-hidden /> اجتياز ({states.filter((s) => s.checked).length}/{items.length})
               </Button>
               <Button variant="ghost" size="sm" onClick={() => setFlagMode(true)}>
-                <Flag className="h-3.5 w-3.5" aria-hidden /> Flag & Hold
+                <Flag className="h-3.5 w-3.5" aria-hidden /> أوقِف وراجِع
               </Button>
             </div>
           )}

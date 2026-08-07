@@ -74,7 +74,7 @@ export default function ScopeBuilder({ clientId, onDone }:
     const chosen = catalog.services.filter((s) => picked.has(s.id));
     if (chosen.length === 0) return '';
     return [
-      'مسودة نطاق العمل (SoW)',
+      'مسودة نطاق العمل',
       '',
       selectedPackage ? `${selectedPackage.name_ar} — ${selectedPackage.tagline_ar ?? ''}` : '',
       selectedPackage ? '' : 'نطاق مخصص',

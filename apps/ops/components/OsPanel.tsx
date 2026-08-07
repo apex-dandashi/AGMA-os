@@ -36,9 +36,9 @@ export default function OsPanel() {
       <h1 className="mb-3 text-xl font-black">نظام التشغيل</h1>
       <Tabs active={tab} onChange={setTab}
         tabs={[
-          { key: 'scorecard', label: 'النتائج' },
-          { key: 'rocks', label: 'الصخور' },
-          { key: 'issues', label: 'القضايا' },
+          { key: 'scorecard', label: 'المؤشرات' },
+          { key: 'rocks', label: 'الأولويات الربعية' },
+          { key: 'issues', label: 'المشاكل والعوائق' },
           { key: 'meeting', label: 'الاجتماع الأسبوعي' },
           { key: 'packages', label: 'الباقات' },
           { key: 'improve', label: 'التحسين' },
@@ -85,7 +85,7 @@ function ScorecardTab() {
       const { error } = await getSupabase().rpc('compute_scorecard_v3');
       if (error) throw new Error(error.message);
     },
-    { invalidate: [['scorecard']], successMessage: 'حُسبت النتائج' }
+    { invalidate: [['scorecard']], successMessage: 'حُدّثت المؤشرات' }
   );
 
   if (isLoading || !data) return <SkeletonList rows={6} />;
@@ -96,7 +96,8 @@ function ScorecardTab() {
     <div>
       <div className="mb-3 flex items-center gap-3">
         <p className="text-sm text-gray-medium">
-          يُحسب تلقائياً كل أحد 7:00 صباحاً — أحمر أسبوعين متتاليين يفتح قضية تلقائياً.
+          أرقام الأداء الأسبوعية، كل رقم له مسؤول وهدف واضح. تتحدّث تلقائياً كل
+          أحد ٧ صباحاً — وأي مؤشر يبقى بالأحمر أسبوعين تُفتح له مشكلة تلقائياً.
         </p>
         {me.role === 'admin' && (
           <Button variant="outline" size="xs" className="ms-auto"
@@ -238,7 +239,7 @@ function RocksTab() {
       });
       if (error) throw new Error(error.message);
     },
-    { invalidate: [rocksKey], successMessage: 'أُضيفت الصخرة' }
+    { invalidate: [rocksKey], successMessage: 'أُضيفت الأولوية' }
   );
 
   const setStatus = useAppMutation(
@@ -253,6 +254,10 @@ function RocksTab() {
 
   return (
     <div>
+      <p className="mb-2 text-sm text-gray-medium">
+        أهم ٣–٥ أهداف للربع الحالي — لكل هدف مسؤول واحد وموعد واضح، وتُراجع
+        كل أسبوعين. ما ليس هنا ليس أولوية.
+      </p>
       <div className="mb-3 flex flex-wrap items-end gap-2">
         <Select label="الربع" value={quarter} onChange={(e) => setQuarter(e.target.value)}
           className="w-32">
@@ -264,7 +269,7 @@ function RocksTab() {
           })}
         </Select>
         <div className="min-w-44 flex-1">
-          <Input label="صخرة جديدة (لك)" value={title}
+          <Input label="أولوية جديدة (مسؤوليتك أنت)" value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="أولوية التسعين يوماً" />
         </div>
@@ -275,7 +280,7 @@ function RocksTab() {
         </div>
         <Button size="sm" loading={add.isPending} disabled={!title.trim()}
           onClick={() => { add.mutate(undefined as never); setTitle(''); setCriteria(''); }}>
-          + صخرة
+          + أولوية
         </Button>
       </div>
       {(rocks ?? []).length === 0 ? (
@@ -359,7 +364,7 @@ function IssuesTab() {
       const { error } = await getSupabase().from('issues').insert({ title });
       if (error) throw new Error(error.message);
     },
-    { invalidate: [issuesKey], successMessage: 'سُجّلت القضية' }
+    { invalidate: [issuesKey], successMessage: 'سُجّلت المشكلة' }
   );
 
   const open = (issues ?? []).filter((i) => i.status === 'identified' || i.status === 'discussing');
@@ -369,6 +374,11 @@ function IssuesTab() {
 
   return (
     <div>
+      <p className="mb-2 text-sm text-gray-medium">
+        كل ما يعطّل الشغل يُكتب هنا فور ملاحظته — عميل متأخر، أداة معطلة، خلاف
+        على أولوية. تُناقش أهم ٣ في اجتماع الأسبوع، ولا تُغلق مشكلة إلا بمعرفة
+        سببها الحقيقي.
+      </p>
       <form className="mb-3 flex gap-2"
         onSubmit={(e: FormEvent) => {
           e.preventDefault();
@@ -378,9 +388,9 @@ function IssuesTab() {
         }}>
         <div className="flex-1">
           <Input value={title} onChange={(e) => setTitle(e.target.value)}
-            placeholder="أي أحد يرصد أي قضية — إخفاؤها هو الخطيئة، لا وجودها" />
+            placeholder="أي أحد يسجّل أي مشكلة — الخطأ إخفاؤها، لا وجودها" />
         </div>
-        <Button type="submit" size="sm" loading={raise.isPending}>+ قضية</Button>
+        <Button type="submit" size="sm" loading={raise.isPending}>+ مشكلة</Button>
       </form>
 
       {open.length === 0 ? (
@@ -406,7 +416,7 @@ function IssuesTab() {
                   </Button>
                 )}
                 <Button variant="outline" size="xs" onClick={() => setSolving(issue)}>
-                  حلّ (IDS)
+                  ناقشها وحلّها
                 </Button>
               </span>
             </Card>
@@ -456,7 +466,7 @@ function SolveModal({ issue, onClose, issuesKey }:
   return (
     <Modal open={!!issue} onClose={onClose} title={`حلّ: ${issue?.title ?? ''}`}>
       <div className="space-y-3">
-        <Textarea label="السبب الجذري (إلزامي — العرَض لا يُغلق قضية)"
+        <Textarea label="السبب الجذري (إلزامي — لا تُغلق المشكلة بعلاج العرَض)"
           rows={3} value={rootCause} onChange={(e) => setRootCause(e.target.value)}
           placeholder="لماذا حدثت فعلاً؟ وما الذي تغيّر كي لا تتكرر؟" />
         <Button size="sm" className="w-full" loading={solve.isPending}
@@ -544,11 +554,13 @@ function MeetingTab() {
   return (
     <div className="mx-auto max-w-3xl space-y-5">
       <p className="text-sm text-gray-medium">
-        جدول Level-10 الثابت — النظام يحضّر، أنتما تقرران. (يوم الاجتماع الأسبوعي: قرار شركاء)
+        اجتماع أسبوعي ثابت بنفس اليوم والساعة، ٩٠ دقيقة بجدول جاهز — النظام
+        يحضّر الأرقام والقوائم، وأنتما تناقشان وتقرران فقط. (تحديد يوم
+        الاجتماع: قرار شركاء)
       </p>
 
       <MeetingSection n="١" title="الافتتاح — خبر جيد واحد لكل شريك (٥ د)" />
-      <MeetingSection n="٢" title={`النتائج — ${reds.length} أحمر (٥ د)`}>
+      <MeetingSection n="٢" title={`المؤشرات — ${reds.length} بالأحمر (٥ د)`}>
         {reds.length === 0 ? (
           <p className="text-sm text-gray-light">كل المؤشرات خضراء هذا الأسبوع.</p>
         ) : (
@@ -565,7 +577,7 @@ function MeetingTab() {
           </ul>
         )}
       </MeetingSection>
-      <MeetingSection n="٣" title="الصخور — على المسار؟ (٥ د)">
+      <MeetingSection n="٣" title="الأولويات الربعية — هل هي على المسار؟ (٥ د)">
         <ul className="space-y-1 text-sm">
           {(rocks ?? []).map((r) => (
             <li key={r.id} className={r.status === 'off_track' ? 'text-pulse-orange' : 'text-gray-light'}>
@@ -600,7 +612,7 @@ function MeetingTab() {
           </div>
         </div>
       </MeetingSection>
-      <MeetingSection n="٥" title={`قضايا IDS — أعلى ٣ أولوية (٦٠ د)`}>
+      <MeetingSection n="٥" title={`أهم ٣ مشاكل — حدِّد، ناقش، حُلّ (٦٠ د)`}>
         <ul className="space-y-1 text-sm">
           {(issues ?? []).slice(0, 3).map((i) => (
             <li key={i.id} className="font-medium">
@@ -612,7 +624,7 @@ function MeetingTab() {
             <li className="text-gray-medium">لا قضايا مفتوحة.</li>
           )}
         </ul>
-        <p className="mt-1 text-xs text-gray-medium">الحل من تبويب القضايا — الجذر إلزامي.</p>
+        <p className="mt-1 text-xs text-gray-medium">الحل من تبويب «المشاكل والعوائق» — كتابة السبب الجذري إلزامية قبل الإغلاق.</p>
       </MeetingSection>
       <MeetingSection n="٦" title="الختام — قيّم الاجتماع (٥ د)">
         <div className="flex items-center gap-2">

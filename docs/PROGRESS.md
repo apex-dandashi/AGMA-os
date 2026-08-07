@@ -22,6 +22,31 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
 
+## Language review log (2026-08-07) — clear Saudi Arabic everywhere
+
+Owner feedback: too many literal translations and unexplained jargon. Full
+copy sweep — UI strings, tab names, toasts, hints, and the DATABASE error
+messages/notification templates now speak the same plain voice:
+
+- EOS jargon translated to meaning, not words: الصخور → **الأولويات
+  الربعية** · القضايا → **المشاكل والعوائق** · النتائج → **المؤشرات** ·
+  «حلّ (IDS)» → «ناقشها وحلّها» · L10 explained in a plain intro line.
+- Profit First: طقس التوزيع → **جولة توزيع الدخل** · الخزينة →
+  **الاحتياطي** («كم شهراً يغطي الاحتياطي مصاريفنا؟») · CAP→TAP →
+  «النسبة المطبّقة الآن ← النسبة التي نتدرج إليها».
+- Gawande: Flag & Hold → **«أوقِف وراجِع»** · «لحظة التجمّع» → «وقفة سريعة
+  قبل الإطلاق» · flagged state explains what happened and what to do next.
+- بلاي بوك → **دليل العمل** everywhere · «تسرب نطاق» → «عمل خارج الاتفاق» ·
+  الريتينرات → الاشتراكات الشهرية · SoW/GWC/READ-DO English tags dropped or
+  explained inline.
+- Every OS tab now opens with a one-line plain explanation of what it is and
+  when it's used (المؤشرات، الأولويات، المشاكل، الاجتماع).
+- Migration 20260807230000: DB guard messages rewritten with guidance («لا
+  يمكن إنجاز المهمة قبل اجتياز قائمة الفحص — افتحها من زر فحص الإطلاق»)،
+  notification templates flag_hold/allocation_ready rewritten. Verified live.
+
+All gates green; migration applied to production.
+
 ## Package B log (2026-08-07) — serious Saudi invoicing (parity push 2/3)
 
 - **ZATCA Phase-1 QR** (mandatory on Saudi tax invoices since 2021): TLV

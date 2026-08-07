@@ -53,7 +53,7 @@ export default function AllocationsTab() {
         .eq('id', id);
       if (error) throw new Error(error.message);
     },
-    { invalidate: [allocKey], successMessage: 'وُثّق التوزيع — الخزينة تكبر' }
+    { invalidate: [allocKey], successMessage: 'تم توثيق التوزيع — الاحتياطي يكبر' }
   );
 
   const [confirming, setConfirming] = useState<string | null>(null);
@@ -79,15 +79,15 @@ export default function AllocationsTab() {
         <Card className="p-4 text-center">
           <VaultIcon className="mx-auto h-5 w-5 text-pulse-orange" aria-hidden />
           <p className="mt-1 text-2xl font-black" dir="ltr">{vaultMonths.toFixed(1)}</p>
-          <p className="text-xs text-gray-medium">أشهر الخزينة (الهدف ٣) — أوكسجين الوكالة</p>
+          <p className="text-xs text-gray-medium">كم شهراً يغطي الاحتياطي مصاريفنا؟ (الهدف ٣ أشهر)</p>
         </Card>
         <Card className="p-4 text-center">
           <p className="mt-1 text-2xl font-black" dir="ltr">SAR {fmt(Math.max(0, profitReserve))}</p>
-          <p className="text-xs text-gray-medium">احتياطي الربح المتراكم</p>
+          <p className="text-xs text-gray-medium">احتياطي الربح المتجمّع</p>
         </Card>
         <Card className="p-4 text-center">
           <p className="mt-1 text-2xl font-black" dir="ltr">SAR {fmt(Math.round(opexMonthly))}</p>
-          <p className="text-xs text-gray-medium">متوسط التشغيل الشهري (٩٠ يوماً)</p>
+          <p className="text-xs text-gray-medium">متوسط مصاريفنا الشهرية (آخر ٩٠ يوماً)</p>
         </Card>
       </div>
 
@@ -95,8 +95,8 @@ export default function AllocationsTab() {
         <Card className="border-pulse-orange/50 p-4">
           <div className="mb-2 flex items-center gap-2">
             <PiggyBank className="h-4 w-4 text-pulse-orange" aria-hidden />
-            <h3 className="font-bold">طقس التوزيع — {pending.run_date}</h3>
-            <Badge variant="accent">بانتظار التحويلات</Badge>
+            <h3 className="font-bold">جولة توزيع الدخل — {pending.run_date}</h3>
+            <Badge variant="accent">بانتظار تحويل المبالغ</Badge>
             <span dir="ltr" className="ms-auto font-black">SAR {fmt(Number(pending.income))}</span>
           </div>
           <div className="space-y-1 text-sm">
@@ -108,8 +108,9 @@ export default function AllocationsTab() {
             ))}
           </div>
           <p className="mt-3 text-xs text-gray-medium">
-            نفّذ التحويلات بحسب قائمة «طقس التوزيع» (READ-DO) ثم أكّد — أموال محافظ
-            الإعلانات لا تدخل هذه الحسبة أبداً.
+            حوّل المبالغ أدناه بين الحسابات كما هي، بترتيب قائمة «جولة التوزيع» في
+            قوائم الفحص، ثم اضغط تأكيد — أموال محافظ إعلانات العملاء لا تدخل
+            هذه الحسبة أبداً لأنها ليست دخلاً لنا.
           </p>
           {me.role === 'admin' ? (
             <Button size="sm" className="mt-2" onClick={() => setConfirming(pending.id)}>
@@ -122,7 +123,7 @@ export default function AllocationsTab() {
       )}
 
       <div>
-        <h3 className="mb-2 font-bold text-gray-light">النِّسَب: الحالية ← المستهدفة (CAP → TAP)</h3>
+        <h3 className="mb-2 font-bold text-gray-light">نسب التوزيع: النسبة المطبّقة الآن ← النسبة التي نتدرج إليها</h3>
         <div className="space-y-1.5">
           {data.rules.map((r) => (
             <Card key={r.bucket} className="flex items-center gap-3 p-2.5 text-sm">
@@ -134,13 +135,13 @@ export default function AllocationsTab() {
           ))}
         </div>
         <p className="mt-1 text-xs text-gray-medium">
-          خطوة ١–٢٪ كل ربع نحو الهدف — تُعدَّل مع المحاسب (قرار شركاء).
+          نرفع النسب خطوة ١–٢٪ كل ثلاثة أشهر حتى نصل للهدف — تعديلها من الإعدادات (قرار شركاء).
         </p>
       </div>
 
       <div>
         <div className="mb-2 flex items-center gap-3">
-          <h3 className="font-bold text-gray-light">سجل التوزيعات</h3>
+          <h3 className="font-bold text-gray-light">سجل الجولات السابقة</h3>
           {me.role === 'admin' && (
             <Button variant="outline" size="xs" onClick={() => setShowDistribute(true)}>
               توزيع أرباح ربعي
@@ -150,7 +151,7 @@ export default function AllocationsTab() {
         {data.allocations.length === 0 ? (
           <EmptyState icon={<PiggyBank className="h-8 w-8" aria-hidden />}
             title="لا توزيعات بعد"
-            hint="يتولّد الطقس تلقائياً كل ١٠ و٢٥ من الشهر من دخل الفترة." />
+            hint="تتولّد الجولة تلقائياً يومي ١٠ و٢٥ من كل شهر من دخل الفترة." />
         ) : (
           <div className="space-y-1.5">
             {data.allocations.map((a) => (
@@ -167,8 +168,8 @@ export default function AllocationsTab() {
       </div>
 
       <ConfirmDialog open={!!confirming} onClose={() => setConfirming(null)}
-        title="تأكيد طقس التوزيع"
-        message="تؤكد أن التحويلات نُفّذت فعلياً بحسب القائمة؟ التأكيد يوثَّق باسمك في سجل التدقيق ويغذي مؤشر «الطقس في موعده»."
+        title="تأكيد جولة التوزيع"
+        message="هل حوّلت المبالغ فعلياً بين الحسابات؟ التأكيد يُسجَّل باسمك ويُحدّث مؤشر «التوزيع في موعده»."
         confirmLabel="نُفّذت — وثّق"
         onConfirm={async () => {
           if (confirming) await confirm.mutateAsync(confirming);
@@ -200,8 +201,8 @@ function DistributeModal({ open, onClose, reserve, allocKey }:
     <Modal open={open} onClose={onClose} title="التوزيع الربعي للأرباح">
       <div className="space-y-3">
         <p className="text-sm text-gray-light">
-          الاحتياطي الحالي: <b dir="ltr">SAR {fmt(reserve)}</b> — قاعدة الكتاب:
-          يوزَّع ٥٠٪ مكافأةً للشريكين ويبقى ٥٠٪ يبني الخزينة.
+          الاحتياطي المتاح للتوزيع: <b dir="ltr">SAR {fmt(reserve)}</b> — قاعدة الكتاب:
+          يوزَّع ٥٠٪ مكافأة للشريكين ويبقى ٥٠٪ يقوّي الاحتياطي.
         </p>
         <div className="flex items-end gap-2">
           <Input label="المبلغ الموزَّع" type="number" dir="ltr" value={amount || ''}

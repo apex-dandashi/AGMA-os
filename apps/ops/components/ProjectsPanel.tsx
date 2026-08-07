@@ -124,7 +124,7 @@ export default function ProjectsPanel() {
         <EmptyState
           icon={<FolderKanban className="h-8 w-8" aria-hidden />}
           title="لا مشاريع بعد"
-          hint="أنشئ مشروعاً من بلاي بوك، أو اعتمد نطاقاً — المشاريع تتولد تلقائياً من النطاقات المعتمدة."
+          hint="أنشئ مشروعاً من دليل عمل جاهز، أو اعتمد نطاق عمل — المشاريع تتولد تلقائياً من النطاقات المعتمدة."
           action={<Button size="sm" onClick={() => setShowNew(true)}>+ مشروع</Button>}
         />
       ) : (
@@ -222,7 +222,7 @@ function NewProjectModal({ open, onClose, clients }:
     },
     {
       invalidate: [projectsKey as unknown as readonly string[]],
-      successMessage: 'أُنشئ المشروع بمهامه من البلاي بوك',
+      successMessage: 'أُنشئ المشروع بكل مهامه من دليل العمل',
     }
   );
 
@@ -234,7 +234,7 @@ function NewProjectModal({ open, onClose, clients }:
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="مشروع جديد من بلاي بوك">
+    <Modal open={open} onClose={onClose} title="مشروع جديد من دليل عمل">
       <form onSubmit={submit} className="space-y-3">
         <Select label="العميل" value={clientId} onChange={(e) => setClientId(e.target.value)}>
           <option value="">— اختر —</option>
@@ -242,7 +242,7 @@ function NewProjectModal({ open, onClose, clients }:
             <option key={c.id} value={c.id}>{c.company}</option>
           ))}
         </Select>
-        <Select label="البلاي بوك" value={slug} onChange={(e) => setSlug(e.target.value)}>
+        <Select label="دليل العمل" value={slug} onChange={(e) => setSlug(e.target.value)}>
           <option value="">— اختر —</option>
           {(playbooks ?? []).map((p) => (
             <option key={p.slug} value={p.slug}>
@@ -369,7 +369,7 @@ function StageBlock({ stage, tasks, allTasks, members, checklistByTemplate, deta
       });
       if (error) throw new Error(error.message);
     },
-    { invalidate: [detailKey], successMessage: 'أُضيفت المهمة — بلا قالب تُحتسب تسرب نطاق' }
+    { invalidate: [detailKey], successMessage: 'أُضيفت المهمة — تنبيه: المهام خارج القوالب تُحتسب عملاً خارج الاتفاق' }
   );
 
   return (
@@ -447,7 +447,7 @@ function TaskRow({ task, allTasks, members, detailKey, checklistKey, stageAssign
       const { error } = await getSupabase().from('tasks').delete().eq('id', task.id);
       if (error) throw new Error(error.message);
     },
-    { invalidate: [detailKey], successMessage: 'حُذفت المهمة (موثّق في التدقيق)' }
+    { invalidate: [detailKey], successMessage: 'حُذفت المهمة — الإجراء مسجّل في سجل العمليات' }
   );
 
   const overdue = task.due && task.status !== 'done' && new Date(task.due) < new Date();
