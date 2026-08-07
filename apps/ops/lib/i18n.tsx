@@ -8,6 +8,7 @@ import * as React from 'react';
  * remain Arabic-primary by rule 8.
  */
 const DICT = {
+  'nav.os': { ar: 'النظام', en: 'OS' },
   'nav.myday': { ar: 'يومي', en: 'My Day' },
   'nav.pipeline': { ar: 'المسار', en: 'Pipeline' },
   'nav.projects': { ar: 'المشاريع', en: 'Projects' },

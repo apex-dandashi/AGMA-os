@@ -17,6 +17,7 @@ import ActivitiesBell, { activitiesKey } from './ActivitiesBell';
 import NotificationsInbox, { inboxKey } from './NotificationsInbox';
 
 const NAV: { href: string; key: DictKey }[] = [
+  { href: '/os/', key: 'nav.os' },
   { href: '/my-day/', key: 'nav.myday' },
   { href: '/', key: 'nav.pipeline' },
   { href: '/projects/', key: 'nav.projects' },

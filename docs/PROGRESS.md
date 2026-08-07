@@ -14,8 +14,8 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 4 | Projects + playbooks + HR | ✅ Done (2026-08-07) |
 | 5 | Finance KSA | ✅ Done (2026-08-07) |
 | 6 | Notifications | ✅ Done (2026-08-07) |
-| 6.5a | **OS-core** (docs/10): vision/VTO, seats, primary_aims, rocks, issues+IDS, scorecard+digest, L10 meetings | ⬜ Next |
-| 6.5b | **Safety+cash** (docs/10): pause checklists, Flag & Hold, huddles, Profit First allocations, Vault/drip, leak detection | ⬜ |
+| 6.5a | **OS-core** (docs/10): vision/VTO, seats, primary_aims, rocks, issues+IDS, scorecard+digest, L10 meetings | ✅ Done (2026-08-07) |
+| 6.5b | ⬜ Next — **Safety+cash** (docs/10): pause checklists, Flag & Hold, huddles, Profit First allocations, Vault/drip, leak detection | ⬜ |
 | 6.5c | **Sellable** (docs/10): TVR scores, service_packages, custom-reason mining, playbook versions+grades, experiments, EMT/independence gauges | ⬜ |
 | 7 | Portal + onboarding + Drop Forms | ⬜ |
 | 8 | Content Engine | ⬜ |

@@ -566,6 +566,96 @@ export type Database = {
           },
         ]
       }
+      issues: {
+        Row: {
+          auto_filed: boolean
+          client_id: string | null
+          created_at: string
+          details: string | null
+          document_id: string | null
+          id: string
+          original_id: string | null
+          priority: number
+          project_id: string | null
+          raised_by: string | null
+          root_cause: string | null
+          solved_at: string | null
+          status: Database["public"]["Enums"]["issue_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          auto_filed?: boolean
+          client_id?: string | null
+          created_at?: string
+          details?: string | null
+          document_id?: string | null
+          id?: string
+          original_id?: string | null
+          priority?: number
+          project_id?: string | null
+          raised_by?: string | null
+          root_cause?: string | null
+          solved_at?: string | null
+          status?: Database["public"]["Enums"]["issue_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          auto_filed?: boolean
+          client_id?: string | null
+          created_at?: string
+          details?: string | null
+          document_id?: string | null
+          id?: string
+          original_id?: string | null
+          priority?: number
+          project_id?: string | null
+          raised_by?: string | null
+          root_cause?: string | null
+          solved_at?: string | null
+          status?: Database["public"]["Enums"]["issue_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "issues_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "issues_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "issues_original_id_fkey"
+            columns: ["original_id"]
+            isOneToOne: false
+            referencedRelation: "issues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "issues_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "issues_raised_by_fkey"
+            columns: ["raised_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kpi_definitions: {
         Row: {
           direction: Database["public"]["Enums"]["kpi_direction"]
@@ -713,6 +803,78 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      meeting_todos: {
+        Row: {
+          created_at: string
+          done_at: string | null
+          due: string
+          id: string
+          meeting_id: string | null
+          owner: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          done_at?: string | null
+          due?: string
+          id?: string
+          meeting_id?: string | null
+          owner?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          done_at?: string | null
+          due?: string
+          id?: string
+          meeting_id?: string | null
+          owner?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_todos_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_todos_owner_fkey"
+            columns: ["owner"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meetings: {
+        Row: {
+          created_at: string
+          headlines: string | null
+          held_on: string
+          id: string
+          kind: Database["public"]["Enums"]["meeting_kind"]
+          rating: number | null
+        }
+        Insert: {
+          created_at?: string
+          headlines?: string | null
+          held_on?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["meeting_kind"]
+          rating?: number | null
+        }
+        Update: {
+          created_at?: string
+          headlines?: string | null
+          held_on?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["meeting_kind"]
+          rating?: number | null
+        }
+        Relationships: []
       }
       messages: {
         Row: {
@@ -1087,6 +1249,35 @@ export type Database = {
           },
         ]
       }
+      primary_aims: {
+        Row: {
+          profile_id: string
+          shared_excerpt: string | null
+          statement: string
+          updated_at: string
+        }
+        Insert: {
+          profile_id: string
+          shared_excerpt?: string | null
+          statement?: string
+          updated_at?: string
+        }
+        Update: {
+          profile_id?: string
+          shared_excerpt?: string | null
+          statement?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "primary_aims_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           active: boolean
@@ -1364,6 +1555,57 @@ export type Database = {
           },
         ]
       }
+      rocks: {
+        Row: {
+          created_at: string
+          id: string
+          linked_project: string | null
+          owner: string
+          quarter: string
+          status: Database["public"]["Enums"]["rock_status"]
+          success_criteria: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          linked_project?: string | null
+          owner: string
+          quarter: string
+          status?: Database["public"]["Enums"]["rock_status"]
+          success_criteria?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          linked_project?: string | null
+          owner?: string
+          quarter?: string
+          status?: Database["public"]["Enums"]["rock_status"]
+          success_criteria?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rocks_linked_project_fkey"
+            columns: ["linked_project"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rocks_owner_fkey"
+            columns: ["owner"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       role_profiles: {
         Row: {
           created_at: string
@@ -1431,6 +1673,127 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scorecard_entries: {
+        Row: {
+          computed_at: string
+          is_green: boolean | null
+          metric_key: string
+          value: number | null
+          week_start: string
+        }
+        Insert: {
+          computed_at?: string
+          is_green?: boolean | null
+          metric_key: string
+          value?: number | null
+          week_start: string
+        }
+        Update: {
+          computed_at?: string
+          is_green?: boolean | null
+          metric_key?: string
+          value?: number | null
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scorecard_entries_metric_key_fkey"
+            columns: ["metric_key"]
+            isOneToOne: false
+            referencedRelation: "scorecard_metrics"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
+      scorecard_metrics: {
+        Row: {
+          active: boolean
+          direction: Database["public"]["Enums"]["metric_direction"]
+          green_threshold: number | null
+          key: string
+          name_ar: string
+          seat_id: string | null
+          sort: number
+          source: string
+        }
+        Insert: {
+          active?: boolean
+          direction?: Database["public"]["Enums"]["metric_direction"]
+          green_threshold?: number | null
+          key: string
+          name_ar: string
+          seat_id?: string | null
+          sort?: number
+          source?: string
+        }
+        Update: {
+          active?: boolean
+          direction?: Database["public"]["Enums"]["metric_direction"]
+          green_threshold?: number | null
+          key?: string
+          name_ar?: string
+          seat_id?: string | null
+          sort?: number
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scorecard_metrics_seat_id_fkey"
+            columns: ["seat_id"]
+            isOneToOne: false
+            referencedRelation: "seats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seats: {
+        Row: {
+          holder: string | null
+          id: string
+          measurables: Json
+          name_ar: string
+          name_en: string
+          reports_to: string | null
+          roles: Json
+          sort: number
+        }
+        Insert: {
+          holder?: string | null
+          id?: string
+          measurables?: Json
+          name_ar: string
+          name_en: string
+          reports_to?: string | null
+          roles?: Json
+          sort?: number
+        }
+        Update: {
+          holder?: string | null
+          id?: string
+          measurables?: Json
+          name_ar?: string
+          name_en?: string
+          reports_to?: string | null
+          roles?: Json
+          sort?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seats_holder_fkey"
+            columns: ["holder"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seats_reports_to_fkey"
+            columns: ["reports_to"]
+            isOneToOne: false
+            referencedRelation: "seats"
             referencedColumns: ["id"]
           },
         ]
@@ -1743,6 +2106,47 @@ export type Database = {
           },
         ]
       }
+      vision: {
+        Row: {
+          core_focus: Json
+          core_values: Json
+          id: number
+          one_year_plan: string | null
+          ten_year_target: string | null
+          three_year_picture: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          core_focus?: Json
+          core_values?: Json
+          id?: number
+          one_year_plan?: string | null
+          ten_year_target?: string | null
+          three_year_picture?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          core_focus?: Json
+          core_values?: Json
+          id?: number
+          one_year_plan?: string | null
+          ten_year_target?: string | null
+          three_year_picture?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vision_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wallet_entries: {
         Row: {
           amount: number
@@ -1887,6 +2291,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      compute_scorecard: { Args: never; Returns: undefined }
       create_project_from_playbook: {
         Args: { p_client_id: string; p_name: string; p_playbook_slug: string }
         Returns: string
@@ -1956,6 +2361,7 @@ export type Database = {
         | "invoice"
         | "credit_note"
       interaction_kind: "call" | "whatsapp" | "email" | "meeting" | "note"
+      issue_status: "identified" | "discussing" | "solved" | "dropped"
       kpi_direction: "up" | "down"
       lead_outcome: "open" | "won" | "lost"
       lead_source: "call" | "whatsapp" | "email" | "site"
@@ -1967,8 +2373,10 @@ export type Database = {
         | "live"
         | "optimize"
       leave_kind: "annual" | "sick" | "unpaid" | "other"
+      meeting_kind: "l10" | "quarterly" | "annual"
       message_channel: "portal" | "whatsapp" | "email"
       method_phase: "analyze" | "generate" | "market" | "adapt"
+      metric_direction: "up" | "down"
       notification_channel: "inapp" | "email" | "whatsapp"
       notification_status:
         | "queued"
@@ -1984,6 +2392,7 @@ export type Database = {
         | "paused"
         | "completed"
         | "archived"
+      rock_status: "on_track" | "off_track" | "done" | "dropped"
       scope_status: "draft" | "sent" | "approved" | "rejected"
       task_status: "todo" | "in_progress" | "review" | "done" | "blocked"
       user_role: "admin" | "strategist" | "executor" | "client"
@@ -2134,6 +2543,7 @@ export const Constants = {
         "credit_note",
       ],
       interaction_kind: ["call", "whatsapp", "email", "meeting", "note"],
+      issue_status: ["identified", "discussing", "solved", "dropped"],
       kpi_direction: ["up", "down"],
       lead_outcome: ["open", "won", "lost"],
       lead_source: ["call", "whatsapp", "email", "site"],
@@ -2146,13 +2556,16 @@ export const Constants = {
         "optimize",
       ],
       leave_kind: ["annual", "sick", "unpaid", "other"],
+      meeting_kind: ["l10", "quarterly", "annual"],
       message_channel: ["portal", "whatsapp", "email"],
       method_phase: ["analyze", "generate", "market", "adapt"],
+      metric_direction: ["up", "down"],
       notification_channel: ["inapp", "email", "whatsapp"],
       notification_status: ["queued", "sent", "failed", "skipped", "cancelled"],
       payment_method: ["transfer", "cash", "card", "other"],
       project_mode: ["recurring", "milestone"],
       project_status: ["planning", "active", "paused", "completed", "archived"],
+      rock_status: ["on_track", "off_track", "done", "dropped"],
       scope_status: ["draft", "sent", "approved", "rejected"],
       task_status: ["todo", "in_progress", "review", "done", "blocked"],
       user_role: ["admin", "strategist", "executor", "client"],
