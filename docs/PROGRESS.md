@@ -10,6 +10,7 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 1 | Schema / RLS / seeds / auth / audit | ✅ Done (2026-08-07) |
 | 2 | CRM + Sales + website sync | ✅ Done (2026-08-07) |
 | 3 | Legal generators | ✅ Done (2026-08-07) |
+| 3.5 | **Quality hardening** — docs/07 quality roadmap (owner verdict: 3/10 → target 9+) | ⬜ Next |
 | 4 | Projects + playbooks + HR | ⬜ |
 | 5 | Finance KSA | ⬜ |
 | 6 | Notifications | ⬜ |
