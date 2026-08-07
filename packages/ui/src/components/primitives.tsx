@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 import { cn } from '../cn';
 
 /* ---------------------------------------------------------------- Spinner */
@@ -88,26 +89,63 @@ export function EmptyState({
 
 /**
  * أيقونة توضيح صغيرة: تشرح المعنى المقصود، مصدر الرقم، أو مكان التعديل.
- * Hover opens it, click toggles (touch), Escape/blur closes. Inline SVG —
- * no icon-lib dependency inside the ui package.
+ * Hover opens it, click toggles (touch), Escape/blur/scroll closes.
+ * The bubble renders in a document-level portal with fixed positioning so
+ * NO table, overflow container, or header can ever clip or cover it.
  */
 export function Hint({ text, wide }: { text: string; wide?: boolean }) {
-  const [open, setOpen] = React.useState(false);
+  const btnRef = React.useRef<HTMLButtonElement>(null);
+  const [rect, setRect] = React.useState<DOMRect | null>(null);
+
+  const show = () => setRect(btnRef.current?.getBoundingClientRect() ?? null);
+  const hide = () => setRect(null);
+
+  React.useEffect(() => {
+    if (!rect) return;
+    const close = () => hide();
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('resize', close);
+    return () => {
+      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('resize', close);
+    };
+  }, [rect]);
+
+  const width = wide ? 300 : 232;
+  let style: React.CSSProperties | undefined;
+  if (rect && typeof window !== 'undefined') {
+    const placeBelow = rect.top < 150;
+    style = {
+      position: 'fixed',
+      width,
+      left: Math.min(
+        Math.max(8, rect.left + rect.width / 2 - width / 2),
+        window.innerWidth - width - 8
+      ),
+      zIndex: 9999,
+      ...(placeBelow
+        ? { top: rect.bottom + 6 }
+        : { top: rect.top - 6, transform: 'translateY(-100%)' }),
+    };
+  }
+
   return (
-    <span className="relative inline-flex align-middle"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}>
+    <>
       <button
+        ref={btnRef}
         type="button"
         aria-label={`توضيح: ${text.slice(0, 40)}`}
-        aria-expanded={open}
+        aria-expanded={!!rect}
+        onMouseEnter={show}
+        onMouseLeave={hide}
         onClick={(e) => {
           e.stopPropagation();
-          setOpen((v) => !v);
+          if (rect) hide();
+          else show();
         }}
-        onBlur={() => setOpen(false)}
-        onKeyDown={(e) => e.key === 'Escape' && setOpen(false)}
-        className="rounded-full text-gray-medium transition-colors hover:text-pulse-orange focus-visible:ring-2 focus-visible:ring-pulse-orange/60 focus:outline-none"
+        onBlur={hide}
+        onKeyDown={(e) => e.key === 'Escape' && hide()}
+        className="inline-flex rounded-full align-middle text-gray-medium transition-colors hover:text-pulse-orange focus-visible:ring-2 focus-visible:ring-pulse-orange/60 focus:outline-none"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
           strokeLinecap="round" strokeLinejoin="round" aria-hidden
@@ -117,17 +155,14 @@ export function Hint({ text, wide }: { text: string; wide?: boolean }) {
           <path d="M12 17h.01" />
         </svg>
       </button>
-      {open && (
-        <span
-          role="tooltip"
-          className={cn(
-            'absolute bottom-full start-0 z-50 mb-1.5 rounded-sm border border-gray-dark bg-pure-ink p-2.5 text-start text-xs font-normal leading-relaxed text-gray-light shadow-xl',
-            wide ? 'w-72' : 'w-56'
-          )}
-        >
-          {text}
-        </span>
-      )}
-    </span>
+      {rect &&
+        ReactDOM.createPortal(
+          <span role="tooltip" dir="rtl" style={style}
+            className="rounded-sm border border-gray-dark bg-pure-ink p-2.5 text-start text-xs font-normal leading-relaxed text-gray-light shadow-xl">
+            {text}
+          </span>,
+          document.body
+        )}
+    </>
   );
 }

@@ -12,9 +12,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "lucide-react": "^0.553.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "lucide-react": "^0.553.0",
     "tailwind-merge": "^3.3.1"
   },
   "peerDependencies": {
@@ -22,6 +22,8 @@
   },
   "devDependencies": {
     "@types/react": "^19",
+    "@types/react-dom": "^19.2.4",
+    "react-dom": "^19.2.8",
     "typescript": "5.9.3"
   }
 }
