@@ -16,7 +16,9 @@ import MfaGate from './MfaGate';
 import ActivitiesBell, { activitiesKey } from './ActivitiesBell';
 
 const NAV: { href: string; key: DictKey }[] = [
+  { href: '/my-day/', key: 'nav.myday' },
   { href: '/', key: 'nav.pipeline' },
+  { href: '/projects/', key: 'nav.projects' },
   { href: '/clients/', key: 'nav.clients' },
   { href: '/documents/', key: 'nav.documents' },
   { href: '/website/', key: 'nav.website' },

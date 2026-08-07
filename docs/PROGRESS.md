@@ -11,13 +11,45 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 2 | CRM + Sales + website sync | ✅ Done (2026-08-07) |
 | 3 | Legal generators | ✅ Done (2026-08-07) |
 | 3.5 | **Quality hardening** — docs/07 quality roadmap (owner verdict: 3/10 → target 9+) | ✅ Done — Sprints A+B+C (2026-08-07) |
-| 4 | Projects + playbooks + HR | ⬜ |
-| 5 | Finance KSA | ⬜ |
+| 4 | Projects + playbooks + HR | ✅ Done (2026-08-07) |
+| 5 | Finance KSA | ⬜ Next |
 | 6 | Notifications | ⬜ |
 | 7 | Portal + onboarding + Drop Forms | ⬜ |
 | 8 | Content Engine | ⬜ |
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
+
+## Phase 4 log (2026-08-07)
+
+**Built (docs/03 both modes · docs/04 §1.4/1.6/2.2 · docs/08 backbone):**
+- Migration `20260807100000_projects_hr`:
+  - tasks now belong to projects directly (sprints optional → milestone mode
+    works), carry playbook stage, `blocked_by` dependency, sort.
+  - `create_project_from_playbook()`: instantiates project + all task
+    templates with cumulative due dates; each stage's tasks blocked by the
+    previous stage's client-approval gate (docs/04 flow #2).
+  - **THE BACKBONE**: `on_scope_approved` trigger — approving a scope
+    auto-creates one project per scoped category. Verified: 1 approval →
+    2 projects, 28 tasks, 6 gates, 18 dependency-blocked, scope auto-approved.
+  - `time_entries` (member logs own; feeds cost via profiles.cost_rate_hourly)
+    + HR fields on profiles (job_title, phone, cost rate, capacity, skills)
+    + `leaves` table. Realtime on tasks/time_entries.
+- **ops → المشاريع**: project cards with AGMA Method™ phase pills +
+  recurring/milestone badges, deep-linked detail with stage-grouped task board
+  (status, assignee, due, approval-gate ShieldCheck badge, Lock badge with
+  blocking-task tooltip, status select disabled while blocked), quick time
+  logging (15/30/60/120 presets), create-from-playbook modal.
+- **ops → يومي** (docs/05 §B9): my open tasks across projects, overdue-first,
+  inline status; header shows open/overdue/activity counts.
+- **ops → الفريق**: HR columns (job title + cost rate admin-editable inline),
+  workload heatmap-lite (open-task count per member, hot ≥ 8).
+
+**Verified:** migration replay · backbone trigger test · RLS harness (fixture
+updated for tasks.project_id) · e2e golden path · builds/typecheck/tests.
+
+**Deferred:** sprint-cycle UI for recurring projects (cadence automation lands
+with Phase 6 crons) · CSV import (docs/08 P4 item → next session) · leaves UI
+(table + RLS live; surface with employee portal Phase 10).
 
 ## Phase 3.5 Sprint C log (2026-08-07)
 

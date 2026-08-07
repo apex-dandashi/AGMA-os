@@ -54,8 +54,9 @@ insert into public.sprints (id, project_id, number) values
   ('50000000-0000-0000-0000-0000000000bb', '40000000-0000-0000-0000-0000000000bb', 1)
 on conflict (id) do nothing;
 
-insert into public.tasks (id, sprint_id, title, assignee) values
-  ('60000000-0000-0000-0000-0000000000aa', '50000000-0000-0000-0000-0000000000aa',
+insert into public.tasks (id, project_id, sprint_id, title, assignee) values
+  ('60000000-0000-0000-0000-0000000000aa', '40000000-0000-0000-0000-0000000000aa',
+   '50000000-0000-0000-0000-0000000000aa',
    'RLS Task', '00000000-0000-0000-0000-0000000000e1')
 on conflict (id) do nothing;
 

@@ -632,6 +632,44 @@ export type Database = {
           },
         ]
       }
+      leaves: {
+        Row: {
+          created_at: string
+          ends_on: string
+          id: string
+          kind: Database["public"]["Enums"]["leave_kind"]
+          member: string
+          note: string | null
+          starts_on: string
+        }
+        Insert: {
+          created_at?: string
+          ends_on: string
+          id?: string
+          kind?: Database["public"]["Enums"]["leave_kind"]
+          member: string
+          note?: string | null
+          starts_on: string
+        }
+        Update: {
+          created_at?: string
+          ends_on?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["leave_kind"]
+          member?: string
+          note?: string | null
+          starts_on?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leaves_member_fkey"
+            columns: ["member"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           body: string
@@ -839,32 +877,47 @@ export type Database = {
       profiles: {
         Row: {
           active: boolean
+          capacity_hours_week: number
           client_id: string | null
+          cost_rate_hourly: number | null
           created_at: string
           email: string | null
           full_name: string | null
           id: string
+          job_title: string | null
+          phone: string | null
           role: Database["public"]["Enums"]["user_role"]
+          skills: string[]
           updated_at: string
         }
         Insert: {
           active?: boolean
+          capacity_hours_week?: number
           client_id?: string | null
+          cost_rate_hourly?: number | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id: string
+          job_title?: string | null
+          phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          skills?: string[]
           updated_at?: string
         }
         Update: {
           active?: boolean
+          capacity_hours_week?: number
           client_id?: string | null
+          cost_rate_hourly?: number | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
+          job_title?: string | null
+          phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          skills?: string[]
           updated_at?: string
         }
         Relationships: [
@@ -937,6 +990,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      rate_limits: {
+        Row: {
+          bucket: string
+          caller_hash: string
+          hits: number
+          window_start: string
+        }
+        Insert: {
+          bucket: string
+          caller_hash: string
+          hits?: number
+          window_start?: string
+        }
+        Update: {
+          bucket?: string
+          caller_hash?: string
+          hits?: number
+          window_start?: string
+        }
+        Relationships: []
       }
       reports: {
         Row: {
@@ -1250,13 +1324,17 @@ export type Database = {
       tasks: {
         Row: {
           assignee: string | null
+          blocked_by: string | null
           created_at: string
           deliverable_url: string | null
           due: string | null
           id: string
           needs_client_approval: boolean
+          project_id: string
           service_id: string | null
-          sprint_id: string
+          sort: number
+          sprint_id: string | null
+          stage_id: string | null
           status: Database["public"]["Enums"]["task_status"]
           template_id: string | null
           title: string
@@ -1264,13 +1342,17 @@ export type Database = {
         }
         Insert: {
           assignee?: string | null
+          blocked_by?: string | null
           created_at?: string
           deliverable_url?: string | null
           due?: string | null
           id?: string
           needs_client_approval?: boolean
+          project_id: string
           service_id?: string | null
-          sprint_id: string
+          sort?: number
+          sprint_id?: string | null
+          stage_id?: string | null
           status?: Database["public"]["Enums"]["task_status"]
           template_id?: string | null
           title: string
@@ -1278,13 +1360,17 @@ export type Database = {
         }
         Update: {
           assignee?: string | null
+          blocked_by?: string | null
           created_at?: string
           deliverable_url?: string | null
           due?: string | null
           id?: string
           needs_client_approval?: boolean
+          project_id?: string
           service_id?: string | null
-          sprint_id?: string
+          sort?: number
+          sprint_id?: string | null
+          stage_id?: string | null
           status?: Database["public"]["Enums"]["task_status"]
           template_id?: string | null
           title?: string
@@ -1296,6 +1382,20 @@ export type Database = {
             columns: ["assignee"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_blocked_by_fkey"
+            columns: ["blocked_by"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
           {
@@ -1313,10 +1413,62 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "tasks_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "playbook_stages"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "tasks_template_id_fkey"
             columns: ["template_id"]
             isOneToOne: false
             referencedRelation: "task_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      time_entries: {
+        Row: {
+          created_at: string
+          entry_date: string
+          id: string
+          member: string
+          minutes: number
+          note: string | null
+          task_id: string
+        }
+        Insert: {
+          created_at?: string
+          entry_date?: string
+          id?: string
+          member?: string
+          minutes: number
+          note?: string | null
+          task_id: string
+        }
+        Update: {
+          created_at?: string
+          entry_date?: string
+          id?: string
+          member?: string
+          minutes?: number
+          note?: string | null
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_entries_member_fkey"
+            columns: ["member"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "time_entries_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
             referencedColumns: ["id"]
           },
         ]
@@ -1377,6 +1529,18 @@ export type Database = {
         Args: never
         Returns: Database["public"]["Enums"]["user_role"]
       }
+      check_rate_limit: {
+        Args: {
+          p_bucket: string
+          p_caller_hash: string
+          p_max_per_hour: number
+        }
+        Returns: boolean
+      }
+      create_project_from_playbook: {
+        Args: { p_client_id: string; p_name: string; p_playbook_slug: string }
+        Returns: string
+      }
       current_client_id: { Args: never; Returns: string }
       is_admin: { Args: never; Returns: boolean }
       is_project_member: { Args: { pid: string }; Returns: boolean }
@@ -1413,6 +1577,7 @@ export type Database = {
         | "roadmap"
         | "live"
         | "optimize"
+      leave_kind: "annual" | "sick" | "unpaid" | "other"
       message_channel: "portal" | "whatsapp" | "email"
       method_phase: "analyze" | "generate" | "market" | "adapt"
       project_mode: "recurring" | "milestone"
@@ -1573,6 +1738,7 @@ export const Constants = {
         "live",
         "optimize",
       ],
+      leave_kind: ["annual", "sick", "unpaid", "other"],
       message_channel: ["portal", "whatsapp", "email"],
       method_phase: ["analyze", "generate", "market", "adapt"],
       project_mode: ["recurring", "milestone"],

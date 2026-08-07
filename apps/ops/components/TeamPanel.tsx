@@ -25,6 +25,31 @@ export default function TeamPanel({ me }: { me: Tables<'profiles'> }) {
       return data;
     },
   });
+  // Workload heatmap-lite (docs/04 §1.6): open tasks per member.
+  const { data: workload } = useQuery({
+    queryKey: ['workload'],
+    queryFn: async () => {
+      const { data, error } = await getSupabase()
+        .from('tasks')
+        .select('assignee')
+        .neq('status', 'done')
+        .not('assignee', 'is', null);
+      if (error) throw new Error(error.message);
+      const counts = new Map<string, number>();
+      for (const t of data ?? []) {
+        counts.set(t.assignee!, (counts.get(t.assignee!) ?? 0) + 1);
+      }
+      return counts;
+    },
+  });
+
+  const updateHr = useAppMutation(
+    async ({ id, patch }: { id: string; patch: Partial<Tables<'profiles'>> }) => {
+      const { error } = await getSupabase().from('profiles').update(patch as never).eq('id', id);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [['profiles']], successMessage: 'حُدّث السجل' }
+  );
 
   const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
@@ -87,38 +112,80 @@ export default function TeamPanel({ me }: { me: Tables<'profiles'> }) {
       {isLoading ? (
         <SkeletonList rows={3} />
       ) : (
-        <Table head={['الاسم', 'البريد', 'الدور', 'الحالة']}>
-          {(profiles ?? []).map((p) => (
-            <Tr key={p.id}>
-              <Td className="font-medium">{p.full_name || '—'}</Td>
-              <Td dir="ltr" className="text-gray-light">{p.email}</Td>
-              <Td>
-                {isAdmin && p.id !== me.id && p.role !== 'client' ? (
-                  <Select
-                    value={p.role}
-                    aria-label={`دور ${p.email}`}
-                    onChange={(e) =>
-                      changeRole.mutate({ id: p.id, newRole: e.target.value as Enums<'user_role'> })
-                    }
-                    className="w-36"
-                  >
-                    <option value="admin">مدير النظام</option>
-                    <option value="strategist">استراتيجي</option>
-                    <option value="executor">منفّذ</option>
-                  </Select>
-                ) : (
-                  <Badge variant={p.role === 'admin' ? 'accent' : 'neutral'}>
-                    {ROLE_LABELS[p.role]}
+        <Table head={['الاسم', 'البريد', 'الدور', 'المسمى', 'التكلفة/س', 'العبء', 'الحالة']}>
+          {(profiles ?? []).map((p) => {
+            const isTeamRow = p.role !== 'client';
+            const load = workload?.get(p.id) ?? 0;
+            return (
+              <Tr key={p.id}>
+                <Td className="font-medium">{p.full_name || '—'}</Td>
+                <Td dir="ltr" className="text-gray-light">{p.email}</Td>
+                <Td>
+                  {isAdmin && p.id !== me.id && isTeamRow ? (
+                    <Select
+                      value={p.role}
+                      aria-label={`دور ${p.email}`}
+                      onChange={(e) =>
+                        changeRole.mutate({ id: p.id, newRole: e.target.value as Enums<'user_role'> })
+                      }
+                      className="w-36"
+                    >
+                      <option value="admin">مدير النظام</option>
+                      <option value="strategist">استراتيجي</option>
+                      <option value="executor">منفّذ</option>
+                    </Select>
+                  ) : (
+                    <Badge variant={p.role === 'admin' ? 'accent' : 'neutral'}>
+                      {ROLE_LABELS[p.role]}
+                    </Badge>
+                  )}
+                </Td>
+                <Td>
+                  {isAdmin && isTeamRow ? (
+                    <Input defaultValue={p.job_title ?? ''} aria-label={`مسمى ${p.email}`}
+                      placeholder="—" className="w-32 py-1 text-xs"
+                      onBlur={(e) =>
+                        e.target.value !== (p.job_title ?? '') &&
+                        updateHr.mutate({ id: p.id, patch: { job_title: e.target.value || null } })} />
+                  ) : (
+                    <span className="text-gray-light">{p.job_title ?? '—'}</span>
+                  )}
+                </Td>
+                <Td>
+                  {isAdmin && isTeamRow ? (
+                    <Input type="number" dir="ltr" defaultValue={p.cost_rate_hourly ?? ''}
+                      aria-label={`تكلفة ${p.email}`} placeholder="SAR"
+                      className="w-20 py-1 text-xs"
+                      onBlur={(e) =>
+                        Number(e.target.value) !== Number(p.cost_rate_hourly ?? 0) &&
+                        updateHr.mutate({
+                          id: p.id,
+                          patch: { cost_rate_hourly: Number(e.target.value) || null },
+                        })} />
+                  ) : (
+                    <span dir="ltr" className="text-gray-light">
+                      {p.cost_rate_hourly ? `${p.cost_rate_hourly}` : '—'}
+                    </span>
+                  )}
+                </Td>
+                <Td>
+                  {isTeamRow ? (
+                    <Badge variant={load > 8 ? 'accent' : 'neutral'}
+                      title="مهام مفتوحة مكلّف بها">
+                      {load}
+                    </Badge>
+                  ) : (
+                    '—'
+                  )}
+                </Td>
+                <Td>
+                  <Badge variant={p.active ? 'accent' : 'neutral'}>
+                    {p.active ? 'نشط' : 'موقوف'}
                   </Badge>
-                )}
-              </Td>
-              <Td>
-                <Badge variant={p.active ? 'accent' : 'neutral'}>
-                  {p.active ? 'نشط' : 'موقوف'}
-                </Badge>
-              </Td>
-            </Tr>
-          ))}
+                </Td>
+              </Tr>
+            );
+          })}
         </Table>
       )}
     </div>
