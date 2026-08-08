@@ -49,7 +49,7 @@ export default async function ArticlePage(
     return (
       <main dir="rtl" className="mx-auto max-w-3xl px-4 py-16">
         <p className="text-gray-light">المقال في الطريق —</p>
-        <Link href="/blog/" className="text-pulse-orange hover:underline">← عودة للمدونة</Link>
+        <Link href="/blog/" className="text-pulse-orange hover:underline">← عودة لآخر الأخبار</Link>
       </main>
     );
   }
@@ -82,7 +82,7 @@ export default async function ArticlePage(
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       <nav className="mb-6 text-xs text-gray-medium">
-        <Link href="/blog/" className="hover:text-pulse-orange">← المدونة</Link>
+        <Link href="/blog/" className="hover:text-pulse-orange">← آخر الأخبار</Link>
       </nav>
 
       <article>

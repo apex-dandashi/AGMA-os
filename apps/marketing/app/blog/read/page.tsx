@@ -7,7 +7,7 @@ import ReadClient from './ReadClient';
  * الفهرسة؛ النسخة الثابتة /blog/[slug] هي المرجعية (canonical).
  */
 export const metadata: Metadata = {
-  title: 'مقال — مدونة AGMA',
+  title: 'مقال — آخر الأخبار | AGMA',
   robots: { index: false, follow: true },
 };
 

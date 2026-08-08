@@ -4,7 +4,7 @@ import { fetchPublishedArticles } from '../../lib/blog';
 import FreshArticles from './FreshArticles';
 
 export const metadata: Metadata = {
-  title: 'مدونة AGMA — أفكار وأخبار التسويق والذكاء الاصطناعي في السعودية',
+  title: 'آخر الأخبار — التسويق والذكاء الاصطناعي في السعودية | AGMA',
   description:
     'مقالات يومية من وكالة AGMA: آخر أخبار السيو والتسويق الرقمي والذكاء الاصطناعي، مترجمة لقرارات عملية لأصحاب الأعمال في السعودية والخليج.',
   alternates: { canonical: 'https://agma.com.sa/blog/' },
@@ -16,7 +16,7 @@ export default async function BlogIndex() {
 
   return (
     <main dir="rtl" className="mx-auto max-w-3xl px-4 py-16">
-      <h1 className="mb-2 text-3xl font-black text-snow">مدونة AGMA</h1>
+      <h1 className="mb-2 text-3xl font-black text-snow">آخر الأخبار</h1>
       <p className="mb-10 text-gray-light">
         أفكار وأخبار مجالنا — سيو، تسويق رقمي، ذكاء اصطناعي — مترجمة لقرارات
         عملية لعملك في السعودية.

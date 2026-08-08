@@ -35,7 +35,7 @@ const Footer = () => {
               <li><Link href="/agma-method" className="hover:text-pulse-orange transition-colors">منهجيتنا</Link></li>
               <li><Link href="/process" className="hover:text-pulse-orange transition-colors">آلية العمل</Link></li>
               <li><Link href="/pricing" className="hover:text-pulse-orange transition-colors">التسعير</Link></li>
-              <li><Link href="/blog" className="hover:text-pulse-orange transition-colors">المدونة</Link></li>
+              <li><Link href="/blog" className="hover:text-pulse-orange transition-colors">آخر الأخبار</Link></li>
             </ul>
           </div>
 

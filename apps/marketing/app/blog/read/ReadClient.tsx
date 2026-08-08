@@ -30,7 +30,7 @@ export default function ReadClient() {
     return (
       <main dir="rtl" className="mx-auto max-w-3xl px-4 py-16">
         <p className="text-gray-light">المقال غير موجود.</p>
-        <Link href="/blog/" className="text-pulse-orange hover:underline">← عودة للمدونة</Link>
+        <Link href="/blog/" className="text-pulse-orange hover:underline">← عودة لآخر الأخبار</Link>
       </main>
     );
   }
@@ -40,7 +40,7 @@ export default function ReadClient() {
   return (
     <main dir="rtl" className="mx-auto max-w-3xl px-4 py-16">
       <nav className="mb-6 text-xs text-gray-medium">
-        <Link href="/blog/" className="hover:text-pulse-orange">← المدونة</Link>
+        <Link href="/blog/" className="hover:text-pulse-orange">← آخر الأخبار</Link>
       </nav>
       <article>
         <h1 className="mb-3 text-3xl font-black leading-snug text-snow">{article.title}</h1>

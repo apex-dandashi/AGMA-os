@@ -22,7 +22,7 @@ export async function GET() {
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0"><channel>
-<title>مدونة AGMA</title>
+<title>آخر الأخبار — AGMA</title>
 <link>https://agma.com.sa/blog/</link>
 <description>أفكار وأخبار التسويق والذكاء الاصطناعي في السعودية — من وكالة AGMA</description>
 <language>ar-sa</language>

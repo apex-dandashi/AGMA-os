@@ -12,7 +12,7 @@ export default function ContentTabs() {
     <div className="space-y-4">
       <Tabs active={tab} onChange={setTab} tabs={[
         { key: 'clients', label: 'محتوى العملاء' },
-        { key: 'blog', label: 'مدونة الموقع' },
+        { key: 'blog', label: 'آخر الأخبار (الموقع)' },
       ]} />
       {tab === 'clients' ? <ContentPanel /> : <BlogAdmin />}
     </div>
