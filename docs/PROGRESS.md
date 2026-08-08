@@ -74,6 +74,29 @@ stamp/signature + per-user signatures, and «أين أدخل السجل التج
   where to enter client CR/VAT — discoverability fix).
 - Gauntlet green; migration pushed to production.
 
+## WOW-1 log (2026-08-08) — eighth owner study, approved slice 1
+
+Owner approved my ranking of the micro-experiences study (real data only,
+honesty thresholds, demo portal waits for the real Phase-7 portal).
+
+- `live-stats` function (deployed, verified live in production: 100%
+  uptime, 4 automations, 6 anonymized feed items): real aggregates with
+  honesty thresholds (count metrics hidden until convincing at our scale)
+  + whitelisted anonymized event feed from audit_log (label map only —
+  no record data, no client names). First version counted never-checked
+  sites as down (0% uptime on fresh DB) — fixed: uptime computed over
+  checked sites only. `count_cron_jobs()` helper migration.
+- /live page (2-min auto-refresh, pulse dot, metric cards, «ماذا يفعل
+  نظام AGMA الآن» feed) + footer LiveStatusDot: ● أنظمة AGMA تعمل → /live,
+  plus timezone-aware «فريق الرياض متصل الآن» (Sun–Thu 9–18 KSA).
+- Audit scanner theater: 6-stage animated checklist fills the 30–60s
+  PageSpeed wait (the wait itself became the wow).
+- Application tracker: track action now accepts APP- refs (same
+  email-match, status-only discipline) + «قدّمت سابقاً؟ تتبع طلبك»
+  collapsible on /careers with respectful Arabic status names.
+- security.txt at /.well-known/ (contact, policy → /trust, expiry).
+- Gauntlet green; migration + 2 functions live; shipped both branches.
+
 ## Integrations P0 log (2026-08-08) — seventh owner study, approved slice
 
 Owner approved my assessment of the free-APIs study: build the gold

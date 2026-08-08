@@ -71,7 +71,8 @@ const turnstileField = z.string().optional();
 
 const trackSchema = z.object({
   action: z.literal('track'),
-  reference: z.string().trim().regex(/^CMP-\d{4}-\d{5}$/),
+  // CMP للشكاوى وAPP لطلبات التوظيف — نفس الآلية: الحالة فقط بالبريد المطابق
+  reference: z.string().trim().toUpperCase().pipe(z.string().regex(/^(CMP|APP)-\d{4}-\d{5}$/)),
   email: z.string().trim().toLowerCase().pipe(z.string().email()),
 });
 
@@ -270,12 +271,22 @@ Deno.serve(async (req) => {
   }
 
   // track: الحالة فقط، وبالبريد المطابق — لا تفاصيل
+  if (body.reference.startsWith('APP-')) {
+    const { data: a } = await supabase.from('career_applications')
+      .select('status, created_at, email')
+      .eq('public_reference', body.reference).maybeSingle();
+    if (!a || (a.email ?? '').toLowerCase() !== body.email) {
+      return new Response(JSON.stringify({ error: 'not_found' }), { status: 404, headers });
+    }
+    return new Response(JSON.stringify({ ok: true, kind: 'application',
+      status: a.status, submitted_at: a.created_at }), { status: 200, headers });
+  }
   const { data: c } = await supabase.from('complaints')
     .select('status, created_at, email')
     .eq('public_reference', body.reference).maybeSingle();
   if (!c || (c.email ?? '').toLowerCase() !== body.email) {
     return new Response(JSON.stringify({ error: 'not_found' }), { status: 404, headers });
   }
-  return new Response(JSON.stringify({ ok: true, status: c.status, submitted_at: c.created_at }),
-    { status: 200, headers });
+  return new Response(JSON.stringify({ ok: true, kind: 'complaint',
+    status: c.status, submitted_at: c.created_at }), { status: 200, headers });
 });

@@ -41,6 +41,67 @@ async function fetchPublic<T>(path: string): Promise<T[]> {
   return res.json();
 }
 
+/** تتبع حالة طلب التوظيف بالرقم والبريد — مسار مؤسسي كالشكاوى (WOW-1). */
+function TrackApplication() {
+  const [ref, setRef] = useState('');
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const STATUS_AR: Record<string, string> = {
+    applied: 'مستلم — بانتظار المراجعة', prescreen: 'قيد الفرز الأولي',
+    shortlisted: 'ضمن القائمة المختصرة', assessment: 'مرحلة تقييم المهارات',
+    interview: 'مرحلة المقابلات', offer: 'مرحلة العرض الوظيفي',
+    hired: 'تم التوظيف — مبروك!', rejected: 'اعتُذر عن المتابعة في هذه الفرصة',
+    withdrawn: 'مسحوب', talent_pool: 'محفوظ في شبكة المواهب لفرص قادمة',
+  };
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setErr(null); setStatus(null); setBusy(true);
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/public-forms`, {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ action: 'track', reference: ref.trim(), email: email.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) setStatus(STATUS_AR[data.status] ?? data.status);
+      else setErr('لم نجد طلباً بهذا الرقم والبريد — تأكد منهما.');
+    } catch {
+      setErr('تعذر الاستعلام — حاول مجدداً.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <details className="rounded-xl border border-white/10 bg-white/5 p-5">
+      <summary className="cursor-pointer text-sm font-bold">
+        قدّمت سابقاً؟ تتبع حالة طلبك
+      </summary>
+      <form onSubmit={submit} noValidate className="mt-4 flex flex-wrap items-end gap-3">
+        <div>
+          <label htmlFor="tr-ref" className={label}>رقم الطلب (APP-…)</label>
+          <input id="tr-ref" dir="ltr" className={field} value={ref}
+            onChange={(e) => setRef(e.target.value)} />
+        </div>
+        <div>
+          <label htmlFor="tr-email" className={label}>بريدك</label>
+          <input id="tr-email" type="email" dir="ltr" className={field} value={email}
+            onChange={(e) => setEmail(e.target.value)} />
+        </div>
+        <button type="submit" disabled={busy}
+          className="rounded-md bg-pulse-orange px-5 py-2.5 text-sm font-bold text-void hover:opacity-90 disabled:opacity-50">
+          {busy ? '…' : 'استعلام'}
+        </button>
+        {status && <p className="w-full text-sm">الحالة: <b className="text-pulse-orange">{status}</b></p>}
+        {err && <p role="alert" className="w-full text-sm font-bold text-pulse-orange">{err}</p>}
+      </form>
+    </details>
+  );
+}
+
 export default function CareersClient() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
@@ -202,7 +263,9 @@ export default function CareersClient() {
                 ))}
               </div>
             )}
-            <div className="rounded-xl border border-pulse-orange/40 bg-white/5 p-6">
+            <TrackApplication />
+
+            <div className="mt-6 rounded-xl border border-pulse-orange/40 bg-white/5 p-6">
               <h2 className="mb-1 flex items-center gap-2 text-lg font-black">
                 <Sparkles className="h-5 w-5 text-pulse-orange" aria-hidden />
                 لم تجد وظيفة مفتوحة تناسبك؟

@@ -17,6 +17,40 @@ type Result = {
   lcp: string | null;
 };
 
+/** مسرح الفحص: يحوّل ثواني الانتظار إلى جزء من التجربة (WOW-1). */
+const SCAN_STEPS = [
+  'الاتصال بالموقع…', 'قياس الأداء وCore Web Vitals…', 'فحص السيو والفهرسة…',
+  'اختبار إمكانية الوصول…', 'مراجعة أفضل الممارسات والأمان…', 'تجميع فرص التحسين…',
+];
+
+function ScanTheater() {
+  const [step, setStep] = useState(0);
+  React.useEffect(() => {
+    const t = setInterval(() => setStep((s) => Math.min(s + 1, SCAN_STEPS.length - 1)), 6000);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <div className="rounded-xl border border-pulse-orange/40 bg-white/5 p-6">
+      <p className="mb-4 text-sm font-black">AGMA تفحص موقعك الآن…</p>
+      <ul className="space-y-2.5">
+        {SCAN_STEPS.map((s, i) => (
+          <li key={s} className={`flex items-center gap-2 text-sm transition-opacity ${
+            i > step ? 'opacity-30' : ''}`}>
+            {i < step ? (
+              <span className="font-bold text-green-400">✓</span>
+            ) : i === step ? (
+              <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-pulse-orange border-t-transparent" aria-hidden />
+            ) : (
+              <span className="inline-block h-3 w-3 rounded-full border border-gray-medium" aria-hidden />
+            )}
+            <span className={i === step ? 'text-snow' : 'text-gray-light'}>{s}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function ScoreRing({ value, title }: { value: number; title: string }) {
   const color = value >= 90 ? 'text-green-400' : value >= 50 ? 'text-pulse-orange' : 'text-red-400';
   return (
@@ -81,7 +115,9 @@ export default function AuditClient() {
           الممارسات — مع أهم فرص التحسين بالعربية.
         </p>
 
-        {!result && !manualFollowup && (
+        {busy && <div className="mb-6"><ScanTheater /></div>}
+
+        {!result && !manualFollowup && !busy && (
           <form onSubmit={submit} noValidate className="space-y-4">
             <div>
               <label htmlFor="w-url" className={label}>رابط موقعك *</label>

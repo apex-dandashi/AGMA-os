@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 import { Mail, Phone, MapPin } from 'lucide-react';
+import LiveStatusDot from './LiveStatusDot';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -92,6 +93,7 @@ const Footer = () => {
           </div>
 
           <div className="flex flex-col gap-3">
+            <LiveStatusDot />
             <span className="text-[10px] text-pulse-orange font-bold uppercase tracking-widest font-mono">الثقة والحوكمة</span>
             <div className="flex flex-wrap gap-x-6 gap-y-2">
               <Link href="/tools/website-audit" className="hover:text-snow transition-colors">فحص موقعك مجاناً</Link>
