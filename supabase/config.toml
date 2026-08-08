@@ -38,3 +38,7 @@ verify_jwt = false
 # AGMA Live public aggregates — anonymized, cached (L9).
 [functions.live-stats]
 verify_jwt = false
+
+# الجمع اليومي للمقالات — يستدعيه cron عبر pg_net بلا توثيق؛ لا يقبل مدخلات (L9).
+[functions.content-collect]
+verify_jwt = false

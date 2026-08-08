@@ -18,9 +18,52 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 6.5b | **Safety+cash** (docs/10): pause checklists, Flag & Hold, huddles, Profit First allocations, Vault/drip, leak detection | ✅ Done (2026-08-07) |
 | 6.5c | **Sellable** (docs/10): TVR scores, service_packages, custom-reason mining, playbook versions+grades, experiments, EMT/independence gauges | ✅ Done (2026-08-07) |
 | 7 | Portal + onboarding + Drop Forms | ✅ Core done (2026-08-08) — magic-link login, docs+sign w/ evidence, approvals, invoices+bank info; onboarding/Drop Forms iterate next |
-| 8 | Content Engine | ✅ Core done (2026-08-08) — client-content workflow + AI drafting + portal approval; daily signal collection/auto-publish iterate later |
+| 8 | Content Engine | ✅ Done (2026-08-08) — client-content workflow + AI drafting + portal approval + daily blog engine (RSS collect → auto-draft → review → static SEO/GEO pages) |
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
+
+## Phase 8b log (2026-08-08) — Daily blog engine (SEO/GEO)
+
+Owner: «ابي محرك لتنزيل المقالات اليومية في موقعنا لتقوية السيو والجيو
+وعرض اخر الاخبار والافكار في مجالنا». Blueprint B2 second half.
+
+- `20260809010000_blog_engine.sql`: content_sources (6 seeded RSS feeds,
+  team-editable) · content_signals (unique url, prune-to-500 fn) · articles
+  (slug/tags/sources jsonb/seo fields) with gates: AI article never publishes
+  without documented human review, no empty publish, **slug immutable after
+  publish** (SEO safety); anon RLS reads published only (harness section);
+  article_ready notification on AI drafts reaching review; pg_cron
+  'agma-content-collect' daily 04:30 UTC via pg_net; seeded launch article
+  (welcome-to-agma-blog) so the blog never builds empty.
+- `content-collect` (verify_jwt=false — cron calls it; accepts no input, L9):
+  RSS/Atom parse (fast-xml-parser), dedupe by url, prune, then ONE auto-draft
+  per day when ANTHROPIC_API_KEY exists → status 'review' + team notification.
+  **Live-verified in production: first call collected 30 signals.**
+- `generate-article` (team JWT): on-demand draft from picked signals or free
+  topic; structured outputs (json_schema) → title/slug/excerpt/body_md/tags/
+  seo fields; sources recorded from signals only (no fabricated citations —
+  prompt contract). Shared `_shared/article.ts` module, claude-opus-5 +
+  server-side fallback.
+- Ops: المحتوى now tabbed — «محتوى العملاء» | «مدونة الموقع» (BlogAdmin):
+  sources CRUD + toggle, signal picker → generate, review queue with full
+  editor (title/slug/excerpt/body/SEO/tags), «راجعتُه» → publish, published
+  list with live links + archive.
+- Marketing (static export, SEO-first): /blog list + /blog/[slug] fully
+  static pages (Article JSON-LD with citations, OG, canonical, Arabic
+  locale) + FreshArticles client strip for post-build publishes linking
+  /blog/read?slug (noindex reader) until next bake · sitemap.ts (all routes +
+  articles) · /blog/feed.xml RSS · header+footer «المدونة» links · marked
+  renderer. Build guards: empty-fetch fallback params + graceful page (export
+  never breaks on DB hiccup).
+- `.github/workflows/daily-rebake.yml`: daily 03:00 UTC Hostinger redeploy →
+  yesterday's publishes become static HTML. **Owner action: add
+  HOSTINGER_DEPLOY_HOOK_MAIN secret (hPanel Git webhook URL) in GitHub.**
+- Gauntlet green: typecheck 5/5, build 2/2 (blog routes baked), RLS harness
+  + blog section, e2e passed. Production: migration pushed, both functions
+  deployed, live collect verified.
+
+Owner actions pending: ANTHROPIC_API_KEY (auto-draft + on-demand generation),
+HOSTINGER_DEPLOY_HOOK_MAIN (daily static rebake).
 
 ## Phase 8 log (2026-08-08) — Content Engine core
 

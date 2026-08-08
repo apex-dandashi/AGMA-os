@@ -225,4 +225,29 @@ begin
   end;
 end $$;
 
+-- ---------- blog engine (المرحلة ٨ب) -----------------------------------------
+insert into public.articles (id, slug, title, body_md, status, ai_generated) values
+  ('a0000000-0000-0000-0000-0000000000aa', 'rls-published', 'منشور', 'نص', 'published', false),
+  ('a0000000-0000-0000-0000-0000000000ab', 'rls-draft', 'مسودة', 'نص', 'review', false)
+on conflict (id) do nothing;
+
+do $$
+declare n int;
+begin
+  -- anon: يرى المنشور فقط
+  perform set_config('request.jwt.claims', '{"role":"anon"}', true);
+  perform set_config('role', 'anon', true);
+  select count(*) into n from public.articles;
+  if n <> 1 then raise exception 'anon: articles expected 1 published got %', n; end if;
+
+  -- العميل: لا يرى الإشارات ولا مسودات المدونة
+  perform set_config('request.jwt.claims',
+    '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated"}', true);
+  perform set_config('role', 'authenticated', true);
+  select count(*) into n from public.content_signals;
+  if n <> 0 then raise exception 'client: signals must be invisible, got %', n; end if;
+  select count(*) into n from public.articles where status <> 'published';
+  if n <> 0 then raise exception 'client: article drafts must be invisible, got %', n; end if;
+end $$;
+
 select 'RLS_CHECKS_PASSED' as result;

@@ -367,6 +367,81 @@ export type Database = {
           },
         ]
       }
+      articles: {
+        Row: {
+          ai_generated: boolean
+          body_md: string | null
+          created_at: string
+          created_by: string | null
+          excerpt: string | null
+          human_reviewed_at: string | null
+          human_reviewed_by: string | null
+          id: string
+          published_at: string | null
+          seo_description: string | null
+          seo_title: string | null
+          slug: string
+          sources: Json
+          status: Database["public"]["Enums"]["article_status"]
+          tags: string[]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          ai_generated?: boolean
+          body_md?: string | null
+          created_at?: string
+          created_by?: string | null
+          excerpt?: string | null
+          human_reviewed_at?: string | null
+          human_reviewed_by?: string | null
+          id?: string
+          published_at?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          slug: string
+          sources?: Json
+          status?: Database["public"]["Enums"]["article_status"]
+          tags?: string[]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          ai_generated?: boolean
+          body_md?: string | null
+          created_at?: string
+          created_by?: string | null
+          excerpt?: string | null
+          human_reviewed_at?: string | null
+          human_reviewed_by?: string | null
+          id?: string
+          published_at?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          slug?: string
+          sources?: Json
+          status?: Database["public"]["Enums"]["article_status"]
+          tags?: string[]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "articles_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "articles_human_reviewed_by_fkey"
+            columns: ["human_reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assessment_questions: {
         Row: {
           bank: string
@@ -1292,6 +1367,80 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      content_signals: {
+        Row: {
+          collected_at: string
+          id: string
+          published_at: string | null
+          source_id: string | null
+          summary: string | null
+          title: string
+          url: string
+          used_in_article: string | null
+        }
+        Insert: {
+          collected_at?: string
+          id?: string
+          published_at?: string | null
+          source_id?: string | null
+          summary?: string | null
+          title: string
+          url: string
+          used_in_article?: string | null
+        }
+        Update: {
+          collected_at?: string
+          id?: string
+          published_at?: string | null
+          source_id?: string | null
+          summary?: string | null
+          title?: string
+          url?: string
+          used_in_article?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_signals_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "content_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_sources: {
+        Row: {
+          active: boolean
+          created_at: string
+          feed_url: string
+          id: string
+          lang: string
+          last_collected_at: string | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          feed_url: string
+          id?: string
+          lang?: string
+          last_collected_at?: string | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          feed_url?: string
+          id?: string
+          lang?: string
+          last_collected_at?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       control_mappings: {
         Row: {
@@ -5500,6 +5649,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      prune_content_signals: { Args: never; Returns: undefined }
       recognize_revenue: { Args: never; Returns: undefined }
       render_template: {
         Args: { p_body: string; p_payload: Json }
@@ -5533,6 +5683,7 @@ export type Database = {
         | "task"
         | "content"
       approval_status: "pending" | "approved" | "rejected"
+      article_status: "draft" | "review" | "published" | "archived"
       checklist_run_status: "in_progress" | "passed" | "flagged"
       client_status: "active" | "paused" | "archived"
       complaint_status:
@@ -5850,6 +6001,7 @@ export const Constants = {
         "content",
       ],
       approval_status: ["pending", "approved", "rejected"],
+      article_status: ["draft", "review", "published", "archived"],
       checklist_run_status: ["in_progress", "passed", "flagged"],
       client_status: ["active", "paused", "archived"],
       complaint_status: [

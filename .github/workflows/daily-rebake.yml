@@ -1,0 +1,34 @@
+# الخبز اليومي للمدونة: المقالات المنشورة أمس تتحول صفحات HTML ثابتة
+# (سيو كامل) بإعادة نشر Hostinger مرة يومياً.
+#
+# يتطلب سراً واحداً من المالك: HOSTINGER_DEPLOY_HOOK_MAIN — رابط الـ webhook
+# من hPanel ← Git ← موقع agma.com.sa (نفس الرابط الذي يستقبل دفعات GitHub).
+# اختياري: HOSTINGER_DEPLOY_HOOK_STAGING للنسخة التجريبية.
+name: Daily blog rebake
+
+on:
+  schedule:
+    - cron: '0 3 * * *' # 03:00 UTC = 06:00 KSA — بعد جمع الإشارات وقبل الدوام
+  workflow_dispatch:
+
+jobs:
+  rebake:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Hostinger redeploy (main)
+        env:
+          HOOK: ${{ secrets.HOSTINGER_DEPLOY_HOOK_MAIN }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::warning::HOSTINGER_DEPLOY_HOOK_MAIN غير مضبوط — أضفه في GitHub Secrets ليعمل الخبز اليومي"
+            exit 0
+          fi
+          curl -fsS -X POST "$HOOK" && echo "main rebake triggered"
+
+      - name: Trigger Hostinger redeploy (staging, optional)
+        env:
+          HOOK: ${{ secrets.HOSTINGER_DEPLOY_HOOK_STAGING }}
+        run: |
+          if [ -n "$HOOK" ]; then
+            curl -fsS -X POST "$HOOK" && echo "staging rebake triggered"
+          fi

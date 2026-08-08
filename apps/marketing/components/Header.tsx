@@ -27,6 +27,7 @@ const Header = () => {
     { name: 'خدماتنا', href: '/services' },
     { name: 'القطاعات', href: '/industries' },
     { name: 'التسعير', href: '/pricing' },
+    { name: 'المدونة', href: '/blog' },
   ];
 
   return (
