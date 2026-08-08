@@ -66,6 +66,24 @@ Owner actions pending: ONE of OPENROUTER_API_KEY (free models) or
 ANTHROPIC_API_KEY (best Arabic quality) — see 8c below; plus
 HOSTINGER_DEPLOY_HOOK_MAIN (daily static rebake).
 
+## Phase 8f log (2026-08-08) — Snapshot bake architecture + editor
+
+- Full ArticleEditor (markdown/HTML, live site-parity preview via marked,
+  snippet toolbar incl. HTML CTA box, in-editor AI assistant on selection or
+  whole draft via assist-writing function — live-verified 5s rewrite).
+  Manual «+ اكتب مقالاً بنفسك». BlogAdmin rows open full editor.
+- **Root discovery**: Hostinger build env has NO outbound network — no
+  deployed build ever contained articles (local builds did). Fix:
+  `scripts/snapshot-articles.mjs` writes published articles to
+  `apps/marketing/content/articles-snapshot.json`; blog lib reads snapshot
+  first, network fallback for local dev. daily-rebake.yml rewritten:
+  snapshot → commit → push staging → ff main → Hostinger GitHub-App deploy.
+  **Zero secrets needed** (HOSTINGER_DEPLOY_HOOK idea retired).
+- Live-verified end-to-end: 3 articles statically baked on agma.com.sa
+  (page + JSON-LD + HTML CTA + list + sitemap + RSS all ✓).
+- Mobile: bottom nav rebuilt as 4 primary + «المزيد» bottom sheet (edge
+  swipe conflicted with iOS app switcher); Tabs made scrollable earlier.
+
 ## Phase 8e log (2026-08-08) — Generation pipeline E2E debugging
 
 Owner kept hitting generic «تعذر التوليد». Three stacked root causes found
