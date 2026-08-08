@@ -4,7 +4,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3';
 import { draftArticle, type Signal } from '../_shared/article.ts';
-import { LLM_SETUP_MSG, llmConfigured } from '../_shared/llm.ts';
+import { LLM_SETUP_MSG, llmConfigured, llmErrorMessage } from '../_shared/llm.ts';
 import { teamCors } from '../_shared/team-cors.ts';
 
 const schema = z.object({
@@ -92,17 +92,13 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ ok: true, article_id: insert.data.id }),
       { status: 200, headers });
   } catch (e) {
-    const m = (e as Error).message;
-    if (m === 'refused') {
-      return new Response(JSON.stringify({ error: 'refused',
-        message: 'تعذر توليد هذا الموضوع — جرّب صياغة أخرى' }), { status: 422, headers });
+    const msg = llmErrorMessage(e as Error);
+    console.error('generate-article', (e as Error).message);
+    if (msg) {
+      return new Response(JSON.stringify({ error: 'llm', message: msg }),
+        { status: 422, headers });
     }
-    if (m === 'rate_limited') {
-      return new Response(JSON.stringify({ error: 'rate_limited',
-        message: 'وصلنا حد النماذج المجانية اليومي — حاول لاحقاً أو أضف رصيداً/مفتاح Anthropic' }),
-        { status: 429, headers });
-    }
-    console.error('generate-article', m);
-    return new Response(JSON.stringify({ error: 'server' }), { status: 500, headers });
+    return new Response(JSON.stringify({ error: 'server',
+      message: 'خطأ غير متوقع في التوليد — أعد المحاولة' }), { status: 500, headers });
   }
 });

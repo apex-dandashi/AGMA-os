@@ -14,12 +14,12 @@ export function llmConfigured(): boolean {
 export const LLM_SETUP_MSG =
   'التوليد غير مهيأ بعد — أضف OPENROUTER_API_KEY (نماذج مجانية) أو ANTHROPIC_API_KEY في أسرار الدوال ليعمل فوراً';
 
-async function openrouterChat(
+async function openrouterOnce(
   system: string,
   prompt: string,
   maxTokens: number,
   jsonMode: boolean,
-): Promise<string> {
+): Promise<{ ok: true; text: string } | { ok: false; status: number; body: string }> {
   const key = Deno.env.get('OPENROUTER_API_KEY')!;
   const model = Deno.env.get('OPENROUTER_MODEL') || 'openrouter/free';
   const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -37,21 +37,71 @@ async function openrouterChat(
         { role: 'system', content: system },
         { role: 'user', content: prompt },
       ],
-      // بعض النماذج المجانية تتجاهلها — التعقيم الدفاعي أدناه يغطي ذلك
       ...(jsonMode ? { response_format: { type: 'json_object' } } : {}),
     }),
     signal: AbortSignal.timeout(120_000),
   });
+  const bodyText = await res.text();
   if (!res.ok) {
-    const body = (await res.text()).slice(0, 300);
-    console.error('openrouter', res.status, body);
-    if (res.status === 429) throw new Error('rate_limited');
-    throw new Error('provider');
+    console.error('openrouter', res.status, bodyText.slice(0, 400));
+    return { ok: false, status: res.status, body: bodyText.slice(0, 400) };
   }
-  const data = await res.json();
-  const text: string = data?.choices?.[0]?.message?.content ?? '';
-  if (!text.trim()) throw new Error('empty');
-  return text;
+  // OpenRouter قد يعيد 200 وداخله خطأ
+  let data: Record<string, unknown>;
+  try { data = JSON.parse(bodyText); } catch {
+    return { ok: false, status: 502, body: bodyText.slice(0, 200) };
+  }
+  const errObj = data?.error as { message?: string; code?: number } | undefined;
+  if (errObj) {
+    console.error('openrouter inline error', JSON.stringify(errObj).slice(0, 400));
+    return { ok: false, status: errObj.code ?? 502, body: errObj.message ?? 'unknown' };
+  }
+  const text = (data as { choices?: { message?: { content?: string } }[] })
+    ?.choices?.[0]?.message?.content ?? '';
+  if (!text.trim()) return { ok: false, status: 502, body: 'empty completion' };
+  return { ok: true, text };
+}
+
+function throwProviderError(status: number, body: string): never {
+  const b = body.toLowerCase();
+  if (status === 429 || b.includes('rate limit')) throw new Error('rate_limited');
+  if (b.includes('data policy') || b.includes('privacy')) throw new Error('data_policy');
+  throw new Error(`provider:${status}:${body.slice(0, 160)}`);
+}
+
+async function openrouterChat(
+  system: string,
+  prompt: string,
+  maxTokens: number,
+  jsonMode: boolean,
+): Promise<string> {
+  let r = await openrouterOnce(system, prompt, maxTokens, jsonMode);
+  // بعض المجانية ترفض response_format — أعد المحاولة بدونه
+  if (!r.ok && jsonMode && (r.status === 400 || r.status === 404)) {
+    r = await openrouterOnce(system, prompt, maxTokens, false);
+  }
+  if (!r.ok) throwProviderError(r.status, r.body);
+  return r.text;
+}
+
+/** رسالة عربية مفهومة من أخطاء المزود — تستخدمها الدوال في ردودها. */
+export function llmErrorMessage(e: Error): string | null {
+  const m = e.message;
+  if (m === 'rate_limited') {
+    return 'وصلنا حد النماذج المجانية اليومي — حاول لاحقاً أو أضف رصيداً/مفتاح Anthropic';
+  }
+  if (m === 'data_policy') {
+    return 'إعداد الخصوصية في OpenRouter يمنع النماذج المجانية — فعّل «Free model publication» من Settings ← Privacy هناك';
+  }
+  if (m.startsWith('provider:')) {
+    const [, status, detail] = m.split(':');
+    return `مزود التوليد رفض الطلب (${status}): ${detail}`;
+  }
+  if (m === 'bad_json') {
+    return 'النموذج المجاني أعاد نصاً غير صالح — جرّب مجدداً، أو ثبّت نموذجاً أقوى عبر OPENROUTER_MODEL (مثل deepseek/deepseek-chat-v3-0324:free)';
+  }
+  if (m === 'refused') return 'تعذر توليد هذا المحتوى — عدّل الطلب وحاول مجدداً';
+  return null;
 }
 
 /** نص حر (مثل محتوى العملاء). */
@@ -138,6 +188,10 @@ export async function completeJSON<T>(
       maxTokens,
       true,
     );
-    return extractJSON<T>(fixed);
+    try {
+      return extractJSON<T>(fixed);
+    } catch {
+      throw new Error('bad_json');
+    }
   }
 }
