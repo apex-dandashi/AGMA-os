@@ -66,6 +66,26 @@ Owner actions pending: ONE of OPENROUTER_API_KEY (free models) or
 ANTHROPIC_API_KEY (best Arabic quality) — see 8c below; plus
 HOSTINGER_DEPLOY_HOOK_MAIN (daily static rebake).
 
+## Phase 8e log (2026-08-08) — Generation pipeline E2E debugging
+
+Owner kept hitting generic «تعذر التوليد». Three stacked root causes found
+by server-side E2E testing (throwaway prod user via management API, cleaned
+up after):
+1. CORS: supabase-js sends x-supabase-api-version — manual allow-list
+   blocked every browser invoke. Fix: team-cors echoes requested headers.
+2. In-function `auth.getUser()` (and getUser(jwt)) failed — platform
+   returned an HTML error page to the internal auth call. Fix: functions
+   behind verify_jwt=ON now decode the gateway-verified JWT directly
+   (`_shared/auth.ts` verifiedUserId) — no second auth round-trip.
+3. openrouter/free timed out at 120s with 16k max_tokens. Fix: article cap
+   5000 / client-copy 3000 tokens, 110s fetch timeout mapped to a named
+   Arabic «timeout» message.
+
+**Proven live**: production generate-article returned 200 in 60s with a real
+Arabic article (review status, ai flag, clean slug); test artifacts deleted.
+Lesson recorded: never ship a team-JWT function without a real-invoke test —
+bundler success ≠ working function.
+
 ## Phase 8d log (2026-08-08) — Personal profile + team chat
 
 Owner: «وين قسم البروفايل الشخصي وتعديلاته بالسستم والشات العام وبين
