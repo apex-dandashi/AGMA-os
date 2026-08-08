@@ -487,15 +487,21 @@ function ClientAssistant({ profile, onOpenSupport }: {
   }]);
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: 'end' });
   }, [msgs.length]);
 
-  async function ask(e: React.FormEvent) {
-    e.preventDefault();
-    const q = draft.trim();
+  // الأسئلة المقترحة = عناوين المعرفة المتاحة للعملاء (RLS ترشحها تلقائياً)
+  useEffect(() => {
+    getSupabase().from('kb_articles').select('title')
+      .eq('published', true).limit(6)
+      .then(({ data }) => setSuggestions((data ?? []).map((r) => r.title)));
+  }, []);
+
+  async function askQuestion(q: string) {
     if (!q || busy) return;
     setMsgs((m) => [...m, { role: 'user', text: q }]);
     setDraft('');
@@ -556,10 +562,21 @@ function ClientAssistant({ profile, onOpenSupport }: {
             </div>
           </div>
         ))}
+        {msgs.length === 1 && suggestions.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {suggestions.map((q) => (
+              <button key={q} type="button" onClick={() => askQuestion(q)}
+                className="rounded-full border border-gray-dark px-3 py-1.5 text-[11px] text-gray-light transition-colors hover:border-pulse-orange hover:text-pulse-orange">
+                {q}
+              </button>
+            ))}
+          </div>
+        )}
         {busy && <p className="text-[11px] text-gray-medium">يكتب…</p>}
         <div ref={endRef} />
       </div>
-      <form onSubmit={ask} className="flex gap-2 border-t border-gray-dark p-3">
+      <form onSubmit={(e) => { e.preventDefault(); askQuestion(draft.trim()); }}
+        className="flex gap-2 border-t border-gray-dark p-3">
         <input value={draft} onChange={(e) => setDraft(e.target.value)} maxLength={600}
           placeholder="اسألوا عن أي شيء…"
           className="min-w-0 flex-1 rounded-sm border border-gray-dark bg-transparent px-3 py-2 text-sm text-snow placeholder:text-gray-medium focus:border-pulse-orange focus:outline-none" />

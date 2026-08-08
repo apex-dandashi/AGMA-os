@@ -25,15 +25,24 @@ export default function SiteAssistant() {
   const [leadMode, setLeadMode] = useState(false);
   const [lead, setLead] = useState({ name: '', dial: '+966', phone: '' });
   const [leadSent, setLeadSent] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const endRef = useRef<HTMLDivElement>(null);
+
+  // الأسئلة المقترحة = عناوين قاعدة المعرفة المنشورة — تتجدد مع كل مقال جديد
+  useEffect(() => {
+    if (!open || suggestions.length) return;
+    fetch(`${SUPABASE_URL}/rest/v1/kb_articles?published=eq.true&audience=eq.public&select=title&limit=6`,
+      { headers: { apikey: SUPABASE_ANON_KEY, authorization: `Bearer ${SUPABASE_ANON_KEY}` } })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((rows: { title: string }[]) => setSuggestions(rows.map((r) => r.title)))
+      .catch(() => null);
+  }, [open, suggestions.length]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: 'end' });
   }, [msgs.length, leadMode, open]);
 
-  async function ask(e: React.FormEvent) {
-    e.preventDefault();
-    const q = draft.trim();
+  async function askQuestion(q: string) {
     if (!q || busy) return;
     setMsgs((m) => [...m, { role: 'user', text: q }]);
     setDraft('');
@@ -133,6 +142,16 @@ export default function SiteAssistant() {
                 </div>
               </div>
             ))}
+            {msgs.length === 1 && suggestions.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {suggestions.map((q) => (
+                  <button key={q} type="button" onClick={() => askQuestion(q)}
+                    className="rounded-full border border-white/15 px-3 py-1.5 text-[11px] text-gray-300 transition-colors hover:border-[#E8542F] hover:text-[#E8542F]">
+                    {q}
+                  </button>
+                ))}
+              </div>
+            )}
             {busy && <p className="text-[11px] text-gray-500">يكتب…</p>}
             <div ref={endRef} />
           </div>
@@ -167,7 +186,8 @@ export default function SiteAssistant() {
               </div>
             </form>
           ) : (
-            <form onSubmit={ask} className="flex gap-2 border-t border-white/10 p-3">
+            <form onSubmit={(e) => { e.preventDefault(); askQuestion(draft.trim()); }}
+              className="flex gap-2 border-t border-white/10 p-3">
               <input value={draft} onChange={(e) => setDraft(e.target.value)} maxLength={600}
                 placeholder="اكتب سؤالك…"
                 className="min-w-0 flex-1 rounded-md border border-white/15 bg-white/5 px-3 py-2 text-[13px] text-white placeholder:text-gray-500 focus:border-[#E8542F] focus:outline-none" />
