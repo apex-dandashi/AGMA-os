@@ -19,7 +19,7 @@ const schema = z.object({
 });
 
 Deno.serve(async (req) => {
-  const headers = teamCors(req.headers.get('origin'));
+  const headers = teamCors(req);
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers });
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'method_not_allowed' }), { status: 405, headers });
