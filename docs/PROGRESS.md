@@ -66,6 +66,23 @@ Owner actions pending: ONE of OPENROUTER_API_KEY (free models) or
 ANTHROPIC_API_KEY (best Arabic quality) — see 8c below; plus
 HOSTINGER_DEPLOY_HOOK_MAIN (daily static rebake).
 
+## Gap-pack log (2026-08-09) — docs/17 small fixes
+
+Owner: «حزمة الثغرات الصغيرة».
+
+- `20260809070000_gap_pack.sql`: forms.system_key (onboarding trigger
+  retargeted by key, not limit-1) + seeded **CSAT form** (7 fields incl.
+  testimonial consent) auto-requested when a project turns completed —
+  partial-unique keeps one pending per client (multi-project verified).
+- **G2**: /contact multi-step form phone now dial select with flags (L2 LTR
+  layout) composing E.164 for both lead-intake and the WhatsApp handoff.
+- **G1**: complaints admin gained «اربطها بعميل» dropdown → complaints
+  history lands on the client record and feeds quality loops.
+- **B5 soft gate**: project cards show «استقبال العميل غير مكتمل» badge
+  while the client's onboarding request is pending.
+- Deferred (still needs a key/service): G6 CV malware scan.
+- Gauntlet green; migration in production.
+
 ## Phase 7-tail log (2026-08-09) — Drop Forms engine + auto onboarding (B5)
 
 Owner: «كمل ذيل المرحلة ٧ — Onboarding + Drop Forms».

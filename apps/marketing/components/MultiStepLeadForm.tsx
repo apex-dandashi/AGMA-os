@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import Magnetic from './ui/Magnetic';
 import Tilt from './ui/Tilt';
+import { DIAL_CODES } from '@agma/ui';
 
 const services = [
   { 
@@ -129,6 +130,7 @@ export default function MultiStepLeadForm() {
     jobTitle: '',
     email: '',
     phone: '',
+    dial: '+966',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -233,7 +235,7 @@ export default function MultiStepLeadForm() {
     message += `القطاع: ${formData.sector}\n`;
     message += `الشركة: ${formData.company}\n`;
     message += `المسمى الوظيفي: ${formData.jobTitle}\n`;
-    message += `الهاتف: ${formData.phone}\n`;
+    message += `الهاتف: ${formData.dial}${formData.phone.trim().replace(/^0+/, '')}\n`;
     message += `البريد: ${formData.email}`;
 
     return encodeURIComponent(message);
@@ -272,7 +274,7 @@ export default function MultiStepLeadForm() {
           utm,
           name: formData.name,
           company: formData.company,
-          phone: formData.phone,
+          phone: formData.dial + formData.phone.trim().replace(/^0+/, ''),
           email: formData.email,
           services: [selectedServiceTitles, ...formData.subServices].filter(Boolean).join('، '),
           budget: `${formData.budget} — ${formData.urgency}`,
@@ -335,7 +337,7 @@ export default function MultiStepLeadForm() {
             setStep(1);
             setFormData({
                 services: [], subServices: [], otherServiceText: '', budget: '', urgency: '', details: '', name: '',
-                company: '', sector: '', jobTitle: '', email: '', phone: ''
+                company: '', sector: '', jobTitle: '', email: '', phone: '', dial: '+966'
             });
           }}
           className="text-pulse-orange font-bold text-sm hover:underline tracking-widest uppercase"
@@ -644,14 +646,26 @@ export default function MultiStepLeadForm() {
                     value={formData.jobTitle} 
                     onChange={(v: string) => setFormData({...formData, jobTitle: v})} 
                   />
-                   <FormField 
-                    icon={Phone} 
-                    label="رقم الجوال" 
-                    placeholder="+966 5..." 
-                    value={formData.phone} 
-                    dir="ltr"
-                    onChange={(v: string) => setFormData({...formData, phone: v})} 
-                  />
+                   <div>
+                    <label className="mb-2 flex items-center gap-2 text-sm text-gray-light">
+                      <Phone className="h-4 w-4 text-pulse-orange" aria-hidden /> رقم الجوال
+                    </label>
+                    {/* المفتاح يسار والرقم يمين (قانون L2) */}
+                    <div dir="ltr" className="flex gap-2">
+                      <select aria-label="مفتاح الدولة" value={formData.dial}
+                        onChange={(e) => setFormData({ ...formData, dial: e.target.value })}
+                        className="w-32 shrink-0 rounded-lg border border-white/10 bg-white/5 px-2 py-3 text-sm text-snow focus:border-pulse-orange focus:outline-none">
+                        {DIAL_CODES.map((d) => (
+                          <option key={d.code} value={d.code} className="bg-pure-ink">
+                            {d.flag} {d.code} {d.country}
+                          </option>
+                        ))}
+                      </select>
+                      <input inputMode="tel" placeholder="5XXXXXXXX" value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        className="min-w-0 flex-1 rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-snow placeholder:text-gray-medium focus:border-pulse-orange focus:outline-none" />
+                    </div>
+                  </div>
                 </div>
 
                 <FormField 

@@ -24,11 +24,15 @@ export function VoiceTab() {
     queryKey: key,
     queryFn: async () => {
       const s = getSupabase();
-      const [complaints, feedback] = await Promise.all([
+      const [complaints, feedback, clients] = await Promise.all([
         s.from('complaints').select('*').order('created_at', { ascending: false }),
         s.from('feedback_entries').select('*').order('created_at', { ascending: false }).limit(50),
+        s.from('clients').select('id, company').order('company'),
       ]);
-      return { complaints: complaints.data ?? [], feedback: feedback.data ?? [] };
+      return {
+        complaints: complaints.data ?? [], feedback: feedback.data ?? [],
+        clients: clients.data ?? [],
+      };
     },
   });
   const patch = useAppMutation(
@@ -97,6 +101,16 @@ export function VoiceTab() {
                 <Badge variant="accent">تجاوز مهلة الرد الأول</Badge>
               )}
               <span className="ms-auto flex items-center gap-2">
+                {/* G1: ربط الشكوى بعميل مسجل — يظهر تاريخها في ملفه ويغذي الجودة */}
+                <Select value={c.client_id ?? ''} aria-label="اربطها بعميل"
+                  className="w-40"
+                  onChange={(e) => patch.mutate({ id: c.id,
+                    p: { client_id: e.target.value || null } })}>
+                  <option value="">بلا عميل مرتبط</option>
+                  {data.clients.map((cl) => (
+                    <option key={cl.id} value={cl.id}>{cl.company}</option>
+                  ))}
+                </Select>
                 <Select value={c.status} aria-label={`حالة ${c.public_reference}`}
                   className="w-36 py-1 text-xs"
                   onChange={(e) => {

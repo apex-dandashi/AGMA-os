@@ -72,6 +72,16 @@ function useProjects() {
 export default function ProjectsPanel() {
   const { data: projects, isLoading } = useProjects();
   const { data: clients } = useClients();
+  // البوابة الناعمة (B5): عملاء لم يكملوا نموذج الاستقبال بعد
+  const { data: pendingOnboarding } = useQuery({
+    queryKey: ['onboarding_pending'],
+    queryFn: async () => {
+      const { data } = await getSupabase().from('form_requests')
+        .select('client_id, forms!inner(system_key)')
+        .eq('status', 'pending').eq('forms.system_key', 'onboarding');
+      return new Set((data ?? []).map((r) => r.client_id));
+    },
+  });
   const searchParams = useSearchParams();
   const router = useRouter();
   const selectedId = searchParams.get('id');
@@ -133,6 +143,7 @@ export default function ProjectsPanel() {
           {visible.map((p) => (
             <ProjectCard key={p.id} project={p}
               clientName={clients?.find((c) => c.id === p.client_id)?.company ?? ''}
+              onboardingPending={pendingOnboarding?.has(p.client_id) ?? false}
               onOpen={() => router.replace(`/projects/?id=${p.id}`)} />
           ))}
         </div>
@@ -167,8 +178,8 @@ function ProjectsCsvButton() {
   );
 }
 
-function ProjectCard({ project, clientName, onOpen }:
-  { project: Project; clientName: string; onOpen: () => void }) {
+function ProjectCard({ project, clientName, onboardingPending = false, onOpen }:
+  { project: Project; clientName: string; onboardingPending?: boolean; onOpen: () => void }) {
   return (
     <Card className="cursor-pointer p-4" onClick={onOpen} role="button" tabIndex={0}
       onKeyDown={(e) => e.key === 'Enter' && onOpen()}>
@@ -178,7 +189,12 @@ function ProjectCard({ project, clientName, onOpen }:
           {PROJECT_STATUS[project.status]}
         </Badge>
       </div>
-      <p className="mt-0.5 text-sm text-gray-light">{clientName}</p>
+      <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-sm text-gray-light">
+        {clientName}
+        {onboardingPending && (
+          <Badge variant="outline">استقبال العميل غير مكتمل</Badge>
+        )}
+      </p>
       <div className="mt-3 flex items-center gap-1" aria-label="مرحلة منهجية AGMA">
         {METHOD_PHASES.map((ph) => (
           <span key={ph}
