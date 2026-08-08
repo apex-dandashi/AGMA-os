@@ -22,7 +22,15 @@ export const metadata: Metadata = {
     default: 'AGMA OS',
   },
   description: 'نظام تشغيل وكالة جيل الذكاء الاصطناعي',
-  icons: { icon: '/favicon-agma.webp' },
+  icons: {
+    icon: '/favicon-agma.webp',
+    apple: '/apple-touch-icon.png',
+  },
+  appleWebApp: {
+    capable: true,
+    title: 'AGMA OS',
+    statusBarStyle: 'black-translucent',
+  },
   robots: { index: false, follow: false },
 };
 
