@@ -27,3 +27,10 @@ verify_jwt = false
 # Public voice/careers forms — same rationale as lead-intake.
 [functions.public-forms]
 verify_jwt = false
+
+# Public lead-magnet website audit + cron-invoked site monitor (L9).
+[functions.website-audit]
+verify_jwt = false
+
+[functions.site-monitor]
+verify_jwt = false

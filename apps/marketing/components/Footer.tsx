@@ -94,6 +94,7 @@ const Footer = () => {
           <div className="flex flex-col gap-3">
             <span className="text-[10px] text-pulse-orange font-bold uppercase tracking-widest font-mono">الثقة والحوكمة</span>
             <div className="flex flex-wrap gap-x-6 gap-y-2">
+              <Link href="/tools/website-audit" className="hover:text-snow transition-colors">فحص موقعك مجاناً</Link>
               <Link href="/complaints" className="hover:text-snow transition-colors">الشكاوى والملاحظات</Link>
               <Link href="/feedback" className="hover:text-snow transition-colors">قيّم تجربتك</Link>
               <Link href="/careers" className="hover:text-snow transition-colors">الوظائف</Link>

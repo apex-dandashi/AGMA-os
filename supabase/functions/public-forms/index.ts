@@ -66,6 +66,9 @@ const applySchema = z.object({
   website: z.string().optional(),
 });
 
+// Turnstile token يُقبل في كل الأنواع ويُتحقق منه عند توفر السر
+const turnstileField = z.string().optional();
+
 const trackSchema = z.object({
   action: z.literal('track'),
   reference: z.string().trim().regex(/^CMP-\d{4}-\d{5}$/),
@@ -137,6 +140,38 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   );
 
+  // Turnstile (L9): يفعَّل تلقائياً فور إضافة TURNSTILE_SECRET في أسرار الدوال
+  const tsSecret = Deno.env.get('TURNSTILE_SECRET');
+  if (tsSecret && body.action !== 'track') {
+    const token = (raw as { turnstile?: string }).turnstile ?? '';
+    const v = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ secret: tsSecret, response: token }),
+    }).then((r) => r.json()).catch(() => ({ success: false }));
+    if (!v.success) {
+      return new Response(JSON.stringify({ error: 'turnstile' }), { status: 400, headers });
+    }
+  }
+
+  // Resend (يفعَّل بمفتاح RESEND_API_KEY): إرسال غير معطِّل — فشله لا يفشل الطلب
+  const sendEmail = async (to: string, subject: string, text: string) => {
+    const rk = Deno.env.get('RESEND_API_KEY');
+    if (!rk || !to) return;
+    try {
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { authorization: `Bearer ${rk}`, 'content-type': 'application/json' },
+        body: JSON.stringify({
+          from: 'AGMA <care@agma.com.sa>', to: [to], subject, text,
+        }),
+        signal: AbortSignal.timeout(10_000),
+      });
+    } catch (e) {
+      console.error('resend', (e as Error).message);
+    }
+  };
+
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
   const salt = Deno.env.get('RATE_SALT') ?? 'agma-intake';
   const digest = await crypto.subtle.digest(
@@ -160,6 +195,9 @@ Deno.serve(async (req) => {
       console.error('complaint insert', error.code);
       return new Response(JSON.stringify({ error: 'server' }), { status: 500, headers });
     }
+    await sendEmail(body.email ?? '',
+      `استلمنا شكواك — ${data.public_reference}`,
+      `شكراً لتواصلك مع AGMA.\n\nرقم شكواك المرجعي: ${data.public_reference}\nالموضوع: ${body.subject}\n\nسيصلك ردنا الأول خلال يوم عمل بحسب سياسة الخدمة، ويمكنك متابعة الحالة عبر agma.com.sa/complaints (تتبع شكوى سابقة).\n\nمؤسسة عامر عبدالله بن عثمان الغامدي للخدمات التسويقية «AGMA»`);
     return new Response(JSON.stringify({ ok: true, reference: data.public_reference }),
       { status: 200, headers });
   }
@@ -224,6 +262,9 @@ Deno.serve(async (req) => {
       console.error('application insert', error.code);
       return new Response(JSON.stringify({ error: 'server' }), { status: 500, headers });
     }
+    await sendEmail(row.email,
+      `شكراً لانضمامك إلى رحلة AGMA — ${data.public_reference}`,
+      `مرحباً ${row.full_name}،\n\nاستلمنا طلبك تحت الرقم ${data.public_reference}.\nسيراجع فريقنا الطلب وفق متطلبات الدور، وسنشعرك عند وجود تحديث على حالته.\n\nمؤسسة عامر عبدالله بن عثمان الغامدي للخدمات التسويقية «AGMA»`);
     return new Response(JSON.stringify({ ok: true, reference: data.public_reference }),
       { status: 200, headers });
   }

@@ -846,6 +846,69 @@ export type Database = {
         }
         Relationships: []
       }
+      client_sites: {
+        Row: {
+          active: boolean
+          client_id: string | null
+          created_at: string
+          down_since: string | null
+          id: string
+          label: string | null
+          last_checked_at: string | null
+          last_error: string | null
+          last_response_ms: number | null
+          last_status: number | null
+          ssl_expires_on: string | null
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          active?: boolean
+          client_id?: string | null
+          created_at?: string
+          down_since?: string | null
+          id?: string
+          label?: string | null
+          last_checked_at?: string | null
+          last_error?: string | null
+          last_response_ms?: number | null
+          last_status?: number | null
+          ssl_expires_on?: string | null
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          active?: boolean
+          client_id?: string | null
+          created_at?: string
+          down_since?: string | null
+          id?: string
+          label?: string | null
+          last_checked_at?: string | null
+          last_error?: string | null
+          last_response_ms?: number | null
+          last_status?: number | null
+          ssl_expires_on?: string | null
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_sites_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_360"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_sites_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           budget_tier: string | null

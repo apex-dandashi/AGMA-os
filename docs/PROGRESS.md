@@ -74,6 +74,41 @@ stamp/signature + per-user signatures, and «أين أدخل السجل التج
   where to enter client CR/VAT — discoverability fix).
 - Gauntlet green; migration pushed to production.
 
+## Integrations P0 log (2026-08-08) — seventh owner study, approved slice
+
+Owner approved my assessment of the free-APIs study: build the gold
+(audit tool, client monitoring, UTM/QR, Turnstile/Resend hooks), skip the
+self-hosting trap and duplicate infra.
+
+- `20260808190000_integrations.sql`: client_sites (status/response_ms/
+  ssl_expires_on/down_since) + alert trigger (down transition → site_down
+  notification, verified; SSL 30/14/7/3/1-day ladder, verified) + pg_cron
+  every 6h → net.http_post to site-monitor + agma.com.sa/ops seeds.
+- `site-monitor` function (deployed, verified in production: both AGMA
+  sites checked live, 281/180ms): input-less public function (abuse-safe:
+  checks only registered sites, self rate-limited 6/h), HTTP status +
+  response time + TLS cert expiry attempt via Deno.connectTls handshake.
+- `website-audit` function (deployed): lead-first design — the request
+  itself becomes a tagged pipeline lead even if PageSpeed fails (verified:
+  lead row with «فاحص المواقع» tag on a ps_429 failure). Keyless quota is
+  congested → PAGESPEED_API_KEY (free) listed as owner action; UI shows
+  «سنرسل التقرير يدوياً خلال يوم عمل» on audit_failed (lead is in hand).
+- public-forms: Turnstile verification + Resend confirmation emails
+  (complaint w/ tracking instructions, application receipt) — both
+  activate automatically when TURNSTILE_SECRET / RESEND_API_KEY appear in
+  function secrets; email failures never fail the submission. website-audit
+  has the same Turnstile hook. All three functions in config.toml
+  verify_jwt=false BEFORE deploy (L9 — lesson applied).
+- Marketing: /tools/website-audit (score rings, LCP, Arabic opportunity
+  labels, CTA to /contact) + footer «فحص موقعك مجاناً».
+- Ops «الموقع»: مراقبة المواقع block (live status dots, response ms, SSL
+  countdown, client link, فحص الآن) + أدوات الحملات (UTM builder w/ copy,
+  QR generator client-side via qrcode-generator, SVG download).
+- Owner actions to finish the round: PAGESPEED_API_KEY (free, Google
+  Cloud), TURNSTILE keys (Cloudflare), RESEND_API_KEY + DNS records for
+  agma.com.sa — all into Supabase function secrets, never chat.
+- Gauntlet green; migration + 3 functions live in production; shipped.
+
 ## Owner laws round log (2026-08-08) — docs/17
 
 Owner: «ملاحظاتي مكررة… كيف نخليها قوانين؟ وقبل المرحلة ٧ نراجع الربط
