@@ -174,7 +174,9 @@ function Chrome({ profile, children }: { profile: Tables<'profiles'>; children: 
       href={item.href}
       aria-current={pathname === item.href ? 'page' : undefined}
       className={`rounded-sm transition-colors focus-visible:ring-2 focus-visible:ring-pulse-orange/60 focus:outline-none ${
-        mobile ? 'flex-1 py-2.5 text-center text-xs' : 'px-3 py-1.5 text-sm'
+        mobile
+          ? 'shrink-0 snap-start whitespace-nowrap px-4 py-3 text-center text-sm'
+          : 'px-3 py-1.5 text-sm'
       } ${
         pathname === item.href
           ? 'bg-pulse-orange/15 text-pulse-orange'
@@ -235,8 +237,10 @@ function Chrome({ profile, children }: { profile: Tables<'profiles'>; children: 
       </header>
       <main id="main" className="p-4 md:p-6">{children}</main>
       {/* Mobile bottom navigation */}
+      {/* شريط جوال ينزلق أفقياً — ١٤ قسماً لا تنحشر (طلب المالك 2026-08-08) */}
       <nav aria-label="mobile"
-        className="fixed inset-x-0 bottom-0 z-40 flex border-t border-gray-dark bg-pure-ink/95 backdrop-blur md:hidden">
+        className="fixed inset-x-0 bottom-0 z-40 flex snap-x gap-1 overflow-x-auto border-t border-gray-dark bg-pure-ink/95 px-2 backdrop-blur [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:hidden"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         {NAV.map((i) => navLink(i, true))}
       </nav>
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />

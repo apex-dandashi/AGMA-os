@@ -314,7 +314,9 @@ export default function BlogAdmin() {
               <span className="text-xs text-gray-medium">
                 {a.published_at && new Date(a.published_at).toLocaleDateString('ar-SA')}
               </span>
-              <a href={`https://agma.com.sa/blog/${a.slug}/`} target="_blank" rel="noreferrer"
+              {/* القارئ الفوري يعمل لحظة النشر؛ الصفحة الثابتة تُخبز في البناء اليومي */}
+              <a href={`https://agma.com.sa/blog/read/?slug=${encodeURIComponent(a.slug)}`}
+                target="_blank" rel="noreferrer"
                 className="ms-auto flex items-center gap-1 text-xs text-pulse-orange hover:underline">
                 <ExternalLink className="h-3 w-3" aria-hidden /> افتحه في الموقع
               </a>
