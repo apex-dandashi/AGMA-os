@@ -9,6 +9,26 @@ project_id = "agma-os"
 [analytics]
 enabled = false
 
+# Auth URL configuration — mirrors Authentication → URL Configuration on the
+# hosted project (corrected 2026-08-08). site_url had been left at Supabase's
+# default http://localhost:3000, so GoTrue discarded the redirectTo the app
+# sends and every password-reset email pointed at localhost.
+#
+# site_url deliberately stays the production ops URL: it is only the fallback
+# used when a request carries no redirectTo (or one that isn't allow-listed),
+# and both apps always pass an explicit redirectTo. Local dev keeps working
+# through additional_redirect_urls, and `supabase config push` can't reinstate
+# the localhost fallback on production.
+[auth]
+site_url = "https://ops.agma.com.sa"
+additional_redirect_urls = [
+  "https://ops.agma.com.sa/**",
+  "https://agma.com.sa/**",
+  "https://staging.agma.com.sa/**",
+  "http://localhost:3001/**", # ops dev server
+  "http://localhost:3000/**", # marketing dev server
+]
+
 # TOTP 2FA — mandatory for team roles (docs/05 §B11.4). Hosted project:
 # verify Auth → Multi-Factor is enabled in the dashboard too.
 [auth.mfa.totp]

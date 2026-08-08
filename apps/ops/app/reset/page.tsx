@@ -14,6 +14,8 @@ export default function ResetPage() {
   const [mode, setMode] = useState<'checking' | 'request' | 'set'>('checking');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [needsMfa, setNeedsMfa] = useState(false);
+  const [mfaCode, setMfaCode] = useState('');
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | undefined>();
   const [busy, setBusy] = useState(false);
@@ -21,11 +23,17 @@ export default function ResetPage() {
 
   useEffect(() => {
     const supabase = getSupabase();
-    supabase.auth.getSession().then(({ data }) => {
-      setMode(data.session ? 'set' : 'request');
-    });
+    async function evaluate() {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) { setMode('request'); return; }
+      // حساب عليه توثيق ثنائي وجلسة الرابط مستوى أول؟ نطلب الرمز قبل التغيير
+      const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      setNeedsMfa(aal?.nextLevel === 'aal2' && aal.currentLevel !== 'aal2');
+      setMode('set');
+    }
+    evaluate();
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') setMode('set');
+      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') evaluate();
     });
     return () => sub.subscription.unsubscribe();
   }, []);
@@ -50,9 +58,45 @@ export default function ResetPage() {
     }
     setBusy(true);
     setErr(undefined);
-    const { error } = await getSupabase().auth.updateUser({ password });
-    if (error) setErr('تعذر تعيين كلمة المرور');
-    else router.replace('/');
+    const supabase = getSupabase();
+
+    // التوثيق الثنائي أولاً إن لزم — بدونه يرفض Supabase تغيير كلمة المرور
+    if (needsMfa) {
+      if (mfaCode.trim().length < 6) {
+        setErr('أدخل رمز التحقق من تطبيق المصادقة');
+        setBusy(false);
+        return;
+      }
+      const { data: factors } = await supabase.auth.mfa.listFactors();
+      const factor = factors?.totp?.find((f) => f.status === 'verified');
+      if (factor) {
+        const { data: challenge } = await supabase.auth.mfa.challenge({ factorId: factor.id });
+        const { error: vErr } = challenge
+          ? await supabase.auth.mfa.verify({
+              factorId: factor.id, challengeId: challenge.id, code: mfaCode.trim(),
+            })
+          : { error: new Error('challenge') };
+        if (vErr) {
+          setErr('رمز التحقق غير صحيح');
+          setBusy(false);
+          return;
+        }
+        setNeedsMfa(false);
+      }
+    }
+
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) {
+      const m = error.message.toLowerCase();
+      if (m.includes('different')) setErr('الجديدة تطابق القديمة — اختر كلمة مرور مختلفة');
+      else if (m.includes('aal2') || m.includes('mfa')) setErr('مطلوب رمز التحقق بخطوتين أولاً');
+      else if (m.includes('session')) {
+        setErr('انتهت صلاحية الرابط — اطلب رابطاً جديداً');
+        setMode('request');
+      } else if (m.includes('weak') || m.includes('password')) {
+        setErr('كلمة المرور لا تحقق الشروط — أطول وأكثر تنوعاً');
+      } else setErr(`تعذر التعيين: ${error.message}`);
+    } else router.replace('/');
     setBusy(false);
   }
 
@@ -81,6 +125,12 @@ export default function ResetPage() {
             <Input type="password" required dir="ltr" label="كلمة المرور الجديدة"
               value={password} onChange={(e) => setPassword(e.target.value)} error={err}
               hint="١٠ أحرف على الأقل" />
+            {needsMfa && (
+              <Input dir="ltr" inputMode="numeric" maxLength={6}
+                label="رمز التحقق بخطوتين"
+                hint="حسابك محمي بالتوثيق الثنائي — أدخل الرمز من تطبيق المصادقة"
+                value={mfaCode} onChange={(e) => setMfaCode(e.target.value)} />
+            )}
             <Button type="submit" loading={busy} className="w-full" size="sm">
               حفظ والدخول
             </Button>
