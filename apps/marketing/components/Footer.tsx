@@ -91,9 +91,18 @@ const Footer = () => {
             </div>
           </div>
 
-          <div className="flex gap-6">
-            <Link href="/privacy-policy" className="hover:text-snow transition-colors">سياسة الخصوصية</Link>
-            <Link href="/terms" className="hover:text-snow transition-colors">الشروط والأحكام</Link>
+          <div className="flex flex-col gap-3">
+            <span className="text-[10px] text-pulse-orange font-bold uppercase tracking-widest font-mono">الثقة والحوكمة</span>
+            <div className="flex flex-wrap gap-x-6 gap-y-2">
+              <Link href="/complaints" className="hover:text-snow transition-colors">الشكاوى والملاحظات</Link>
+              <Link href="/feedback" className="hover:text-snow transition-colors">قيّم تجربتك</Link>
+              <Link href="/careers" className="hover:text-snow transition-colors">الوظائف</Link>
+              <Link href="/trust" className="hover:text-snow transition-colors">مركز الثقة</Link>
+              <Link href="/trust#responsible-ai" className="hover:text-snow transition-colors">الاستخدام المسؤول للذكاء الاصطناعي</Link>
+              <Link href="/trust#accessibility" className="hover:text-snow transition-colors">إمكانية الوصول</Link>
+              <Link href="/privacy-policy" className="hover:text-snow transition-colors">سياسة الخصوصية</Link>
+              <Link href="/terms" className="hover:text-snow transition-colors">الشروط والأحكام</Link>
+            </div>
           </div>
         </div>
       </div>

@@ -8,6 +8,7 @@ import { PenLine } from 'lucide-react';
 import { getSupabase } from '../lib/supabase';
 import { keys, useAppMutation } from '../lib/queries';
 import { readImageAsDataUri } from '../lib/images';
+import { CareersSection } from './PublicLayerAdmin';
 
 /**
  * الأدوار هنا «مستويات صلاحية» أمنية ثلاثية (كلٌّ يشمل ما تحته) — أما
@@ -158,6 +159,8 @@ export default function TeamPanel({ me }: { me: Tables<'profiles'> }) {
       <h1 className="mb-4 text-xl font-black">الفريق</h1>
 
       <MySignatureCard me={me} />
+
+      {(isAdmin || me.role === 'hr') && <CareersSection />}
 
       {isAdmin && (
         <form onSubmit={invite} className="mb-5 flex flex-wrap items-end gap-2 rounded-sm border border-gray-dark p-3">

@@ -11,6 +11,7 @@ import type { Enums, Tables } from '@agma/db';
 import { getSupabase } from '../lib/supabase';
 import { useAppMutation } from '../lib/queries';
 import { useProfile } from './AppShell';
+import { VoiceTab } from './PublicLayerAdmin';
 
 /**
  * الحوكمة والامتثال (docs/15 — IMS Phase 1): معايير مُصدَّرة، ضوابط بربط
@@ -35,6 +36,7 @@ export default function ImsPanel() {
         { key: 'obligations', label: 'الالتزامات' },
         { key: 'privacy', label: 'الخصوصية' },
         { key: 'capa', label: 'عدم المطابقة' },
+        { key: 'voice', label: 'صوت العميل' },
         { key: 'ai', label: 'الذكاء الاصطناعي' },
       ]} />
       <div className="mt-4">
@@ -44,6 +46,7 @@ export default function ImsPanel() {
         {tab === 'obligations' && <ObligationsTab />}
         {tab === 'privacy' && <PrivacyTab />}
         {tab === 'capa' && <CapaTab />}
+        {tab === 'voice' && <VoiceTab />}
         {tab === 'ai' && <AiTab />}
       </div>
     </div>

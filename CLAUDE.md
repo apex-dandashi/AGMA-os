@@ -20,6 +20,7 @@ All specifications live in `/docs` — read the relevant one before touching its
 - `docs/13-contract-library-reference.md` — third owner study (contract template library); P0 templates+clauses built, rest gated with triggers
 - `docs/14-contract-library-v2.md` — fourth owner study (33-template library + org identity + build rules); 12 new types + org_settings built, SCC/B2C/signature gated
 - `docs/15-ims-reference.md` — fifth owner study (IMS: ISO/PDPL/NCA audit-readiness); Phase-1 core built (frameworks/controls/risks/ROPA/DSAR/breaches/CAPA), ISO catalogs+Audit Room+BCMS gated
+- `docs/16-public-layer-reference.md` — sixth owner study (complaints/feedback portal, careers+ATS w/ MHRSD rules, trust center); core built incl. publish gate + escalations, question banks+interview validations gated to first published job
 - `docs/references/` — real quotation/invoice PDFs + CR certificate = visual ground truth for generator QA
 
 ## Stack

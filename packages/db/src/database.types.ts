@@ -444,6 +444,253 @@ export type Database = {
         }
         Relationships: []
       }
+      career_applications: {
+        Row: {
+          accommodations_needed: string | null
+          arabic_level: string | null
+          city: string | null
+          cover_note: string | null
+          created_at: string
+          email: string
+          english_level: string | null
+          experience_level: string | null
+          full_name: string
+          id: string
+          job_id: string | null
+          linkedin_url: string | null
+          phone: string | null
+          portfolio_url: string | null
+          privacy_notice_version: string
+          public_reference: string
+          rejection_reason: string | null
+          role_id: string | null
+          salary_range: string | null
+          start_availability: string | null
+          status: string
+          talent_pool_consent: boolean
+          talent_pool_until: string | null
+          updated_at: string
+          work_model_pref: string | null
+        }
+        Insert: {
+          accommodations_needed?: string | null
+          arabic_level?: string | null
+          city?: string | null
+          cover_note?: string | null
+          created_at?: string
+          email: string
+          english_level?: string | null
+          experience_level?: string | null
+          full_name: string
+          id?: string
+          job_id?: string | null
+          linkedin_url?: string | null
+          phone?: string | null
+          portfolio_url?: string | null
+          privacy_notice_version?: string
+          public_reference: string
+          rejection_reason?: string | null
+          role_id?: string | null
+          salary_range?: string | null
+          start_availability?: string | null
+          status?: string
+          talent_pool_consent?: boolean
+          talent_pool_until?: string | null
+          updated_at?: string
+          work_model_pref?: string | null
+        }
+        Update: {
+          accommodations_needed?: string | null
+          arabic_level?: string | null
+          city?: string | null
+          cover_note?: string | null
+          created_at?: string
+          email?: string
+          english_level?: string | null
+          experience_level?: string | null
+          full_name?: string
+          id?: string
+          job_id?: string | null
+          linkedin_url?: string | null
+          phone?: string | null
+          portfolio_url?: string | null
+          privacy_notice_version?: string
+          public_reference?: string
+          rejection_reason?: string | null
+          role_id?: string | null
+          salary_range?: string | null
+          start_availability?: string | null
+          status?: string
+          talent_pool_consent?: boolean
+          talent_pool_until?: string | null
+          updated_at?: string
+          work_model_pref?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "career_applications_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "career_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "career_applications_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "career_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      career_departments: {
+        Row: {
+          id: string
+          name_ar: string
+          sort: number
+        }
+        Insert: {
+          id?: string
+          name_ar: string
+          sort?: number
+        }
+        Update: {
+          id?: string
+          name_ar?: string
+          sort?: number
+        }
+        Relationships: []
+      }
+      career_jobs: {
+        Row: {
+          benefits: string | null
+          close_date: string | null
+          created_at: string
+          description_ar: string | null
+          employment_type: string | null
+          experience_requirement: string | null
+          id: string
+          localization_review: string
+          location: string | null
+          official_occupation_code: string | null
+          open_date: string | null
+          public_title_ar: string
+          published_at: string | null
+          qualification: string | null
+          questions: Json | null
+          responsibilities: string | null
+          role_id: string
+          salary_max: number | null
+          salary_min: number | null
+          skills: string | null
+          slug: string
+          status: string
+          updated_at: string
+          work_model: string | null
+          working_hours: string | null
+        }
+        Insert: {
+          benefits?: string | null
+          close_date?: string | null
+          created_at?: string
+          description_ar?: string | null
+          employment_type?: string | null
+          experience_requirement?: string | null
+          id?: string
+          localization_review?: string
+          location?: string | null
+          official_occupation_code?: string | null
+          open_date?: string | null
+          public_title_ar: string
+          published_at?: string | null
+          qualification?: string | null
+          questions?: Json | null
+          responsibilities?: string | null
+          role_id: string
+          salary_max?: number | null
+          salary_min?: number | null
+          skills?: string | null
+          slug: string
+          status?: string
+          updated_at?: string
+          work_model?: string | null
+          working_hours?: string | null
+        }
+        Update: {
+          benefits?: string | null
+          close_date?: string | null
+          created_at?: string
+          description_ar?: string | null
+          employment_type?: string | null
+          experience_requirement?: string | null
+          id?: string
+          localization_review?: string
+          location?: string | null
+          official_occupation_code?: string | null
+          open_date?: string | null
+          public_title_ar?: string
+          published_at?: string | null
+          qualification?: string | null
+          questions?: Json | null
+          responsibilities?: string | null
+          role_id?: string
+          salary_max?: number | null
+          salary_min?: number | null
+          skills?: string | null
+          slug?: string
+          status?: string
+          updated_at?: string
+          work_model?: string | null
+          working_hours?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "career_jobs_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "career_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      career_roles: {
+        Row: {
+          active: boolean
+          created_at: string
+          department_id: string
+          id: string
+          portfolio_label: string | null
+          title_ar: string
+          title_en: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          department_id: string
+          id?: string
+          portfolio_label?: string | null
+          title_ar: string
+          title_en?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          department_id?: string
+          id?: string
+          portfolio_label?: string | null
+          title_ar?: string
+          title_en?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "career_roles_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "career_departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checklist_runs: {
         Row: {
           allocation_id: string | null
@@ -610,6 +857,153 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
+      }
+      complaints: {
+        Row: {
+          assigned_to: string | null
+          category: string
+          channel: string | null
+          client_id: string | null
+          closed_at: string | null
+          complainant_type: string
+          confidential_flag: boolean
+          created_at: string
+          description: string
+          desired_resolution: string | null
+          email: string | null
+          first_response_at: string | null
+          first_response_due_at: string | null
+          id: string
+          incident_date: string | null
+          is_current_client: boolean | null
+          linked_breach_id: string | null
+          linked_ncr_id: string | null
+          name: string | null
+          organization: string | null
+          phone: string | null
+          privacy_incident_flag: boolean
+          privacy_notice_version: string
+          public_reference: string
+          resolution: string | null
+          resolution_due_at: string | null
+          resolved_at: string | null
+          root_cause: string | null
+          security_incident_flag: boolean
+          severity: string
+          source_page: string | null
+          status: Database["public"]["Enums"]["complaint_status"]
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          category: string
+          channel?: string | null
+          client_id?: string | null
+          closed_at?: string | null
+          complainant_type?: string
+          confidential_flag?: boolean
+          created_at?: string
+          description: string
+          desired_resolution?: string | null
+          email?: string | null
+          first_response_at?: string | null
+          first_response_due_at?: string | null
+          id?: string
+          incident_date?: string | null
+          is_current_client?: boolean | null
+          linked_breach_id?: string | null
+          linked_ncr_id?: string | null
+          name?: string | null
+          organization?: string | null
+          phone?: string | null
+          privacy_incident_flag?: boolean
+          privacy_notice_version?: string
+          public_reference: string
+          resolution?: string | null
+          resolution_due_at?: string | null
+          resolved_at?: string | null
+          root_cause?: string | null
+          security_incident_flag?: boolean
+          severity?: string
+          source_page?: string | null
+          status?: Database["public"]["Enums"]["complaint_status"]
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string
+          channel?: string | null
+          client_id?: string | null
+          closed_at?: string | null
+          complainant_type?: string
+          confidential_flag?: boolean
+          created_at?: string
+          description?: string
+          desired_resolution?: string | null
+          email?: string | null
+          first_response_at?: string | null
+          first_response_due_at?: string | null
+          id?: string
+          incident_date?: string | null
+          is_current_client?: boolean | null
+          linked_breach_id?: string | null
+          linked_ncr_id?: string | null
+          name?: string | null
+          organization?: string | null
+          phone?: string | null
+          privacy_incident_flag?: boolean
+          privacy_notice_version?: string
+          public_reference?: string
+          resolution?: string | null
+          resolution_due_at?: string | null
+          resolved_at?: string | null
+          root_cause?: string | null
+          security_incident_flag?: boolean
+          severity?: string
+          source_page?: string | null
+          status?: Database["public"]["Enums"]["complaint_status"]
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "complaints_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "complaints_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_360"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "complaints_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "complaints_linked_breach_id_fkey"
+            columns: ["linked_breach_id"]
+            isOneToOne: false
+            referencedRelation: "privacy_breaches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "complaints_linked_ncr_id_fkey"
+            columns: ["linked_ncr_id"]
+            isOneToOne: false
+            referencedRelation: "nonconformities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       contacts: {
         Row: {
@@ -1243,6 +1637,66 @@ export type Database = {
             columns: ["playbook_id"]
             isOneToOne: false
             referencedRelation: "playbooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feedback_entries: {
+        Row: {
+          aspect: string | null
+          client_id: string | null
+          contact_permission: boolean
+          created_at: string
+          email: string | null
+          id: string
+          improvement_comment: string | null
+          name: string | null
+          positive_comment: string | null
+          privacy_notice_version: string
+          rating: number
+          source_page: string | null
+        }
+        Insert: {
+          aspect?: string | null
+          client_id?: string | null
+          contact_permission?: boolean
+          created_at?: string
+          email?: string | null
+          id?: string
+          improvement_comment?: string | null
+          name?: string | null
+          positive_comment?: string | null
+          privacy_notice_version?: string
+          rating: number
+          source_page?: string | null
+        }
+        Update: {
+          aspect?: string | null
+          client_id?: string | null
+          contact_permission?: boolean
+          created_at?: string
+          email?: string | null
+          id?: string
+          improvement_comment?: string | null
+          name?: string | null
+          positive_comment?: string | null
+          privacy_notice_version?: string
+          rating?: number
+          source_page?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_entries_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_360"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedback_entries_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
             referencedColumns: ["id"]
           },
         ]
@@ -4553,6 +5007,7 @@ export type Database = {
       is_project_member: { Args: { pid: string }; Returns: boolean }
       is_strategist_plus: { Args: never; Returns: boolean }
       is_team: { Args: never; Returns: boolean }
+      next_complaint_reference: { Args: never; Returns: string }
       next_document_number: { Args: { p_prefix: string }; Returns: string }
       normalize_ar: { Args: { t: string }; Returns: string }
       normalize_digits: { Args: { t: string }; Returns: string }
@@ -4587,8 +5042,10 @@ export type Database = {
       run_daily_jobs_v4: { Args: never; Returns: undefined }
       run_daily_jobs_v5: { Args: never; Returns: undefined }
       run_daily_jobs_v6: { Args: never; Returns: undefined }
+      run_daily_jobs_v7: { Args: never; Returns: undefined }
       run_dunning: { Args: never; Returns: undefined }
       run_ims_alerts: { Args: never; Returns: undefined }
+      run_public_layer_jobs: { Args: never; Returns: undefined }
       send_contract_renewals: { Args: never; Returns: undefined }
       send_overdue_reminders: { Args: never; Returns: undefined }
       send_tax_reminders: { Args: never; Returns: undefined }
@@ -4608,6 +5065,17 @@ export type Database = {
       approval_status: "pending" | "approved" | "rejected"
       checklist_run_status: "in_progress" | "passed" | "flagged"
       client_status: "active" | "paused" | "archived"
+      complaint_status:
+        | "received"
+        | "triage"
+        | "assigned"
+        | "in_progress"
+        | "waiting_customer"
+        | "resolution_proposed"
+        | "resolved"
+        | "closed"
+        | "duplicate"
+        | "withdrawn"
       control_impl_mode:
         | "system_enforced"
         | "workflow_enforced"
@@ -4887,6 +5355,18 @@ export const Constants = {
       approval_status: ["pending", "approved", "rejected"],
       checklist_run_status: ["in_progress", "passed", "flagged"],
       client_status: ["active", "paused", "archived"],
+      complaint_status: [
+        "received",
+        "triage",
+        "assigned",
+        "in_progress",
+        "waiting_customer",
+        "resolution_proposed",
+        "resolved",
+        "closed",
+        "duplicate",
+        "withdrawn",
+      ],
       control_impl_mode: [
         "system_enforced",
         "workflow_enforced",

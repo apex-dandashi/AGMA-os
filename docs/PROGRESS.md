@@ -74,6 +74,44 @@ stamp/signature + per-user signatures, and «أين أدخل السجل التج
   where to enter client CR/VAT — discoverability fix).
 - Gauntlet green; migration pushed to production.
 
+## Public layer log (2026-08-08) — docs/16, sixth owner study
+
+Study: «الإضافات الاحترافية للواجهة وبوابة الشكاوى والتوظيف الذكي».
+Verdicts in docs/16 (question banks/interview validations/ATS dashboards
+gated to first real published job; role catalog seeded at 24 not 190).
+
+- `20260808160000_public_layer.sql`: complaints (CMP-YYYY-NNNNN counter,
+  10-state workflow, per-case SLA defaults 1d/5d, privacy category →
+  auto-linked privacy_breach w/ 72h clock + critical severity, security →
+  auto NCR, notify_team on arrival), feedback_entries (anonymous unless
+  contact_permission — function strips identity server-side, verified),
+  career_departments (10) + career_roles (24 seeded w/ portfolio labels),
+  career_jobs with DB publish gate enforcing MHRSD advert rules (occupation
+  code, full description set, work model/hours/benefits, open/close dates,
+  localization review incl. marketing-occupations rule) — rejected hr's
+  incomplete publish with Arabic reason, passed when complete; anon RLS
+  shows published+unexpired only (verified 1 job / 24 catalog roles);
+  career_applications (APP counter, talent-pool consent → +365d,
+  auto-anonymize after expiry in daily job), run_daily_jobs_v7 (auto-close
+  expired jobs + complaint SLA breach alerts).
+- Edge function `public-forms` (deployed): complaint/feedback/apply/track
+  actions, zod discriminated union (refine moved post-parse — zod v3
+  can't discriminate ZodEffects), honeypot, salted-IP rate limit, track
+  returns status only after email match. All paths integration-tested
+  locally (200s, 404 wrong email, honeypot swallow, validation 400).
+- Marketing: /complaints (chooser → رسمية/تتبع/خصوصية preselect),
+  /feedback (stars + aspects + minimization note), /careers (values,
+  published jobs via anon REST, talent network form w/ neutral
+  accommodations question + no discriminatory fields + independent
+  talent-pool consent), /trust (privacy/security/responsible-AI/quality/
+  accessibility/report — explicitly "نبني وفق" not "معتمدون"), footer
+  «الثقة والحوكمة» group.
+- Ops: الحوكمة ← «صوت العميل» tab (KPIs, complaint workflow w/ SLA badges,
+  حل مقترح, one-click convert-to-CAPA, feedback stream); الفريق ←
+  «التوظيف» section for admin/hr (applications pipeline, jobs w/ publish
+  button surfacing gate errors as toasts).
+- Gauntlet green; migration + function in production; shipped both branches.
+
 ## Innovation round log (2026-08-08)
 
 Owner on the experiments modal (raw `on_time_tasks_pct` visible): «كيف نطور
