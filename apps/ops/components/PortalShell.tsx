@@ -135,6 +135,16 @@ const DOC_AR: Record<string, string> = {
   service: 'اتفاقية خدمات', retainer: 'اشتراك شهري', sla: 'مستوى خدمة',
 };
 
+const CONTENT_CHANNEL_AR: Record<string, string> = {
+  article: 'مقال', social_post: 'منشور سوشيال', reel_script: 'سكربت ريل',
+  email: 'إيميل', ad_copy: 'نص إعلان',
+};
+
+const CONTENT_STATUS_AR: Record<string, string> = {
+  client_review: 'بمراجعتكم', approved: 'معتمد ✓', scheduled: 'مجدول للنشر',
+  published: 'منشور',
+};
+
 const PROJECT_STATUS: Record<string, string> = {
   planning: 'التخطيط', active: 'قيد التنفيذ', paused: 'موقوف مؤقتاً',
   completed: 'مكتمل', archived: 'مؤرشف',
@@ -149,7 +159,7 @@ function Portal({ profile }: { profile: Tables<'profiles'> }) {
     queryKey: key,
     queryFn: async () => {
       const s = getSupabase();
-      const [client, docs, approvals, projects, payments, accounts, signatures] =
+      const [client, docs, approvals, projects, payments, accounts, signatures, content] =
         await Promise.all([
           s.from('clients').select('company').eq('id', profile.client_id!).single(),
           s.from('documents').select('*').order('created_at', { ascending: false }),
@@ -159,12 +169,15 @@ function Portal({ profile }: { profile: Tables<'profiles'> }) {
           s.from('payment_accounts').select('iban, bank_name, beneficiary_name, is_default')
             .eq('active', true),
           s.from('document_signatures').select('document_id, signer_name, signed_at'),
+          // RLS: يرى فقط محتواه من مرحلة «بمراجعتكم» فصاعداً
+          s.from('content_items').select('*').order('created_at', { ascending: false }),
         ]);
       return {
         company: client.data?.company ?? '',
         docs: docs.data ?? [], approvals: approvals.data ?? [],
         projects: projects.data ?? [], payments: payments.data ?? [],
         accounts: accounts.data ?? [], signatures: signatures.data ?? [],
+        content: content.data ?? [],
       };
     },
   });
@@ -183,16 +196,23 @@ function Portal({ profile }: { profile: Tables<'profiles'> }) {
     w.document.close();
   }
 
-  async function decideApproval(id: string, status: 'approved' | 'rejected') {
+  async function decideApproval(id: string, status: 'approved' | 'rejected', note?: string) {
     const { error } = await getSupabase().from('approvals')
-      .update({ status, decided_at: new Date().toISOString(), decided_by: profile.id })
+      .update({ status, note: note?.trim() || null,
+        decided_at: new Date().toISOString(), decided_by: profile.id })
       .eq('id', id);
     if (error) toast.error(error.message);
     else {
-      toast.success(status === 'approved' ? 'تم الاعتماد — شكراً لكم' : 'سُجل الرفض');
+      toast.success(status === 'approved' ? 'تم الاعتماد — شكراً لكم' : 'وصلت ملاحظتكم للفريق');
+      setRejecting(null); setRejectNote('');
       refetch();
     }
   }
+
+  // إعادة محتوى بملاحظة: الملاحظة إلزامية حتى يعرف الفريق ماذا يعدل
+  const [rejecting, setRejecting] = useState<string | null>(null);
+  const [rejectNote, setRejectNote] = useState('');
+  const [readingContent, setReadingContent] = useState<Tables<'content_items'> | null>(null);
 
   if (isLoading || !data) {
     return <div className="grid min-h-screen place-items-center"><Spinner className="h-6 w-6" /></div>;
@@ -240,20 +260,55 @@ function Portal({ profile }: { profile: Tables<'profiles'> }) {
                     <Sparkles className="h-4 w-4 text-pulse-orange" aria-hidden />
                     بانتظار قراركم
                   </p>
-                  {pendingApprovals.map((a) => (
-                    <div key={a.id} className="mb-2 flex flex-wrap items-center gap-2 rounded-sm border border-gray-dark p-3 text-sm">
-                      <span>طلب اعتماد {a.item_type === 'scope' ? 'نطاق عمل' : 'بند'}</span>
-                      <span className="ms-auto flex gap-2">
-                        <Button size="xs" onClick={() => decideApproval(a.id, 'approved')}>
-                          اعتماد
-                        </Button>
-                        <Button variant="ghost" size="xs"
-                          onClick={() => decideApproval(a.id, 'rejected')}>
-                          لدي ملاحظات
-                        </Button>
-                      </span>
-                    </div>
-                  ))}
+                  {pendingApprovals.map((a) => {
+                    const cnt = a.item_type === 'content'
+                      ? data.content.find((c) => c.id === a.item_id) : null;
+                    return (
+                      <div key={a.id} className="mb-2 rounded-sm border border-gray-dark p-3 text-sm">
+                        <div className="flex flex-wrap items-center gap-2">
+                          {cnt ? (
+                            <>
+                              <Badge variant="outline">{CONTENT_CHANNEL_AR[cnt.channel] ?? 'محتوى'}</Badge>
+                              <span className="font-bold">{cnt.title}</span>
+                            </>
+                          ) : (
+                            <span>طلب اعتماد {a.item_type === 'scope' ? 'نطاق عمل' : 'بند'}</span>
+                          )}
+                          <span className="ms-auto flex gap-2">
+                            {cnt?.body && (
+                              <Button variant="ghost" size="xs" onClick={() => setReadingContent(cnt)}>
+                                اقرأه كاملاً
+                              </Button>
+                            )}
+                            <Button size="xs" onClick={() => decideApproval(a.id, 'approved')}>
+                              اعتماد
+                            </Button>
+                            <Button variant="ghost" size="xs"
+                              onClick={() => (a.item_type === 'content'
+                                ? setRejecting(rejecting === a.id ? null : a.id)
+                                : decideApproval(a.id, 'rejected'))}>
+                              لدي ملاحظات
+                            </Button>
+                          </span>
+                        </div>
+                        {cnt?.body && (
+                          <p className="mt-2 line-clamp-3 whitespace-pre-wrap text-xs text-gray-light">
+                            {cnt.body}
+                          </p>
+                        )}
+                        {rejecting === a.id && (
+                          <div className="mt-2 flex flex-wrap items-end gap-2 rounded-sm border border-pulse-orange/50 p-2">
+                            <Input label="ما الذي تريدون تعديله؟ (إلزامي)" className="min-w-64 flex-1"
+                              value={rejectNote} onChange={(e) => setRejectNote(e.target.value)} />
+                            <Button size="xs" disabled={rejectNote.trim().length < 3}
+                              onClick={() => decideApproval(a.id, 'rejected', rejectNote)}>
+                              أرسل الملاحظة
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                   {pendingSign.map((d) => (
                     <div key={d.id} className="mb-2 flex flex-wrap items-center gap-2 rounded-sm border border-gray-dark p-3 text-sm">
                       <FileText className="h-4 w-4 text-pulse-orange" aria-hidden />
@@ -281,6 +336,31 @@ function Portal({ profile }: { profile: Tables<'profiles'> }) {
                       <Badge variant={p.status === 'active' ? 'accent' : 'outline'}>
                         {PROJECT_STATUS[p.status] ?? p.status}
                       </Badge>
+                    </div>
+                  ))}
+                </Card>
+              )}
+              {data.content.length > 0 && (
+                <Card className="p-4">
+                  <p className="mb-2 font-bold">محتواكم</p>
+                  {data.content.map((c) => (
+                    <div key={c.id} className="mb-1.5 flex flex-wrap items-center gap-2 text-sm">
+                      <Badge variant="outline">{CONTENT_CHANNEL_AR[c.channel] ?? c.channel}</Badge>
+                      <span>{c.title}</span>
+                      <Badge variant={c.status === 'approved' || c.status === 'published' ? 'accent' : 'neutral'}>
+                        {CONTENT_STATUS_AR[c.status] ?? c.status}
+                      </Badge>
+                      {c.body && (
+                        <Button variant="ghost" size="xs" onClick={() => setReadingContent(c)}>
+                          اقرأه
+                        </Button>
+                      )}
+                      {c.publish_url && (
+                        <a className="text-xs text-pulse-orange underline" href={c.publish_url}
+                          target="_blank" rel="noreferrer" dir="ltr">
+                          رابط النشر
+                        </a>
+                      )}
                     </div>
                   ))}
                 </Card>
@@ -365,6 +445,18 @@ function Portal({ profile }: { profile: Tables<'profiles'> }) {
           )}
         </div>
       </main>
+
+      <Modal open={readingContent != null} onClose={() => setReadingContent(null)}
+        title={readingContent?.title ?? ''}>
+        <div className="space-y-2">
+          <Badge variant="outline">
+            {CONTENT_CHANNEL_AR[readingContent?.channel ?? ''] ?? 'محتوى'}
+          </Badge>
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-snow">
+            {readingContent?.body}
+          </p>
+        </div>
+      </Modal>
 
       <SignModal doc={signing} onClose={() => setSigning(null)}
         onDone={() => { setSigning(null); refetch(); }} />

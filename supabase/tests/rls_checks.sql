@@ -177,4 +177,52 @@ begin
   end;
 end $$;
 
+-- ---------- content engine (المرحلة ٨) ---------------------------------------
+insert into public.content_items (id, client_id, channel, title, status, ai_generated) values
+  -- مسودة داخلية لعميل أ: يجب ألا يراها
+  ('90000000-0000-0000-0000-0000000000aa', '10000000-0000-0000-0000-0000000000aa',
+   'social_post', 'مسودة داخلية', 'draft', false),
+  -- بمراجعة العميل لعميل أ: يراها
+  ('90000000-0000-0000-0000-0000000000ab', '10000000-0000-0000-0000-0000000000aa',
+   'article', 'مقال للاعتماد', 'client_review', false),
+  -- بمراجعة العميل لعميل ب: عزل تام
+  ('90000000-0000-0000-0000-0000000000bb', '10000000-0000-0000-0000-0000000000bb',
+   'article', 'مقال عميل آخر', 'client_review', false)
+on conflict (id) do nothing;
+
+do $$
+declare n int;
+begin
+  perform set_config('request.jwt.claims',
+    '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated"}', true);
+  perform set_config('role', 'authenticated', true);
+
+  select count(*) into n from public.content_items;
+  if n <> 1 then
+    raise exception 'client: content visible expected 1 (own client_review) got %', n;
+  end if;
+
+  -- العميل قراءة فقط — أي تعديل مباشر يجب أن يمس صفر صفوف
+  update public.content_items set title = 'عبث'
+    where id = '90000000-0000-0000-0000-0000000000ab';
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'client: content update must hit 0 rows, hit %', n; end if;
+end $$;
+
+-- الحارس: إدراج منشور مباشرة (حتى كفريق) مرفوض
+do $$
+begin
+  perform set_config('request.jwt.claims',
+    '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}', true);
+  perform set_config('role', 'authenticated', true);
+  begin
+    insert into public.content_items (client_id, channel, title, status, ai_generated)
+    values ('10000000-0000-0000-0000-0000000000aa', 'email', 'قفز فوق الاعتماد',
+            'published', false);
+    raise exception 'content: direct published insert must be rejected';
+  exception when raise_exception then
+    if sqlerrm not like '%اعتماد%' then raise; end if;
+  end;
+end $$;
+
 select 'RLS_CHECKS_PASSED' as result;

@@ -271,17 +271,20 @@ export default function TransformExperience() {
                   <input aria-label="البريد" type="email" dir="ltr" placeholder="بريدك" value={contact.email}
                     onChange={(e) => setContact((c) => ({ ...c, email: e.target.value }))}
                     className="rounded-md border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-snow placeholder:text-gray-medium focus:border-pulse-orange focus:outline-none" />
-                  <select aria-label="مفتاح الدولة" dir="ltr" value={contact.dial}
-                    onChange={(e) => setContact((c) => ({ ...c, dial: e.target.value }))}
-                    className="rounded-md border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-snow focus:border-pulse-orange focus:outline-none">
-                    {DIAL_CODES.map((d) => (
-                      <option key={d.code} value={d.code}>{d.country} {d.code}</option>
-                    ))}
-                  </select>
-                  <input aria-label="رقم الجوال" inputMode="tel" dir="ltr" placeholder="5XXXXXXXX"
-                    value={contact.phone}
-                    onChange={(e) => setContact((c) => ({ ...c, phone: e.target.value }))}
-                    className="rounded-md border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-snow placeholder:text-gray-medium focus:border-pulse-orange focus:outline-none" />
+                  {/* مفتاح الدولة يسار والرقم يمين — حاوية LTR (قانون L8) */}
+                  <div dir="ltr" className="flex gap-2 sm:col-span-2">
+                    <select aria-label="مفتاح الدولة" value={contact.dial}
+                      onChange={(e) => setContact((c) => ({ ...c, dial: e.target.value }))}
+                      className="w-36 shrink-0 rounded-md border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-snow focus:border-pulse-orange focus:outline-none">
+                      {DIAL_CODES.map((d) => (
+                        <option key={d.code} value={d.code}>{d.flag} {d.code} {d.country}</option>
+                      ))}
+                    </select>
+                    <input aria-label="رقم الجوال" inputMode="tel" placeholder="5XXXXXXXX"
+                      value={contact.phone}
+                      onChange={(e) => setContact((c) => ({ ...c, phone: e.target.value }))}
+                      className="min-w-0 flex-1 rounded-md border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-snow placeholder:text-gray-medium focus:border-pulse-orange focus:outline-none" />
+                  </div>
                 </div>
                 <button type="button" disabled={busy || contact.name.trim().length < 2
                   || !/.+@.+\..+/.test(contact.email) || contact.phone.trim().length < 7}

@@ -14,6 +14,7 @@ const DICT = {
   'nav.projects': { ar: 'المشاريع', en: 'Projects' },
   'nav.clients': { ar: 'العملاء', en: 'Clients' },
   'nav.documents': { ar: 'المستندات', en: 'Documents' },
+  'nav.content': { ar: 'المحتوى', en: 'Content' },
   'nav.finance': { ar: 'المالية', en: 'Finance' },
   'nav.website': { ar: 'الموقع', en: 'Website' },
   'nav.team': { ar: 'الفريق', en: 'Team' },

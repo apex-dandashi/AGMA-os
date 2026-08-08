@@ -61,6 +61,9 @@ L1. **Dropdowns everywhere sensible.** Any field with an enumerable answer gets
 L2. **Phone fields get a dial-code select** (`DIAL_CODES`, السعودية +966
     default). **Israel is excluded from all country/dial lists by KSA legal
     requirement — never add it.** Local numbers compose to E.164.
+    Layout (owner 2026-08-08): select + number live in ONE `dir="ltr"` flex
+    container — flag+code select on the LEFT, number input on the RIGHT;
+    options render `{flag} {code} {country}`.
 L3. **No raw keys in UI.** Metric keys, enum values, status codes always render
     their Arabic label (e.g. scorecard metrics by `name_ar`, never
     `on_time_tasks_pct`).

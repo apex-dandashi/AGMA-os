@@ -192,15 +192,16 @@ export default function ComplaintsClient() {
               </div>
               <div>
                 <label htmlFor="c-phone" className={label}>رقم الجوال</label>
-                <div className="flex gap-2">
-                  <select aria-label="مفتاح الدولة" dir="ltr" className={`${field} w-36`}
+                {/* المفتاح يسار والرقم يمين — حاوية LTR (قانون L8) */}
+                <div dir="ltr" className="flex gap-2">
+                  <select aria-label="مفتاح الدولة" className={`${field} w-36 shrink-0`}
                     value={form.dial}
                     onChange={(e) => setForm((f) => ({ ...f, dial: e.target.value }))}>
                     {DIAL_CODES.map((d) => (
-                      <option key={d.code} value={d.code}>{d.country} {d.code}</option>
+                      <option key={d.code} value={d.code}>{d.flag} {d.code} {d.country}</option>
                     ))}
                   </select>
-                  <input id="c-phone" inputMode="tel" dir="ltr" className={field}
+                  <input id="c-phone" inputMode="tel" className={`${field} min-w-0 flex-1`}
                     placeholder="5XXXXXXXX" value={form.phone}
                     onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} />
                 </div>

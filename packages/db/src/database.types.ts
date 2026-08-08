@@ -315,6 +315,7 @@ export type Database = {
           id: string
           item_id: string
           item_type: Database["public"]["Enums"]["approval_item_type"]
+          note: string | null
           status: Database["public"]["Enums"]["approval_status"]
           updated_at: string
         }
@@ -326,6 +327,7 @@ export type Database = {
           id?: string
           item_id: string
           item_type: Database["public"]["Enums"]["approval_item_type"]
+          note?: string | null
           status?: Database["public"]["Enums"]["approval_status"]
           updated_at?: string
         }
@@ -337,6 +339,7 @@ export type Database = {
           id?: string
           item_id?: string
           item_type?: Database["public"]["Enums"]["approval_item_type"]
+          note?: string | null
           status?: Database["public"]["Enums"]["approval_status"]
           updated_at?: string
         }
@@ -1173,6 +1176,119 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_items: {
+        Row: {
+          ai_generated: boolean
+          assignee: string | null
+          body: string | null
+          brief: string | null
+          channel: Database["public"]["Enums"]["content_channel"]
+          client_id: string
+          created_at: string
+          created_by: string | null
+          human_reviewed_at: string | null
+          human_reviewed_by: string | null
+          id: string
+          project_id: string | null
+          publish_url: string | null
+          published_at: string | null
+          scheduled_for: string | null
+          status: Database["public"]["Enums"]["content_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          ai_generated?: boolean
+          assignee?: string | null
+          body?: string | null
+          brief?: string | null
+          channel: Database["public"]["Enums"]["content_channel"]
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          human_reviewed_at?: string | null
+          human_reviewed_by?: string | null
+          id?: string
+          project_id?: string | null
+          publish_url?: string | null
+          published_at?: string | null
+          scheduled_for?: string | null
+          status?: Database["public"]["Enums"]["content_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          ai_generated?: boolean
+          assignee?: string | null
+          body?: string | null
+          brief?: string | null
+          channel?: Database["public"]["Enums"]["content_channel"]
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          human_reviewed_at?: string | null
+          human_reviewed_by?: string | null
+          id?: string
+          project_id?: string | null
+          publish_url?: string | null
+          published_at?: string | null
+          scheduled_for?: string | null
+          status?: Database["public"]["Enums"]["content_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_items_assignee_fkey"
+            columns: ["assignee"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_items_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_360"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_items_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_items_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_items_human_reviewed_by_fkey"
+            columns: ["human_reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_costs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -5415,6 +5531,7 @@ export type Database = {
         | "deliverable"
         | "report"
         | "task"
+        | "content"
       approval_status: "pending" | "approved" | "rejected"
       checklist_run_status: "in_progress" | "passed" | "flagged"
       client_status: "active" | "paused" | "archived"
@@ -5429,6 +5546,21 @@ export type Database = {
         | "closed"
         | "duplicate"
         | "withdrawn"
+      content_channel:
+        | "article"
+        | "social_post"
+        | "reel_script"
+        | "email"
+        | "ad_copy"
+      content_status:
+        | "idea"
+        | "draft"
+        | "internal_review"
+        | "client_review"
+        | "approved"
+        | "scheduled"
+        | "published"
+        | "archived"
       control_impl_mode:
         | "system_enforced"
         | "workflow_enforced"
@@ -5709,7 +5841,14 @@ export const Constants = {
   public: {
     Enums: {
       activity_kind: ["call", "meeting", "task", "deadline", "followup"],
-      approval_item_type: ["scope", "roadmap", "deliverable", "report", "task"],
+      approval_item_type: [
+        "scope",
+        "roadmap",
+        "deliverable",
+        "report",
+        "task",
+        "content",
+      ],
       approval_status: ["pending", "approved", "rejected"],
       checklist_run_status: ["in_progress", "passed", "flagged"],
       client_status: ["active", "paused", "archived"],
@@ -5724,6 +5863,23 @@ export const Constants = {
         "closed",
         "duplicate",
         "withdrawn",
+      ],
+      content_channel: [
+        "article",
+        "social_post",
+        "reel_script",
+        "email",
+        "ad_copy",
+      ],
+      content_status: [
+        "idea",
+        "draft",
+        "internal_review",
+        "client_review",
+        "approved",
+        "scheduled",
+        "published",
+        "archived",
       ],
       control_impl_mode: [
         "system_enforced",

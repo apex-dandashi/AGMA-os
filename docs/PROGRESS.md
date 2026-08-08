@@ -18,9 +18,51 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 6.5b | **Safety+cash** (docs/10): pause checklists, Flag & Hold, huddles, Profit First allocations, Vault/drip, leak detection | ✅ Done (2026-08-07) |
 | 6.5c | **Sellable** (docs/10): TVR scores, service_packages, custom-reason mining, playbook versions+grades, experiments, EMT/independence gauges | ✅ Done (2026-08-07) |
 | 7 | Portal + onboarding + Drop Forms | ✅ Core done (2026-08-08) — magic-link login, docs+sign w/ evidence, approvals, invoices+bank info; onboarding/Drop Forms iterate next |
-| 8 | Content Engine | ⬜ |
+| 8 | Content Engine | ✅ Core done (2026-08-08) — client-content workflow + AI drafting + portal approval; daily signal collection/auto-publish iterate later |
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
+
+## Phase 8 log (2026-08-08) — Content Engine core
+
+Owner: «ابدأ بالمرحلة ٨». Blueprint B2 scoped to the client-content workflow
+(daily crawl/auto-select deferred until real retainers need it).
+
+- `20260808230000_content_enum.sql` + `20260808240000_content_engine.sql`:
+  content_items (5 channels × 8 statuses) with TWO DB-enforced gates —
+  AI output never reaches client_review without documented human review
+  (`human_reviewed_by`), and nothing publishes unless approved/scheduled.
+  Gates fire on INSERT and UPDATE (no bypass by direct insert — harness-proven).
+  client_review → approvals row (item_type 'content') + portal notification;
+  client decision reflects back (approved / إعادة بملاحظة → internal_review)
+  and notifies the team. approvals.note added (client change-request note).
+- RLS: team manages; client reads own from client_review onward only.
+  Permanent harness section: isolation (1 visible of 3), client update hits
+  0 rows, direct published insert rejected.
+- `generate-copy` edge function (team-JWT): Claude (claude-opus-5, official
+  SDK, server-side fallback on refusals) drafts Arabic content per channel
+  (article/social/reel/email/ad) with client company+sector context; every
+  generation RESETS human review — doctrine enforced end-to-end. Needs
+  `ANTHROPIC_API_KEY` in function secrets (owner action; 503 with Arabic
+  setup message until then). No config.toml entry — verify_jwt stays ON.
+- Ops: new «المحتوى» nav → ContentPanel: create (client+channel dropdowns,
+  L1), status tabs, blur-save editor, AI generate w/ directions, «راجعتُه»,
+  اعرضه على العميل, schedule date, publish + URL, delete idea/draft (L6),
+  client note surfaced on returned items.
+- Portal: pending-approval card renders content (channel badge, preview,
+  read-full modal, اعتماد / ملاحظة إلزامية عند الإعادة); «محتواكم» card lists
+  approved/scheduled/published with publish links.
+- Owner mid-round request: dial-code fields unified — ONE dir="ltr" container,
+  flag+code select LEFT, number RIGHT, options `{flag} {code} {country}`
+  (DIAL_CODES gained flag field; Israel exclusion untouched). Applied in
+  Transform, website-audit, complaints, careers, ClientsPanel; codified as
+  L2 layout amendment in CLAUDE.md.
+- Gauntlet green: typecheck 5/5, build 2/2, RLS harness incl. new content
+  section, e2e 1 passed. Production: db push (2 migrations) + generate-copy
+  deployed.
+
+Deferred honestly: content_signals daily crawl + topic ranking (needs real
+SEO retainers + search API key), auto-publish integrations, header-image
+generation hookup (generate-design exists — wire when first article ships).
 
 ## Contract Library 2.0 log (2026-08-08) — docs/14, fourth owner study
 

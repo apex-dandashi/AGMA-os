@@ -567,14 +567,17 @@ function ContactsBlock({
       <h3 className="mb-2 font-bold text-gray-light">جهات الاتصال</h3>
       <form onSubmit={submit} className="mb-2 flex flex-wrap gap-2">
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="الاسم" error={err} />
-        <Select value={dial} aria-label="مفتاح الدولة" dir="ltr" className="w-40"
-          onChange={(e) => setDial(e.target.value)}>
-          {DIAL_CODES.map((d) => (
-            <option key={d.code} value={d.code}>{d.country} {d.code}</option>
-          ))}
-        </Select>
-        <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="الهاتف"
-          dir="ltr" inputMode="tel" className="w-36" />
+        {/* المفتاح يسار والرقم يمين — حاوية LTR (قانون L8) */}
+        <span dir="ltr" className="flex gap-2">
+          <Select value={dial} aria-label="مفتاح الدولة" className="w-40 shrink-0"
+            onChange={(e) => setDial(e.target.value)}>
+            {DIAL_CODES.map((d) => (
+              <option key={d.code} value={d.code}>{d.flag} {d.code} {d.country}</option>
+            ))}
+          </Select>
+          <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="الهاتف"
+            inputMode="tel" className="w-36" />
+        </span>
         <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="البريد"
           dir="ltr" inputMode="email" className="w-44" />
         <Button type="submit" size="sm" loading={add.isPending}>+</Button>
