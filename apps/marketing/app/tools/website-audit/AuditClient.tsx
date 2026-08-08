@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { SUPABASE_URL } from '@/lib/publicConfig';
+import { DIAL_CODES } from '@agma/ui';
 import { Gauge, Search, Sparkles } from 'lucide-react';
 
 const field =
@@ -62,7 +63,9 @@ function ScoreRing({ value, title }: { value: number; title: string }) {
 }
 
 export default function AuditClient() {
-  const [form, setForm] = useState({ url: '', name: '', company: '', email: '' });
+  const [form, setForm] = useState({
+    url: '', name: '', company: '', email: '', dial: '+966', phone: '',
+  });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
@@ -74,6 +77,7 @@ export default function AuditClient() {
     if (!form.url.trim()) { setError('أدخل رابط موقعك.'); return; }
     if (form.name.trim().length < 2) { setError('اكتب اسمك.'); return; }
     if (!/.+@.+\..+/.test(form.email.trim())) { setError('أدخل بريداً إلكترونياً صالحاً.'); return; }
+    if (form.phone.trim().length < 7) { setError('أدخل رقم جوالك — نرسل عليه التقرير والمتابعة.'); return; }
     setBusy(true);
     try {
       const res = await fetch(`${SUPABASE_URL}/functions/v1/website-audit`, {
@@ -82,6 +86,9 @@ export default function AuditClient() {
         body: JSON.stringify({
           url: form.url.trim(), name: form.name.trim(),
           company: form.company.trim() || undefined, email: form.email.trim(),
+          phone: form.phone.trim().startsWith('+')
+            ? form.phone.trim()
+            : form.dial + form.phone.trim().replace(/^0+/, ''),
         }),
       });
       const data = await res.json();
@@ -139,6 +146,21 @@ export default function AuditClient() {
                 <label htmlFor="w-email" className={label}>البريد الإلكتروني *</label>
                 <input id="w-email" type="email" dir="ltr" className={field} value={form.email}
                   onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
+              </div>
+              <div className="sm:col-span-3">
+                <label htmlFor="w-phone" className={label}>رقم الجوال *</label>
+                <div className="flex gap-2">
+                  <select aria-label="مفتاح الدولة" dir="ltr" className={`${field} w-36`}
+                    value={form.dial}
+                    onChange={(e) => setForm((f) => ({ ...f, dial: e.target.value }))}>
+                    {DIAL_CODES.map((d) => (
+                      <option key={d.code} value={d.code}>{d.country} {d.code}</option>
+                    ))}
+                  </select>
+                  <input id="w-phone" inputMode="tel" dir="ltr" placeholder="5XXXXXXXX"
+                    className={field} value={form.phone}
+                    onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} />
+                </div>
               </div>
             </div>
             {error && <p role="alert" className="text-sm font-bold text-pulse-orange">{error}</p>}

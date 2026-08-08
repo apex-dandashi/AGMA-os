@@ -16,6 +16,7 @@ const schema = z.object({
   name: z.string().trim().min(2).max(200),
   company: z.string().trim().max(200).optional(),
   email: z.string().trim().toLowerCase().pipe(z.string().email().max(200)),
+  phone: z.string().trim().min(7).max(40),  // L11
   website: z.string().optional(), // honeypot
   turnstile: z.string().optional(),
 });
@@ -101,7 +102,8 @@ Deno.serve(async (req) => {
     name: body.name,
     company: body.company ?? null,
     source: 'site',
-    notes: [`طلب فحص موقع: ${body.url}`, `البريد: ${body.email}`].join('\n'),
+    notes: [`طلب فحص موقع: ${body.url}`, `الهاتف: ${body.phone}`,
+            `البريد: ${body.email}`].join('\n'),
     tags: ['فاحص المواقع'],
   });
 

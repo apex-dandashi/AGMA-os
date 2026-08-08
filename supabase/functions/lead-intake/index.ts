@@ -32,9 +32,8 @@ function normalizePhoneSa(s: string): string {
 const intakeSchema = z.object({
   name: z.string().trim().min(2).max(200),
   company: z.string().trim().max(200).optional(),
-  phone: z.string().trim().max(40)
-    .transform((v) => (v === '' ? undefined : normalizePhoneSa(v)))
-    .optional().catch(undefined),
+  // L11: لا عميل محتمل بلا جوال — الجوال هو قناة البيع
+  phone: z.string().trim().min(7).max(40).transform(normalizePhoneSa),
   email: z.string().trim()
     .transform((v) => (v === '' ? undefined : v.toLowerCase()))
     .pipe(z.string().email().max(200).optional()).catch(undefined),

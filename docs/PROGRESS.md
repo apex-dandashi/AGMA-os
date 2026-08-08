@@ -74,6 +74,20 @@ stamp/signature + per-user signatures, and «أين أدخل السجل التج
   where to enter client CR/VAT — discoverability fix).
 - Gauntlet green; migration pushed to production.
 
+## L11 phone-required log (2026-08-08)
+
+Owner: «اطلب دائماً رقم جوال للعملاء المحتملين» — codified as law L11 in
+CLAUDE.md (every lead-capturing form requires phone w/ dial select,
+enforced server-side too).
+
+- lead-intake schema: phone now required (was optional-normalized) —
+  MultiStepLeadForm already required it in UI, so no breakage.
+- website-audit: phone required in schema + UI (dial select + 5XXXXXXXX,
+  «نرسل عليه التقرير والمتابعة» error copy) + phone line in lead notes.
+- TransformExperience: dial+phone fields added to «أرسل لي خطة البناء»,
+  E.164 composed, submit gated on it.
+- Both functions redeployed; gauntlet green; shipped.
+
 ## Transform experience log (2026-08-08) — the study's flagship WOW
 
 - TransformExperience component on the homepage (right after hero,

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { SUPABASE_URL } from '@/lib/publicConfig';
+import { DIAL_CODES } from '@agma/ui';
 import {
   ArrowLeft, Bot, CheckCircle2, Megaphone, Palette, RotateCcw, Sparkles, Globe2,
 } from 'lucide-react';
@@ -101,7 +102,7 @@ export default function TransformExperience() {
   const [path, setPath] = useState<Path | null>(null);
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<string[][]>([[], [], []]);
-  const [contact, setContact] = useState({ name: '', email: '' });
+  const [contact, setContact] = useState({ name: '', email: '', dial: '+966', phone: '' });
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -132,7 +133,7 @@ export default function TransformExperience() {
 
   function reset() {
     setPath(null); setStep(0); setAnswers([[], [], []]);
-    setSent(false); setContact({ name: '', email: '' });
+    setSent(false); setContact({ name: '', email: '', dial: '+966', phone: '' });
   }
 
   async function sendLead() {
@@ -145,6 +146,9 @@ export default function TransformExperience() {
         body: JSON.stringify({
           name: contact.name.trim(),
           email: contact.email.trim(),
+          phone: contact.phone.trim().startsWith('+')
+            ? contact.phone.trim()
+            : contact.dial + contact.phone.trim().replace(/^0+/, ''),
           services: `تجربة التحويل: ${cfg.title}`,
           message: [
             `المسار: ${cfg.title} · التعقيد: ${complexity}`,
@@ -267,8 +271,20 @@ export default function TransformExperience() {
                   <input aria-label="البريد" type="email" dir="ltr" placeholder="بريدك" value={contact.email}
                     onChange={(e) => setContact((c) => ({ ...c, email: e.target.value }))}
                     className="rounded-md border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-snow placeholder:text-gray-medium focus:border-pulse-orange focus:outline-none" />
+                  <select aria-label="مفتاح الدولة" dir="ltr" value={contact.dial}
+                    onChange={(e) => setContact((c) => ({ ...c, dial: e.target.value }))}
+                    className="rounded-md border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-snow focus:border-pulse-orange focus:outline-none">
+                    {DIAL_CODES.map((d) => (
+                      <option key={d.code} value={d.code}>{d.country} {d.code}</option>
+                    ))}
+                  </select>
+                  <input aria-label="رقم الجوال" inputMode="tel" dir="ltr" placeholder="5XXXXXXXX"
+                    value={contact.phone}
+                    onChange={(e) => setContact((c) => ({ ...c, phone: e.target.value }))}
+                    className="rounded-md border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-snow placeholder:text-gray-medium focus:border-pulse-orange focus:outline-none" />
                 </div>
-                <button type="button" disabled={busy || contact.name.trim().length < 2 || !/.+@.+\..+/.test(contact.email)}
+                <button type="button" disabled={busy || contact.name.trim().length < 2
+                  || !/.+@.+\..+/.test(contact.email) || contact.phone.trim().length < 7}
                   onClick={sendLead}
                   className="w-full rounded-md bg-pulse-orange px-6 py-2.5 text-sm font-bold text-void transition-opacity hover:opacity-90 disabled:opacity-40">
                   {busy ? 'جارٍ الإرسال…' : 'أرسل لي خطة البناء'}

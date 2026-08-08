@@ -82,6 +82,9 @@ L9. **Public forms**: honeypot + rate limit + Arabic field-specific errors +
     `config.toml` `verify_jwt = false` entry BEFORE first deploy.
 L10. **After adding any public-facing feature, update privacy policy + terms**
     in the same round — policies must always describe current reality.
+L11. **Every lead-capturing form requires a phone number** (with dial select
+    per L2, +966 default) — enforced in the edge-function schema too, so no
+    future form can capture a lead without it. Phone is the sales channel.
 
 ## Conventions
 - TypeScript strict everywhere; Zod validation at every boundary (forms, edge functions, webhooks).
