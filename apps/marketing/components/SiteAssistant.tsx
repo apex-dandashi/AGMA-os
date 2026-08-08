@@ -10,7 +10,10 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../lib/publicConfig';
  * البوت جهاز إدخال للـ CRM لا مجرد واجهة كلام.
  */
 
-type Msg = { role: 'user' | 'bot'; text: string; citations?: string[]; offerLead?: boolean };
+type Msg = {
+  role: 'user' | 'bot'; text: string;
+  citations?: string[]; offerLead?: boolean; general?: boolean;
+};
 
 const sessionKey = `w-${Math.random().toString(36).slice(2, 10)}`;
 
@@ -63,6 +66,7 @@ export default function SiteAssistant() {
           role: 'bot', text: data.answer,
           citations: data.citations?.length ? data.citations : undefined,
           offerLead: !data.confident,
+          general: !!data.general,
         }]);
       } else {
         setMsgs((m) => [...m, {
@@ -127,6 +131,9 @@ export default function SiteAssistant() {
                 <div className={`max-w-[85%] rounded-xl px-3 py-2 text-[13px] leading-relaxed ${
                   m.role === 'user' ? 'bg-[#E8542F]/20 text-white' : 'bg-white/8 text-gray-200'
                 }`}>
+                  {m.general && (
+                    <p className="mb-1 text-[10px] font-bold text-[#E8542F]">نصيحة عامة</p>
+                  )}
                   <p className="whitespace-pre-wrap">{m.text}</p>
                   {m.citations && (
                     <p className="mt-1.5 border-t border-white/10 pt-1 text-[10px] text-gray-400">

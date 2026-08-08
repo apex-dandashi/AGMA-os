@@ -19,8 +19,41 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 6.5c | **Sellable** (docs/10): TVR scores, service_packages, custom-reason mining, playbook versions+grades, experiments, EMT/independence gauges | ✅ Done (2026-08-07) |
 | 7 | Portal + onboarding + Drop Forms | ✅ Done (2026-08-09) — magic-link, docs+sign, approvals, invoices, support, assistant, forms engine + auto onboarding |
 | 8 | Content Engine | ✅ Done (2026-08-08) — client-content workflow + AI drafting + portal approval + daily blog engine (RSS collect → auto-draft → review → static SEO/GEO pages) |
-| 9 | Help Centre / RAG + chatbots | ⬜ |
+| 9 | Help Centre / RAG + chatbots | ✅ Done (2026-08-09) — KB+RAG core, then Help Center: 14 seeded articles (نصائح تسويقية + دليل النظام), two-tier brain (grounded/general-advice), /help site page, ops help surface |
 | 10 | Employee portal + Analytics + digests | ⬜ |
+
+## Help Center log (2026-08-09) — phase 9 tail: عقل من طبقتين + مركز مساعدة
+
+Owner: assistant refused «كيف اسوق مشروعي» → «المساعد يحتاج تحسين … اضف
+مرحلة بناء help center لكامل النظام والادوار مع مساعد ذكاء يفهم السؤال».
+
+- `20260809080000_help_center.sql`: 14 seeded kb_articles — 6 public
+  «نصائح تسويقية» (بدء التسويق من الصفر، الميزانية، اختيار المنصة، سيو أم
+  إعلانات، الإعلانات لا تجيب، متى أحتاج وكالة) + 8 internal «دليل النظام»
+  (المسار، المشاريع، المحتوى، الدردشة والدعم، النماذج، المالية، الحوكمة،
+  الأدوار) audience 'internal'.
+- assistant-ask v2 — العقل من طبقتين: threshold 0.72→0.6; grounded answer
+  from KB when matches exist; general marketing questions outside KB get a
+  practical answer tagged `[نصيحة_عامة]` (`general:true` in response, tag
+  rendered in all 3 UIs); NO_ANSWER reserved for AGMA-specific unknowns +
+  off-topic. New 'ops' surface: team JWT (active, role≠client) → audiences
+  public+client+internal; non-team gets 403.
+- Guard hardening from live tests: leak regex now catches singular «المقطع»
+  (model cited «المقطع رقم 2»), and answers with no Arabic at all are
+  refused — openrouter/free roulette once returned an English llama-guard
+  safety classification as the "answer".
+- kb-reindex batching: 14 articles in one call blew WORKER_RESOURCE_LIMIT
+  (edge compute cap on embeddings) → BATCH=3 per invocation + `remaining`
+  in response; KbAdmin reindex button loops until remaining=0.
+- Marketing `/help`: browsable + searchable public KB (category groups,
+  accordion, marked render, site-parity styles), in footer + sitemap;
+  assistant bubble available on-page. Ops `/help/`: HelpCircle in header +
+  «المساعدة» in mobile sheet → HelpCenter (search, دليل النظام first,
+  audience badges) + AskPanel on surface 'ops'.
+- Live-verified in production (throwaway admin, then deleted): the failing
+  question answers usefully (twice), general question tagged عامة, AGMA
+  salary/client-list question → NO_ANSWER handoff, internal forms question
+  answered from system guide, ops without team JWT → 403. Test logs purged.
 
 ## Phase 8b log (2026-08-08) — Daily blog engine (SEO/GEO)
 

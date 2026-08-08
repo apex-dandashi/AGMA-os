@@ -8,7 +8,7 @@ import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/reac
 import type { Session } from '@supabase/supabase-js';
 import { Button, Input, Modal, Spinner, ToastProvider } from '@agma/ui';
 import type { Tables } from '@agma/db';
-import { UserRound } from 'lucide-react';
+import { HelpCircle, UserRound } from 'lucide-react';
 import { getSupabase } from '../lib/supabase';
 import { installErrorReporting } from '../lib/errorReporting';
 import { LocaleProvider, useLocale, type DictKey } from '../lib/i18n';
@@ -213,6 +213,10 @@ function Chrome({ profile, children }: { profile: Tables<'profiles'>; children: 
           >
             {t('chrome.search')} <kbd className="rounded-sm bg-gray-dark px-1.5 font-sans">⌘K</kbd>
           </button>
+          <Link href="/help/" aria-label="مركز المساعدة" title="مركز المساعدة"
+            className="rounded-sm text-gray-medium hover:text-snow focus-visible:ring-2 focus-visible:ring-pulse-orange/60 focus:outline-none">
+            <HelpCircle className="h-4 w-4" aria-hidden />
+          </Link>
           <ActivitiesBell />
           <NotificationsInbox />
           <button
@@ -263,6 +267,10 @@ function Chrome({ profile, children }: { profile: Tables<'profiles'>; children: 
               <Link href="/profile/" onClick={() => setMoreOpen(false)}
                 className="rounded-sm border border-gray-dark px-2 py-3 text-center text-sm text-gray-light">
                 ملفي الشخصي
+              </Link>
+              <Link href="/help/" onClick={() => setMoreOpen(false)}
+                className="rounded-sm border border-gray-dark px-2 py-3 text-center text-sm text-gray-light">
+                المساعدة
               </Link>
             </div>
           </div>

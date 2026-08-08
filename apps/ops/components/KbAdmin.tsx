@@ -73,16 +73,22 @@ export default function KbAdmin() {
 
   const reindex = useAppMutation(
     async () => {
-      const { data: res, error } = await getSupabase().functions.invoke('kb-reindex', { body: {} });
-      if (error) {
-        const ctx = (error as { context?: unknown }).context;
-        if (ctx instanceof Response) {
-          const b = await ctx.json().catch(() => null);
-          if (b?.message) throw new Error(b.message);
+      // الدالة تفهرس دفعة صغيرة كل نداء (حدود حوسبة Edge) — نكرر حتى تفرغ
+      let total = 0;
+      for (let round = 0; round < 20; round++) {
+        const { data: res, error } = await getSupabase().functions.invoke('kb-reindex', { body: {} });
+        if (error) {
+          const ctx = (error as { context?: unknown }).context;
+          if (ctx instanceof Response) {
+            const b = await ctx.json().catch(() => null);
+            if (b?.message) throw new Error(b.message);
+          }
+          throw new Error('تعذرت الفهرسة — حاول مجدداً');
         }
-        throw new Error('تعذرت الفهرسة — حاول مجدداً');
+        total += res?.indexed ?? 0;
+        if (!res?.remaining) break;
       }
-      toast.success(`فُهرست ${res?.indexed ?? 0} مقالة — المساعد يعرفها الآن`);
+      toast.success(`فُهرست ${total} مقالة — المساعد يعرفها الآن`);
     },
     { invalidate: [key] }
   );

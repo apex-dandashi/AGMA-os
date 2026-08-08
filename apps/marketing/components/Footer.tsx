@@ -36,6 +36,7 @@ const Footer = () => {
               <li><Link href="/process" className="hover:text-pulse-orange transition-colors">آلية العمل</Link></li>
               <li><Link href="/pricing" className="hover:text-pulse-orange transition-colors">التسعير</Link></li>
               <li><Link href="/blog" className="hover:text-pulse-orange transition-colors">آخر الأخبار</Link></li>
+              <li><Link href="/help" className="hover:text-pulse-orange transition-colors">مركز المساعدة</Link></li>
             </ul>
           </div>
 

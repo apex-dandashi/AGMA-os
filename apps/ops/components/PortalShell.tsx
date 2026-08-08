@@ -485,7 +485,7 @@ function ClientAssistant({ profile, onOpenSupport }: {
   profile: Tables<'profiles'>; onOpenSupport: () => void;
 }) {
   const toast = useToast();
-  const [msgs, setMsgs] = useState<{ role: 'user' | 'bot'; text: string; citations?: string[]; offerSupport?: boolean }[]>([{
+  const [msgs, setMsgs] = useState<{ role: 'user' | 'bot'; text: string; citations?: string[]; offerSupport?: boolean; general?: boolean }[]>([{
     role: 'bot',
     text: 'حياكم الله — أجيب فوراً عن أسئلتكم حول البوابة والفوترة وطريقة العمل. وما أعجز عنه أحوّله للفريق بضغطة.',
   }]);
@@ -520,7 +520,7 @@ function ClientAssistant({ profile, onOpenSupport }: {
     } else {
       setMsgs((m) => [...m, { role: 'bot', text: data.answer,
         citations: data.citations?.length ? data.citations : undefined,
-        offerSupport: !data.confident }]);
+        offerSupport: !data.confident, general: !!data.general }]);
     }
     setBusy(false);
   }
@@ -551,6 +551,9 @@ function ClientAssistant({ profile, onOpenSupport }: {
             <div className={`max-w-[85%] rounded-lg px-3 py-2 text-sm leading-relaxed ${
               m.role === 'user' ? 'bg-pulse-orange/15' : 'bg-white/5'
             }`}>
+              {m.general && (
+                <p className="mb-1 text-[10px] font-bold text-pulse-orange">نصيحة عامة</p>
+              )}
               <p className="whitespace-pre-wrap">{m.text}</p>
               {m.citations && (
                 <p className="mt-1.5 border-t border-gray-dark pt-1 text-[10px] text-gray-medium">

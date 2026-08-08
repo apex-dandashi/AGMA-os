@@ -9,7 +9,7 @@ const BASE = 'https://agma.com.sa';
 
 const STATIC_ROUTES = [
   '', '/about', '/agma-method', '/process', '/services', '/industries',
-  '/pricing', '/contact', '/blog', '/careers', '/complaints', '/feedback',
+  '/pricing', '/contact', '/blog', '/help', '/careers', '/complaints', '/feedback',
   '/trust', '/live', '/transform', '/tools/website-audit',
   '/privacy-policy', '/terms',
 ];

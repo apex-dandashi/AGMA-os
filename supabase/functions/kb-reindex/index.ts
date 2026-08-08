@@ -44,8 +44,12 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: 'forbidden' }), { status: 403, headers });
   }
 
-  const { data: dirty } = await supabase.from('kb_articles')
-    .select('id, title, body_md').eq('published', true).is('indexed_at', null).limit(20);
+  // دفعة صغيرة لكل استدعاء — التضمين يستهلك حصة الحوسبة، والواجهة تكرر
+  // النداء حتى remaining = 0 (درس WORKER_RESOURCE_LIMIT مع ١٤ مقالاً دفعة واحدة)
+  const BATCH = 3;
+  const { data: dirty, count } = await supabase.from('kb_articles')
+    .select('id, title, body_md', { count: 'exact' })
+    .eq('published', true).is('indexed_at', null).limit(BATCH);
   let indexed = 0;
   for (const a of dirty ?? []) {
     const chunks = chunkText(a.title, a.body_md);
@@ -69,5 +73,7 @@ Deno.serve(async (req) => {
       .in('kb_id', unpub.map((a) => a.id));
   }
 
-  return new Response(JSON.stringify({ ok: true, indexed }), { status: 200, headers });
+  return new Response(JSON.stringify({
+    ok: true, indexed, remaining: Math.max(0, (count ?? 0) - indexed),
+  }), { status: 200, headers });
 });
