@@ -61,6 +61,8 @@ const applySchema = z.object({
   accommodations_needed: z.string().trim().max(1000).optional(),
   cover_note: z.string().trim().max(3000).optional(),
   talent_pool_consent: z.boolean().default(false),
+  // إجابات التقييم: {question_id: 'A'..'D'} — الدرجة تُحسب في القاعدة حصراً
+  answers: z.record(z.string().uuid(), z.enum(['A', 'B', 'C', 'D'])).optional(),
   website: z.string().optional(),
 });
 

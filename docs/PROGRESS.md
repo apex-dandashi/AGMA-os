@@ -74,6 +74,26 @@ stamp/signature + per-user signatures, and «أين أدخل السجل التج
   where to enter client CR/VAT — discoverability fix).
 - Gauntlet green; migration pushed to production.
 
+## Assessments log (2026-08-08)
+
+Owner: «وين شبكة المواهب وفورمات التقييم» — talent network was live on
+/careers; the assessment engine (🟡 in docs/16) built now:
+
+- `20260808180000_assessments.sql`: assessment_questions with the
+  payment_accounts column-grant pattern — anon gets (id,bank,sort,text_ar,
+  options) only, `scores` column ungranted (verified: SELECT scores →
+  permission denied; plain select → 71 rows). 18 banks seeded from study 6
+  verbatim (COMMON culture ×3 + 17 specialty banks ×4) via a temp _seed_q
+  helper. career_roles.assessment_bank mapped for all 24 roles;
+  applications get answers/score/score_max via BEFORE INSERT trigger —
+  scoring is server-only (perfect-answer fixture 28/28; all-B fixture
+  16/28 — hand-checked).
+- public-forms: apply accepts answers {uuid: A-D}; end-to-end test: anon
+  REST fetch (7 questions, no scores leaked) → apply → DB computed 16/28.
+- Careers form: questions render after picking role/job (fieldset radios,
+  «لا توجد إجابة مثالية محفوظة» honesty note), all must be answered.
+- ops التوظيف: «التقييم n/m» badge (accent at ≥75%).
+
 ## Public layer hotfix + CV upload log (2026-08-08)
 
 Owner hit «تعذر الإرسال» on the live careers form and asked why + where's

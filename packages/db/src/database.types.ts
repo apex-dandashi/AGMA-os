@@ -364,6 +364,36 @@ export type Database = {
           },
         ]
       }
+      assessment_questions: {
+        Row: {
+          bank: string
+          created_at: string
+          id: string
+          options: Json
+          scores: Json
+          sort: number
+          text_ar: string
+        }
+        Insert: {
+          bank: string
+          created_at?: string
+          id?: string
+          options: Json
+          scores: Json
+          sort?: number
+          text_ar: string
+        }
+        Update: {
+          bank?: string
+          created_at?: string
+          id?: string
+          options?: Json
+          scores?: Json
+          sort?: number
+          text_ar?: string
+        }
+        Relationships: []
+      }
       attachments: {
         Row: {
           created_at: string
@@ -447,6 +477,7 @@ export type Database = {
       career_applications: {
         Row: {
           accommodations_needed: string | null
+          answers: Json | null
           arabic_level: string | null
           city: string | null
           cover_note: string | null
@@ -467,6 +498,8 @@ export type Database = {
           rejection_reason: string | null
           role_id: string | null
           salary_range: string | null
+          score: number | null
+          score_max: number | null
           start_availability: string | null
           status: string
           talent_pool_consent: boolean
@@ -476,6 +509,7 @@ export type Database = {
         }
         Insert: {
           accommodations_needed?: string | null
+          answers?: Json | null
           arabic_level?: string | null
           city?: string | null
           cover_note?: string | null
@@ -496,6 +530,8 @@ export type Database = {
           rejection_reason?: string | null
           role_id?: string | null
           salary_range?: string | null
+          score?: number | null
+          score_max?: number | null
           start_availability?: string | null
           status?: string
           talent_pool_consent?: boolean
@@ -505,6 +541,7 @@ export type Database = {
         }
         Update: {
           accommodations_needed?: string | null
+          answers?: Json | null
           arabic_level?: string | null
           city?: string | null
           cover_note?: string | null
@@ -525,6 +562,8 @@ export type Database = {
           rejection_reason?: string | null
           role_id?: string | null
           salary_range?: string | null
+          score?: number | null
+          score_max?: number | null
           start_availability?: string | null
           status?: string
           talent_pool_consent?: boolean
@@ -662,6 +701,7 @@ export type Database = {
       career_roles: {
         Row: {
           active: boolean
+          assessment_bank: string | null
           created_at: string
           department_id: string
           id: string
@@ -671,6 +711,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          assessment_bank?: string | null
           created_at?: string
           department_id: string
           id?: string
@@ -680,6 +721,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          assessment_bank?: string | null
           created_at?: string
           department_id?: string
           id?: string

@@ -10,9 +10,16 @@ import { Briefcase, CheckCircle2, Sparkles } from 'lucide-react';
 type Job = {
   id: string; slug: string; public_title_ar: string; description_ar: string | null;
   employment_type: string | null; work_model: string | null; location: string | null;
-  close_date: string | null;
+  close_date: string | null; role_id: string;
 };
-type Role = { id: string; title_ar: string; portfolio_label: string | null; department_id: string };
+type Role = {
+  id: string; title_ar: string; portfolio_label: string | null;
+  department_id: string; assessment_bank: string | null;
+};
+type Question = {
+  id: string; bank: string; sort: number; text_ar: string;
+  options: { v: string; label: string }[];
+};
 type Dept = { id: string; name_ar: string; sort: number };
 
 const field =
@@ -46,18 +53,24 @@ export default function CareersClient() {
     portfolio_url: '', linkedin_url: '', accommodations: '', accommodations_show: 'لا',
     cover_note: '', talent_pool_consent: false, privacy_ok: false,
   });
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
   const [cv, setCv] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [doneRef, setDoneRef] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchPublic<Job>('career_jobs?select=id,slug,public_title_ar,description_ar,employment_type,work_model,location,close_date&order=created_at.desc').then(setJobs);
-    fetchPublic<Role>('career_roles?select=id,title_ar,portfolio_label,department_id').then(setRoles);
+    fetchPublic<Job>('career_jobs?select=id,slug,public_title_ar,description_ar,employment_type,work_model,location,close_date,role_id&order=created_at.desc').then(setJobs);
+    fetchPublic<Role>('career_roles?select=id,title_ar,portfolio_label,department_id,assessment_bank').then(setRoles);
+    fetchPublic<Question>('assessment_questions?select=id,bank,sort,text_ar,options&order=bank,sort').then(setQuestions);
     fetchPublic<Dept>('career_departments?select=id,name_ar,sort&order=sort').then(setDepts);
   }, []);
 
-  const selectedRole = roles.find((r) => r.id === form.role_id);
+  const selectedRole = roles.find((r) => r.id === (applyJob?.role_id ?? form.role_id));
+  // أسئلة التقييم: المشتركة + بنك التخصص المختار
+  const activeQuestions = questions.filter((q) =>
+    q.bank === 'COMMON' || (selectedRole?.assessment_bank && q.bank === selectedRole.assessment_bank));
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -66,6 +79,11 @@ export default function CareersClient() {
     if (form.full_name.trim().length < 2) { setError('اكتب اسمك الكامل.'); return; }
     if (!/.+@.+\..+/.test(form.email.trim())) { setError('أدخل بريداً إلكترونياً صالحاً.'); return; }
     if (!form.privacy_ok) { setError('أقرّ بإشعار خصوصية المتقدمين للمتابعة.'); return; }
+    if (activeQuestions.length > 0
+        && activeQuestions.some((q) => !answers[q.id])) {
+      setError('أكمل أسئلة التقييم — لكل سؤال إجابة واحدة.');
+      return;
+    }
     if (cv) {
       if (!/\.(pdf|docx?)$/i.test(cv.name)) { setError('ارفع السيرة الذاتية بصيغة PDF أو DOC أو DOCX.'); return; }
       if (cv.size > 5 * 1024 * 1024) { setError('حجم السيرة الذاتية يتجاوز ٥ ميغابايت — صغّر الملف.'); return; }
@@ -92,6 +110,7 @@ export default function CareersClient() {
             form.accommodations_show === 'نعم' ? form.accommodations.trim() || 'نعم' : undefined,
           cover_note: form.cover_note.trim() || undefined,
           talent_pool_consent: form.talent_pool_consent,
+          answers: Object.keys(answers).length ? answers : undefined,
         });
       let res: Response;
       if (cv) {
@@ -303,6 +322,37 @@ export default function CareersClient() {
                   onChange={(e) => setForm((f) => ({ ...f, linkedin_url: e.target.value }))} />
               </div>
             </div>
+            {activeQuestions.length > 0 && (
+              <div className="space-y-5 rounded-xl border border-white/10 bg-white/5 p-5">
+                <p className="text-sm font-black">
+                  أسئلة التقييم ({activeQuestions.length})
+                  <span className="ms-2 text-xs font-normal text-gray-light">
+                    لا توجد إجابة «مثالية» محفوظة — أجب كما تعمل فعلاً.
+                  </span>
+                </p>
+                {activeQuestions.map((q, i) => (
+                  <fieldset key={q.id}>
+                    <legend className="mb-2 text-sm font-bold leading-relaxed">
+                      {i + 1}. {q.text_ar}
+                    </legend>
+                    <div className="space-y-1.5">
+                      {q.options.map((o) => (
+                        <label key={o.v}
+                          className={`flex cursor-pointer items-start gap-2 rounded-md border px-3 py-2 text-sm transition-colors ${
+                            answers[q.id] === o.v
+                              ? 'border-pulse-orange bg-pulse-orange/10'
+                              : 'border-white/10 hover:border-white/30'}`}>
+                          <input type="radio" name={`q-${q.id}`} value={o.v}
+                            checked={answers[q.id] === o.v} className="mt-1"
+                            onChange={() => setAnswers((a) => ({ ...a, [q.id]: o.v }))} />
+                          <span className="leading-relaxed text-gray-light">{o.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+                ))}
+              </div>
+            )}
             <div>
               <label htmlFor="a-cv" className={label}>السيرة الذاتية (PDF أو DOCX، حتى ٥MB)</label>
               <input id="a-cv" type="file" accept=".pdf,.doc,.docx"

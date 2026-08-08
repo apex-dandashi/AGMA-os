@@ -241,6 +241,11 @@ export function CareersSection() {
                   السيرة الذاتية
                 </Button>
               )}
+              {a.score != null && a.score_max != null && a.score_max > 0 && (
+                <Badge variant={a.score >= a.score_max * 0.75 ? 'accent' : 'outline'}>
+                  التقييم {a.score}/{a.score_max}
+                </Badge>
+              )}
               {a.talent_pool_consent && <Badge variant="outline">مواهب حتى {a.talent_pool_until}</Badge>}
               <span className="ms-auto">
                 <Select value={a.status} aria-label={`حالة ${a.public_reference}`}
