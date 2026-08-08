@@ -340,4 +340,45 @@ begin
   delete from public.support_threads where subject like 'حزام:%';
 end $$;
 
+-- ---------- drop forms + onboarding (ذيل المرحلة ٧) --------------------------
+do $$
+declare v_form uuid; v_req uuid; n int;
+begin
+  select id into v_form from public.forms where is_system limit 1;
+  if v_form is null then raise exception 'forms: system seed missing'; end if;
+
+  -- طلب لعميل أ
+  insert into public.form_requests (form_id, client_id, requested_by)
+  values (v_form, '10000000-0000-0000-0000-0000000000aa', null)
+  returning id into v_req;
+
+  -- عميل أ يرى النموذج والطلب ويعبي
+  perform set_config('request.jwt.claims',
+    '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated"}', true);
+  perform set_config('role', 'authenticated', true);
+  select count(*) into n from public.forms;
+  if n <> 1 then raise exception 'client: requested form expected 1 got %', n; end if;
+  insert into public.form_responses (request_id, form_id, client_id, respondent, answers)
+  values (v_req, v_form, '10000000-0000-0000-0000-0000000000aa',
+          '00000000-0000-0000-0000-0000000000c1', '{"about":"حزام"}');
+  -- تعبئة ثانية لنفس الطلب مرفوضة
+  begin
+    insert into public.form_responses (request_id, form_id, client_id, respondent, answers)
+    values (v_req, v_form, '10000000-0000-0000-0000-0000000000aa',
+            '00000000-0000-0000-0000-0000000000c1', '{}');
+    raise exception 'forms: duplicate submission must be rejected';
+  exception when unique_violation or insufficient_privilege then null;
+  end;
+
+  -- المنفذ (فريق) يرى الإجابة؛ والعميل لا يرى نماذج غيره
+  perform set_config('request.jwt.claims',
+    '{"sub":"00000000-0000-0000-0000-0000000000e1","role":"authenticated"}', true);
+  select count(*) into n from public.form_responses where answers->>'about' = 'حزام';
+  if n <> 1 then raise exception 'team: form response expected 1 got %', n; end if;
+
+  perform set_config('role', 'postgres', true);
+  delete from public.form_responses where answers->>'about' = 'حزام';
+  delete from public.form_requests where id = v_req;
+end $$;
+
 select 'RLS_CHECKS_PASSED' as result;

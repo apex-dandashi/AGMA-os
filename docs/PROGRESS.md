@@ -17,7 +17,7 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 6.5a | **OS-core** (docs/10): vision/VTO, seats, primary_aims, rocks, issues+IDS, scorecard+digest, L10 meetings | ✅ Done (2026-08-07) |
 | 6.5b | **Safety+cash** (docs/10): pause checklists, Flag & Hold, huddles, Profit First allocations, Vault/drip, leak detection | ✅ Done (2026-08-07) |
 | 6.5c | **Sellable** (docs/10): TVR scores, service_packages, custom-reason mining, playbook versions+grades, experiments, EMT/independence gauges | ✅ Done (2026-08-07) |
-| 7 | Portal + onboarding + Drop Forms | ✅ Core done (2026-08-08) — magic-link login, docs+sign w/ evidence, approvals, invoices+bank info; onboarding/Drop Forms iterate next |
+| 7 | Portal + onboarding + Drop Forms | ✅ Done (2026-08-09) — magic-link, docs+sign, approvals, invoices, support, assistant, forms engine + auto onboarding |
 | 8 | Content Engine | ✅ Done (2026-08-08) — client-content workflow + AI drafting + portal approval + daily blog engine (RSS collect → auto-draft → review → static SEO/GEO pages) |
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
@@ -65,6 +65,32 @@ Owner: «ابي محرك لتنزيل المقالات اليومية في مو�
 Owner actions pending: ONE of OPENROUTER_API_KEY (free models) or
 ANTHROPIC_API_KEY (best Arabic quality) — see 8c below; plus
 HOSTINGER_DEPLOY_HOOK_MAIN (daily static rebake).
+
+## Phase 7-tail log (2026-08-09) — Drop Forms engine + auto onboarding (B5)
+
+Owner: «كمل ذيل المرحلة ٧ — Onboarding + Drop Forms».
+
+- `20260809060000_drop_forms_onboarding.sql`: forms (fields jsonb, is_system
+  guarded from delete) · form_requests (partial-unique pending per
+  form×client) · form_responses (unique per request → single submission) ·
+  private form-uploads bucket (client-folder RLS, 15MB) · notifications both
+  ways · **auto onboarding**: contract-ish document signed → system form
+  auto-requested once per client + portal notification. Seeded rich
+  onboarding form (12 fields, explicit «لا كلمات مرور هنا» PDPL guidance).
+- **RLS name-scoping bug caught by persona test**: unqualified `id` inside a
+  policy EXISTS bound to the subquery table (r.id) making the form invisible
+  to clients; fixed by qualifying (`forms.id`, `form_responses.form_id`).
+  Lesson: always qualify outer columns in policy subqueries.
+- Ops: «النماذج» nav → FormsAdmin: no-code builder (11 field types incl.
+  phone/file/multi, reorder, options, hints), activate → send-to-client
+  dropdown, requests status, responses viewer with signed-URL attachments +
+  CSV export (BOM for Excel Arabic).
+- Portal: «نماذج» tab — pending requests render engine (all types; phone with
+  L2 dial layout; file → private bucket), required validation with Arabic
+  per-field errors, completed history. Submission marks request completed +
+  notifies team.
+- Gauntlet green (typecheck/build/harness incl. new forms section/e2e);
+  migration pushed to production. Phase 7 now fully closed.
 
 ## Phase 9 log (2026-08-09) — Knowledge base + RAG assistant (B6/B7 core)
 

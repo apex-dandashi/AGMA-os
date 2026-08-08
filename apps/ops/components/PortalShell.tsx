@@ -15,6 +15,7 @@ import {
   formatIBAN, renderContract, renderInvoice, renderQuote,
   type ContractPayload, type InvoicePayload, type QuotePayload,
 } from '@agma/legal-templates';
+import { DIAL_CODES as PORTAL_DIALS } from '@agma/ui';
 import { getSupabase } from '../lib/supabase';
 import { DLV_STATUS, PinViewer } from './DeliverablesBlock';
 
@@ -251,6 +252,7 @@ function Portal({ profile }: { profile: Tables<'profiles'> }) {
           { key: 'pay', label: 'الفواتير والدفع' },
           { key: 'support', label: 'الدعم' },
           { key: 'assistant', label: 'المساعد' },
+          { key: 'forms', label: 'نماذج' },
         ]} />
 
         <div className="mt-5 space-y-4">
@@ -407,6 +409,8 @@ function Portal({ profile }: { profile: Tables<'profiles'> }) {
           {tab === 'support' && <ClientSupport profile={profile} />}
 
           {tab === 'assistant' && <ClientAssistant profile={profile} onOpenSupport={() => setTab('support')} />}
+
+          {tab === 'forms' && <ClientForms profile={profile} />}
 
           {tab === 'pay' && (
             <>
@@ -583,6 +587,255 @@ function ClientAssistant({ profile, onOpenSupport }: {
         <Button type="submit" size="sm" disabled={busy || !draft.trim()}>أرسل</Button>
       </form>
     </Card>
+  );
+}
+
+
+/* -------------------------------------------------------------- forms */
+
+type PortalFieldDef = {
+  key: string; label: string; type: string; required?: boolean;
+  options?: string[]; hint?: string;
+};
+
+function ClientForms({ profile }: { profile: Tables<'profiles'> }) {
+  const toast = useToast();
+  const key = ['portal_forms'];
+  const [filling, setFilling] = useState<string | null>(null);
+  const [answers, setAnswers] = useState<Record<string, unknown>>({});
+  const [busy, setBusy] = useState(false);
+
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: key,
+    queryFn: async () => {
+      const s = getSupabase();
+      const [requests, forms, responses] = await Promise.all([
+        s.from('form_requests').select('*').order('created_at', { ascending: false }),
+        s.from('forms').select('*'),
+        s.from('form_responses').select('*'),
+      ]);
+      return {
+        requests: requests.data ?? [], forms: forms.data ?? [],
+        responses: responses.data ?? [],
+      };
+    },
+  });
+
+  if (isLoading || !data) return <SkeletonList rows={3} />;
+
+  const formOf = (id: string) => data.forms.find((f) => f.id === id);
+  const pending = data.requests.filter((r) => r.status === 'pending' && formOf(r.form_id));
+  const done = data.requests.filter((r) => r.status === 'completed');
+
+  const activeReq = filling ? data.requests.find((r) => r.id === filling) : null;
+  const activeForm = activeReq ? formOf(activeReq.form_id) : null;
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!activeReq || !activeForm) return;
+    const fields = (activeForm.fields as unknown as PortalFieldDef[]) ?? [];
+    for (const f of fields) {
+      const v = answers[f.key];
+      if (f.required && (v == null || v === '' || (Array.isArray(v) && v.length === 0))) {
+        toast.error(`«${f.label}» إلزامي`);
+        return;
+      }
+    }
+    setBusy(true);
+    const { error } = await getSupabase().from('form_responses').insert({
+      request_id: activeReq.id, form_id: activeForm.id,
+      client_id: profile.client_id!, answers: answers as never,
+    });
+    setBusy(false);
+    if (error) { toast.error('تعذر الإرسال — حاول مجدداً'); return; }
+    toast.success('وصلت إجاباتكم — شكراً! فريقنا سيراجعها فوراً');
+    setFilling(null); setAnswers({});
+    refetch();
+  }
+
+  async function uploadFile(fieldKey: string, file: File) {
+    if (file.size > 15 * 1024 * 1024) { toast.error('الملف يتجاوز ١٥MB'); return; }
+    const path = `${profile.client_id}/${crypto.randomUUID()}-${file.name.replace(/[^\w.\-]+/g, '_')}`;
+    const { error } = await getSupabase().storage.from('form-uploads')
+      .upload(path, file, { contentType: file.type });
+    if (error) { toast.error('تعذر رفع الملف'); return; }
+    setAnswers((a) => ({ ...a, [fieldKey]: path }));
+    toast.success('رُفع الملف ✓');
+  }
+
+  const inputCls = 'w-full rounded-sm border border-gray-dark bg-transparent px-3 py-2 text-sm text-snow placeholder:text-gray-medium focus:border-pulse-orange focus:outline-none';
+
+  if (activeReq && activeForm) {
+    const fields = (activeForm.fields as unknown as PortalFieldDef[]) ?? [];
+    return (
+      <Card className="p-5">
+        <Button variant="ghost" size="xs" onClick={() => { setFilling(null); setAnswers({}); }}>
+          → كل النماذج
+        </Button>
+        <h2 className="mt-2 text-lg font-black">{activeForm.title}</h2>
+        {activeForm.description && (
+          <p className="mt-1 whitespace-pre-wrap text-sm text-gray-light">{activeForm.description}</p>
+        )}
+        <form onSubmit={submit} className="mt-5 space-y-4">
+          {fields.map((f) => (
+            <div key={f.key}>
+              <label className="mb-1 block text-xs font-medium text-gray-light">
+                {f.label}{f.required && <span className="text-pulse-orange"> *</span>}
+              </label>
+              {f.hint && <p className="mb-1 text-[11px] text-gray-medium">{f.hint}</p>}
+
+              {f.type === 'textarea' && (
+                <textarea rows={4} className={inputCls}
+                  value={String(answers[f.key] ?? '')}
+                  onChange={(e) => setAnswers((a) => ({ ...a, [f.key]: e.target.value }))} />
+              )}
+              {(f.type === 'text' || f.type === 'url' || f.type === 'email') && (
+                <input type={f.type === 'text' ? 'text' : f.type}
+                  dir={f.type === 'text' ? undefined : 'ltr'} className={inputCls}
+                  value={String(answers[f.key] ?? '')}
+                  onChange={(e) => setAnswers((a) => ({ ...a, [f.key]: e.target.value }))} />
+              )}
+              {f.type === 'number' && (
+                <input type="number" dir="ltr" className={inputCls}
+                  value={String(answers[f.key] ?? '')}
+                  onChange={(e) => setAnswers((a) => ({ ...a, [f.key]: e.target.value }))} />
+              )}
+              {f.type === 'date' && (
+                <input type="date" className={inputCls}
+                  value={String(answers[f.key] ?? '')}
+                  onChange={(e) => setAnswers((a) => ({ ...a, [f.key]: e.target.value }))} />
+              )}
+              {f.type === 'select' && (
+                <select className={inputCls} value={String(answers[f.key] ?? '')}
+                  onChange={(e) => setAnswers((a) => ({ ...a, [f.key]: e.target.value }))}>
+                  <option value="">— اختر —</option>
+                  {(f.options ?? []).map((o) => (
+                    <option key={o} value={o} className="bg-pure-ink">{o}</option>
+                  ))}
+                </select>
+              )}
+              {f.type === 'multi' && (
+                <div className="flex flex-wrap gap-2">
+                  {(f.options ?? []).map((o) => {
+                    const arr = Array.isArray(answers[f.key]) ? answers[f.key] as string[] : [];
+                    const on = arr.includes(o);
+                    return (
+                      <button key={o} type="button"
+                        className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${
+                          on ? 'border-pulse-orange bg-pulse-orange/15 text-pulse-orange'
+                             : 'border-gray-dark text-gray-light'
+                        }`}
+                        onClick={() => setAnswers((a) => ({
+                          ...a,
+                          [f.key]: on ? arr.filter((x) => x !== o) : [...arr, o],
+                        }))}>
+                        {o}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {f.type === 'yesno' && (
+                <div className="flex gap-2">
+                  {['نعم', 'لا'].map((o) => (
+                    <button key={o} type="button"
+                      className={`rounded-sm border px-4 py-1.5 text-sm transition-colors ${
+                        answers[f.key] === o
+                          ? 'border-pulse-orange bg-pulse-orange/15 text-pulse-orange'
+                          : 'border-gray-dark text-gray-light'
+                      }`}
+                      onClick={() => setAnswers((a) => ({ ...a, [f.key]: o }))}>
+                      {o}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {f.type === 'phone' && (
+                // المفتاح يسار والرقم يمين (قانون L2)
+                <div dir="ltr" className="flex gap-2">
+                  <select aria-label="مفتاح الدولة"
+                    className="w-36 shrink-0 rounded-sm border border-gray-dark bg-transparent px-2 py-2 text-sm text-snow focus:border-pulse-orange focus:outline-none"
+                    value={String((answers[`${f.key}__dial`] ?? '+966'))}
+                    onChange={(e) => setAnswers((a) => ({ ...a, [`${f.key}__dial`]: e.target.value }))}>
+                    {PORTAL_DIALS.map((d) => (
+                      <option key={d.code} value={d.code} className="bg-pure-ink">
+                        {d.flag} {d.code} {d.country}
+                      </option>
+                    ))}
+                  </select>
+                  <input inputMode="tel" placeholder="5XXXXXXXX"
+                    className="min-w-0 flex-1 rounded-sm border border-gray-dark bg-transparent px-3 py-2 text-sm text-snow placeholder:text-gray-medium focus:border-pulse-orange focus:outline-none"
+                    value={String(answers[`${f.key}__num`] ?? '')}
+                    onChange={(e) => {
+                      const num = e.target.value;
+                      setAnswers((a) => ({
+                        ...a, [`${f.key}__num`]: num,
+                        [f.key]: num.trim()
+                          ? String(a[`${f.key}__dial`] ?? '+966') + num.trim().replace(/^0+/, '')
+                          : '',
+                      }));
+                    }} />
+                </div>
+              )}
+              {f.type === 'file' && (
+                <div className="flex items-center gap-2">
+                  <label className="cursor-pointer rounded-sm border border-gray-dark px-3 py-2 text-xs text-gray-light transition-colors hover:border-pulse-orange hover:text-pulse-orange">
+                    {answers[f.key] ? 'غيّر الملف' : 'اختر ملفاً'}
+                    <input type="file" className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) uploadFile(f.key, file);
+                        e.target.value = '';
+                      }} />
+                  </label>
+                  {typeof answers[f.key] === 'string' && answers[f.key] !== '' && (
+                    <span className="text-xs text-pulse-orange">مرفق ✓</span>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+          <Button type="submit" loading={busy} className="w-full">أرسل الإجابات</Button>
+        </form>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {pending.length === 0 && done.length === 0 && (
+        <Card className="p-4 text-sm text-gray-light">
+          لا نماذج بانتظاركم حالياً — حين يرسل لكم فريق AGMA نموذجاً سيظهر هنا ويصلكم إشعار.
+        </Card>
+      )}
+      {pending.map((r) => {
+        const f = formOf(r.form_id)!;
+        return (
+          <Card key={r.id} className="flex flex-wrap items-center gap-2 p-4 text-sm">
+            <span className="font-bold">{f.title}</span>
+            <Badge variant="outline">بانتظار تعبئتكم</Badge>
+            <Button size="sm" className="ms-auto"
+              onClick={() => { setFilling(r.id); setAnswers({}); }}>
+              عبّئه الآن
+            </Button>
+          </Card>
+        );
+      })}
+      {done.length > 0 && (
+        <Card className="p-4 text-sm">
+          <p className="mb-2 font-bold">نماذج أكملتموها</p>
+          {done.map((r) => (
+            <p key={r.id} className="flex items-center gap-2 py-0.5 text-gray-light">
+              {formOf(r.form_id)?.title ?? 'نموذج'}
+              <Badge variant="accent">مُرسل ✓</Badge>
+              <span className="text-xs text-gray-medium">
+                {r.completed_at && new Date(r.completed_at).toLocaleDateString('ar-SA')}
+              </span>
+            </p>
+          ))}
+        </Card>
+      )}
+    </div>
   );
 }
 

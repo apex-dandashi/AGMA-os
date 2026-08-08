@@ -2414,6 +2414,178 @@ export type Database = {
         }
         Relationships: []
       }
+      form_requests: {
+        Row: {
+          client_id: string
+          completed_at: string | null
+          created_at: string
+          due_on: string | null
+          form_id: string
+          id: string
+          requested_by: string | null
+          status: string
+        }
+        Insert: {
+          client_id: string
+          completed_at?: string | null
+          created_at?: string
+          due_on?: string | null
+          form_id: string
+          id?: string
+          requested_by?: string | null
+          status?: string
+        }
+        Update: {
+          client_id?: string
+          completed_at?: string | null
+          created_at?: string
+          due_on?: string | null
+          form_id?: string
+          id?: string
+          requested_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_requests_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_360"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_requests_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_requests_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "forms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_requests_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      form_responses: {
+        Row: {
+          answers: Json
+          client_id: string
+          created_at: string
+          form_id: string
+          id: string
+          request_id: string
+          respondent: string
+        }
+        Insert: {
+          answers?: Json
+          client_id: string
+          created_at?: string
+          form_id: string
+          id?: string
+          request_id: string
+          respondent?: string
+        }
+        Update: {
+          answers?: Json
+          client_id?: string
+          created_at?: string
+          form_id?: string
+          id?: string
+          request_id?: string
+          respondent?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_responses_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_360"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_responses_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_responses_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "forms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_responses_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: true
+            referencedRelation: "form_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_responses_respondent_fkey"
+            columns: ["respondent"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forms: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          fields: Json
+          id: string
+          is_system: boolean
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          fields?: Json
+          id?: string
+          is_system?: boolean
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          fields?: Json
+          id?: string
+          is_system?: boolean
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forms_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ims_controls: {
         Row: {
           applicability_reason: string | null
