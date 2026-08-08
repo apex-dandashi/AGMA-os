@@ -74,6 +74,24 @@ stamp/signature + per-user signatures, and «أين أدخل السجل التج
   where to enter client CR/VAT — discoverability fix).
 - Gauntlet green; migration pushed to production.
 
+## Transform experience log (2026-08-08) — the study's flagship WOW
+
+- TransformExperience component on the homepage (right after hero,
+  additive — hero untouched) + standalone /transform:
+  «ماذا تريد أن تحوّل؟» → 4 paths (أعمالي/موقعي/تسويقي/علامتي) → 3 quick
+  chip questions each (multi-select where sensible) → «وجدنا لك N فرص»
+  with estimated complexity → journey map per path (business: عميل محتمل
+  → تأهيل → عرض → عقد → تنفيذ → تقرير; website/marketing/brand each their
+  own) where the answer-mapped nodes GLOW (pulse + shadow) — «العقد
+  المتوهجة هي ما يمكن لـAGMA تحويله».
+- Rule engine is a static effects map (answer → glowing nodes +
+  opportunity line) — no backend, deterministic, honest.
+- Lead capture: «أرسل لي خطة البناء» (name+email) → lead-intake with a
+  structured summary (path, all answers, opportunities, complexity) so
+  sales replies specifically, not with a template. No contact = no
+  storage (data minimization).
+- Gauntlet green; shipped both branches.
+
 ## Deliverable approvals + visual annotations log (2026-08-08)
 
 - `20260808220000_deliverables.sql`: deliverables (draft/pending_client/

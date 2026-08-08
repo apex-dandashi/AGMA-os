@@ -30,6 +30,7 @@ import Magnetic from '@/components/ui/Magnetic';
 import Tilt from '@/components/ui/Tilt';
 import ClientLogos from '@/components/ClientLogos';
 import ScrollFocus from '@/components/ui/ScrollFocus';
+import TransformExperience from '@/components/TransformExperience';
 
 // Component to animate numerical statistics from 0 upwards on scroll viewport entrance
 function AnimatedCounter({ target, suffix = "" }: { target: number; suffix?: string }) {
@@ -271,6 +272,9 @@ export default function HomeClient() {
           </motion.div>
         </div>
       </section>
+
+      {/* تجربة «ماذا تريد أن تحوّل؟» — WOW الكبرى */}
+      <TransformExperience />
 
       {/* Stats / Proof Section */}
       <section className="py-20 border-y border-gray-dark bg-gray-dark/10">
