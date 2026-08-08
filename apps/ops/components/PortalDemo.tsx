@@ -17,24 +17,45 @@ import {
 
 const DEMO_COMPANY = 'شركة الأفق للتطوير العقاري';
 
-/* تصميم إنستغرام تجريبي — SVG مضمّن يجعل تجربة الدبابيس حقيقية */
-const DEMO_DESIGN = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
-<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#2B211B"/><stop offset="1" stop-color="#5a2d1a"/>
-    </linearGradient>
-  </defs>
-  <rect width="600" height="600" fill="url(#bg)"/>
-  <circle cx="520" cy="80" r="140" fill="#E8542F" opacity="0.25"/>
-  <circle cx="80" cy="540" r="100" fill="#E8542F" opacity="0.15"/>
-  <text x="300" y="200" text-anchor="middle" font-family="sans-serif" font-size="26" fill="#F6E3DC">مشروع الأفق ريزيدنس</text>
-  <text x="300" y="290" text-anchor="middle" font-family="sans-serif" font-size="52" font-weight="900" fill="#ffffff">وحدات فاخرة</text>
-  <text x="300" y="350" text-anchor="middle" font-family="sans-serif" font-size="34" font-weight="700" fill="#E8542F">بإطلالة على الواجهة البحرية</text>
-  <rect x="180" y="420" width="240" height="64" rx="32" fill="#E8542F"/>
-  <text x="300" y="462" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="700" fill="#1a1a1a">سجّل اهتمامك</text>
-  <text x="300" y="560" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#8A7F76">alofuq.sa · 920000000</text>
-</svg>`)}`;
+/**
+ * إعلان الديمو: خلفية مولّدة بالذكاء الاصطناعي (برج فاخر على الواجهة البحرية
+ * وقت الغروب — أنتجناها بأدوات AGMA نفسها) + نص عربي مركّب بطباعة HTML حادة
+ * فوقها، كما يخرج الإعلان من استوديو فعلي. الدبابيس تعمل فوق التركيبة كلها.
+ */
+function DemoAdArtwork() {
+  return (
+    <>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/demo/ad-bg.webp" alt="تصميم إعلان الوحدات"
+        className="block w-full select-none" draggable={false} />
+      <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-[6%] text-start">
+        <div>
+          <p className="text-[2.6cqw] font-bold tracking-wide text-white/80"
+            style={{ textShadow: '0 1px 8px rgba(0,0,0,.6)' }}>
+            مشروع الأفق ريزيدنس
+          </p>
+        </div>
+        <div>
+          <p className="text-[7cqw] font-black leading-tight text-white"
+            style={{ textShadow: '0 2px 16px rgba(0,0,0,.7)' }}>
+            وحدات فاخرة
+          </p>
+          <p className="mt-1 text-[4cqw] font-bold text-pulse-orange"
+            style={{ textShadow: '0 1px 10px rgba(0,0,0,.8)' }}>
+            بإطلالة على الواجهة البحرية
+          </p>
+          <span className="mt-[3%] inline-block rounded-full bg-pulse-orange px-[5%] py-[1.8%] text-[2.8cqw] font-black text-void shadow-lg">
+            سجّل اهتمامك
+          </span>
+          <p className="mt-[3%] text-[2cqw] text-white/60" dir="ltr"
+            style={{ textShadow: '0 1px 6px rgba(0,0,0,.6)' }}>
+            alofuq.sa · 920000000
+          </p>
+        </div>
+      </div>
+    </>
+  );
+}
 
 type Pin = { x: number; y: number; body: string };
 
@@ -190,17 +211,16 @@ function DemoInner() {
                   اضغط على أي نقطة من التصميم لتثبيت تعليق عليها بالضبط — جرّبها.
                 </p>
               )}
-              <div className="relative inline-block max-w-full">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={DEMO_DESIGN} alt="تصميم إعلان الوحدات"
-                  className="w-full max-w-[480px] rounded-sm"
-                  style={dlvStatus === 'pending' ? { cursor: 'crosshair' } : undefined}
-                  onClick={(e) => {
-                    if (dlvStatus !== 'pending') return;
-                    const r = e.currentTarget.getBoundingClientRect();
-                    setDraftPin({ x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height });
-                    setPinText('');
-                  }} />
+              <div className="relative inline-block w-full max-w-[480px] overflow-hidden rounded-sm"
+                style={{ containerType: 'inline-size',
+                  cursor: dlvStatus === 'pending' ? 'crosshair' : undefined }}
+                onClick={(e) => {
+                  if (dlvStatus !== 'pending') return;
+                  const r = e.currentTarget.getBoundingClientRect();
+                  setDraftPin({ x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height });
+                  setPinText('');
+                }}>
+                <DemoAdArtwork />
                 {pins.map((p, i) => (
                   <span key={i}
                     className="absolute grid h-6 w-6 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-pulse-orange text-xs font-black text-void shadow"

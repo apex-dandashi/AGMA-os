@@ -74,6 +74,23 @@ stamp/signature + per-user signatures, and «أين أدخل السجل التج
   where to enter client CR/VAT — discoverability fix).
 - Gauntlet green; migration pushed to production.
 
+## Demo 2.1 log (2026-08-08) — AI-generated ad artwork
+
+Owner: «نقدر نولد إعلان احترافي بدل هذا؟» — yes, with the session's image
+generation tools:
+
+- Generated a luxury waterfront-tower dusk shot (marketing_studio_image,
+  1:1, explicit no-text prompt, AGMA palette: charcoal/burnt-orange/cream)
+  → compressed to 39KB webp (sharp via pnpm store path) at
+  apps/ops/public/demo/ad-bg.webp.
+- Deliberate technique: AI renders the visual, Arabic copy is overlaid as
+  crisp HTML (container-query cqw sizing so text scales with the image,
+  text-shadows for legibility, pointer-events-none so the pin click-layer
+  still owns the whole surface). AI Arabic glyphs garble; studio-grade
+  Arabic typography stays HTML's job.
+- Pins/draft-pin/approve flows untouched and working over the composite.
+- Gauntlet green; shipped.
+
 ## Demo 2.0 log (2026-08-08)
 
 Owner: «الديمو ضعيف أبيه كامل — أبي الزبون يجرب سستم يبهره». Full rewrite
