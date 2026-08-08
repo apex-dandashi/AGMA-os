@@ -76,7 +76,7 @@ function DemoInner() {
   const [signing, setSigning] = useState(false);
   const [dlvStatus, setDlvStatus] = useState<'pending' | 'approved' | 'changes'>('pending');
   const [pins, setPins] = useState<Pin[]>([
-    { x: 0.5, y: 0.77, body: 'اجعلوا زر التسجيل أكبر قليلاً' },
+    { x: 0.28, y: 0.87, body: 'اجعلوا زر التسجيل أكبر قليلاً' },
   ]);
   const [draftPin, setDraftPin] = useState<{ x: number; y: number } | null>(null);
   const [pinText, setPinText] = useState('');

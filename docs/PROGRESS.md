@@ -74,6 +74,28 @@ stamp/signature + per-user signatures, and «أين أدخل السجل التج
   where to enter client CR/VAT — discoverability fix).
 - Gauntlet green; migration pushed to production.
 
+## AI design pipeline log (2026-08-08) — «ربطها»
+
+Owner asked to wire ad generation INTO the system, not a one-off asset:
+
+- `generate-design` edge function (deployed, verify_jwt default ON —
+  internal tool): team-role-checked (client role 403), provider-agnostic
+  via IMAGE_API_BASE/IMAGE_API_KEY/IMAGE_MODEL secrets calling the
+  standard /images/generations contract (b64 or url), 10MB cap, uploads
+  to the private deliverables bucket under the client's folder, creates
+  the next numbered version with an auto note «مولَّد بالذكاء الاصطناعي —
+  راجعه بشرياً» (rule 2: human gate before any client-facing surface —
+  generation lands as an internal version, sending to client stays a
+  separate deliberate step).
+- Ops deliverables: «ولّد بالذكاء الاصطناعي» per deliverable → prompt
+  textarea (prefilled with title, guidance: describe scene/colors/style,
+  no in-image text) → new version appears in the flow. Unconfigured
+  provider returns the Arabic setup message straight to the toast.
+- Demo seed pin repositioned off the subtitle (0.28/0.87 — on the CTA).
+- Owner action: add the three IMAGE_* secrets (any OpenAI-compatible
+  provider, incl. Higgsfield-compatible gateways) — button lights up
+  instantly. Gauntlet green; shipped.
+
 ## Demo 2.1 log (2026-08-08) — AI-generated ad artwork
 
 Owner: «نقدر نولد إعلان احترافي بدل هذا؟» — yes, with the session's image

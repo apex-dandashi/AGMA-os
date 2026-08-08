@@ -115,6 +115,30 @@ export default function DeliverablesBlock({ projectId, clientId }: {
     { invalidate: [key], successMessage: 'رُفع الإصدار' }
   );
 
+  const [genFor, setGenFor] = useState<string | null>(null);
+  const [genPrompt, setGenPrompt] = useState('');
+  const generate = useAppMutation(
+    async (dlvId: string) => {
+      const { data, error } = await getSupabase().functions.invoke('generate-design', {
+        body: { deliverable_id: dlvId, prompt: genPrompt.trim() },
+      });
+      if (error) {
+        // رسالة عدم التهيئة تصل من جسم الاستجابة
+        const ctx = (error as { context?: Response }).context;
+        if (ctx) {
+          const body = await ctx.json().catch(() => null);
+          if (body?.message) throw new Error(body.message);
+        }
+        throw new Error('تعذر التوليد — حاول مجدداً');
+      }
+      if (!data?.ok) throw new Error(data?.message ?? 'تعذر التوليد');
+      setGenFor(null);
+      setGenPrompt('');
+    },
+    { invalidate: [key],
+      successMessage: 'وُلد التصميم إصداراً جديداً — راجعه بشرياً قبل عرضه على العميل (قاعدة ثابتة)' }
+  );
+
   const send = useAppMutation(
     async (dlvId: string) => {
       const { error } = await getSupabase().from('deliverables')
@@ -160,6 +184,13 @@ export default function DeliverablesBlock({ projectId, clientId }: {
                   <span className="text-xs text-pulse-orange">«{latest.decision_note}»</span>
                 )}
                 <span className="ms-auto flex items-center gap-2">
+                  <Button variant="ghost" size="xs"
+                    onClick={() => {
+                      setGenFor(genFor === d.id ? null : d.id);
+                      setGenPrompt(`تصميم ${d.title} — `);
+                    }}>
+                    ولّد بالذكاء الاصطناعي
+                  </Button>
                   <label className="cursor-pointer text-xs text-gray-light hover:text-pulse-orange">
                     + إصدار
                     <input type="file" accept="image/png,image/jpeg,image/webp" className="hidden"
@@ -184,6 +215,19 @@ export default function DeliverablesBlock({ projectId, clientId }: {
                   </Button>
                 </span>
               </div>
+              {genFor === d.id && (
+                <div className="mt-2 flex flex-wrap items-end gap-2 rounded-sm border border-pulse-orange/50 p-2">
+                  <Textarea label="صف التصميم المطلوب (المشهد، الألوان، الأسلوب — بلا نص داخل الصورة، النص يُركب لاحقاً)"
+                    rows={2} className="min-w-80" value={genPrompt}
+                    onChange={(e) => setGenPrompt(e.target.value)} />
+                  <Button size="xs" loading={generate.isPending}
+                    disabled={genPrompt.trim().length < 10}
+                    onClick={() => generate.mutate(d.id)}>
+                    ولّد (٣٠–٩٠ ثانية)
+                  </Button>
+                  <Button variant="ghost" size="xs" onClick={() => setGenFor(null)}>إلغاء</Button>
+                </div>
+              )}
               {openDlv === d.id && latest && (
                 <div className="mt-3 space-y-2">
                   <PinViewer path={latest.file_path} comments={latestComments} />
