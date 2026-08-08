@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { marked } from 'marked';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../../../lib/publicConfig';
 import type { BlogArticle } from '../../../lib/blog';
 
@@ -23,14 +25,21 @@ export default function ReadClient() {
       .catch(() => setArticle(null));
   }, [slug]);
 
-  if (article === undefined) {
-    return <main dir="rtl" className="mx-auto max-w-3xl px-4 py-16 text-gray-medium">جارٍ التحميل…</main>;
-  }
-  if (article === null) {
+  if (article === undefined || article === null) {
     return (
-      <main dir="rtl" className="mx-auto max-w-3xl px-4 py-16">
-        <p className="text-gray-light">المقال غير موجود.</p>
-        <Link href="/blog/" className="text-pulse-orange hover:underline">← عودة لآخر الأخبار</Link>
+      <main className="min-h-screen relative bg-pure-ink">
+        <Header />
+        <div dir="rtl" className="mx-auto max-w-3xl px-4 pb-20 pt-32 lg:pt-40">
+          {article === undefined ? (
+            <p className="text-gray-medium">جارٍ التحميل…</p>
+          ) : (
+            <>
+              <p className="text-gray-light">المقال غير موجود.</p>
+              <Link href="/blog/" className="text-pulse-orange hover:underline">← عودة لآخر الأخبار</Link>
+            </>
+          )}
+        </div>
+        <Footer />
       </main>
     );
   }
@@ -38,7 +47,9 @@ export default function ReadClient() {
   const html = marked.parse(article.body_md ?? '', { async: false }) as string;
 
   return (
-    <main dir="rtl" className="mx-auto max-w-3xl px-4 py-16">
+    <main className="min-h-screen relative bg-pure-ink">
+      <Header />
+      <div dir="rtl" className="mx-auto max-w-3xl px-4 pb-20 pt-32 lg:pt-40">
       <nav className="mb-6 text-xs text-gray-medium">
         <Link href="/blog/" className="hover:text-pulse-orange">← آخر الأخبار</Link>
       </nav>
@@ -76,6 +87,8 @@ export default function ReadClient() {
           </section>
         )}
       </article>
+      </div>
+      <Footer />
     </main>
   );
 }

@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { marked } from 'marked';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import { fetchArticle, fetchPublishedArticles } from '../../../lib/blog';
 
 /**
@@ -47,9 +49,13 @@ export default async function ArticlePage(
   if (!a) {
     // حارس البناء: القاعدة غير متاحة لحظة التصدير — صفحة بسيطة بدل كسر البناء
     return (
-      <main dir="rtl" className="mx-auto max-w-3xl px-4 py-16">
-        <p className="text-gray-light">المقال في الطريق —</p>
-        <Link href="/blog/" className="text-pulse-orange hover:underline">← عودة لآخر الأخبار</Link>
+      <main className="min-h-screen relative bg-pure-ink">
+        <Header />
+        <div dir="rtl" className="mx-auto max-w-3xl px-4 pb-20 pt-32 lg:pt-40">
+          <p className="text-gray-light">المقال في الطريق —</p>
+          <Link href="/blog/" className="text-pulse-orange hover:underline">← عودة لآخر الأخبار</Link>
+        </div>
+        <Footer />
       </main>
     );
   }
@@ -77,7 +83,9 @@ export default async function ArticlePage(
   };
 
   return (
-    <main dir="rtl" className="mx-auto max-w-3xl px-4 py-16">
+    <main className="min-h-screen relative bg-pure-ink">
+      <Header />
+      <div dir="rtl" className="mx-auto max-w-3xl px-4 pb-20 pt-32 lg:pt-40">
       <script type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
@@ -131,6 +139,8 @@ export default async function ArticlePage(
           </Link>
         </section>
       </article>
+      </div>
+      <Footer />
     </main>
   );
 }

@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import { fetchPublishedArticles } from '../../lib/blog';
 import FreshArticles from './FreshArticles';
 
@@ -15,7 +17,9 @@ export default async function BlogIndex() {
   const bakedSlugs = articles.map((a) => a.slug);
 
   return (
-    <main dir="rtl" className="mx-auto max-w-3xl px-4 py-16">
+    <main className="min-h-screen relative bg-pure-ink">
+      <Header />
+      <div dir="rtl" className="mx-auto max-w-3xl px-4 pb-20 pt-32 lg:pt-40">
       <h1 className="mb-2 text-3xl font-black text-snow">آخر الأخبار</h1>
       <p className="mb-10 text-gray-light">
         أفكار وأخبار مجالنا — سيو، تسويق رقمي، ذكاء اصطناعي — مترجمة لقرارات
@@ -58,6 +62,8 @@ export default async function BlogIndex() {
           ))}
         </ul>
       )}
+      </div>
+      <Footer />
     </main>
   );
 }
