@@ -46,6 +46,7 @@ export default function CareersClient() {
     portfolio_url: '', linkedin_url: '', accommodations: '', accommodations_show: 'لا',
     cover_note: '', talent_pool_consent: false, privacy_ok: false,
   });
+  const [cv, setCv] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [doneRef, setDoneRef] = useState<string | null>(null);
@@ -65,12 +66,13 @@ export default function CareersClient() {
     if (form.full_name.trim().length < 2) { setError('اكتب اسمك الكامل.'); return; }
     if (!/.+@.+\..+/.test(form.email.trim())) { setError('أدخل بريداً إلكترونياً صالحاً.'); return; }
     if (!form.privacy_ok) { setError('أقرّ بإشعار خصوصية المتقدمين للمتابعة.'); return; }
+    if (cv) {
+      if (!/\.(pdf|docx?)$/i.test(cv.name)) { setError('ارفع السيرة الذاتية بصيغة PDF أو DOC أو DOCX.'); return; }
+      if (cv.size > 5 * 1024 * 1024) { setError('حجم السيرة الذاتية يتجاوز ٥ ميغابايت — صغّر الملف.'); return; }
+    }
     setBusy(true);
     try {
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/public-forms`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
+      const payload = JSON.stringify({
           action: 'apply',
           job_id: applyJob?.id,
           role_id: applyJob ? undefined : form.role_id,
@@ -90,13 +92,32 @@ export default function CareersClient() {
             form.accommodations_show === 'نعم' ? form.accommodations.trim() || 'نعم' : undefined,
           cover_note: form.cover_note.trim() || undefined,
           talent_pool_consent: form.talent_pool_consent,
-        }),
-      });
+        });
+      let res: Response;
+      if (cv) {
+        const fd = new FormData();
+        fd.append('payload', payload);
+        fd.append('cv', cv);
+        res = await fetch(`${SUPABASE_URL}/functions/v1/public-forms`, {
+          method: 'POST', body: fd,
+        });
+      } else {
+        res = await fetch(`${SUPABASE_URL}/functions/v1/public-forms`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: payload,
+        });
+      }
       const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error();
+      if (!res.ok || !data.ok) {
+        if (data.error === 'cv_type') throw new Error('ارفع السيرة الذاتية بصيغة PDF أو DOC أو DOCX.');
+        if (data.error === 'cv_size') throw new Error('حجم السيرة الذاتية يتجاوز ٥ ميغابايت.');
+        if (data.error === 'rate_limited') throw new Error('محاولات كثيرة — انتظر قليلاً ثم أعد الإرسال.');
+        throw new Error();
+      }
       setDoneRef(data.reference);
-    } catch {
-      setError('تعذر الإرسال — حاول مجدداً.');
+    } catch (err) {
+      setError((err as Error).message || 'تعذر الإرسال — حاول مجدداً أو راسلنا على care@agma.com.sa');
     } finally {
       setBusy(false);
     }
@@ -281,6 +302,13 @@ export default function CareersClient() {
                 <input id="a-li" dir="ltr" placeholder="https://linkedin.com/in/…" className={field} value={form.linkedin_url}
                   onChange={(e) => setForm((f) => ({ ...f, linkedin_url: e.target.value }))} />
               </div>
+            </div>
+            <div>
+              <label htmlFor="a-cv" className={label}>السيرة الذاتية (PDF أو DOCX، حتى ٥MB)</label>
+              <input id="a-cv" type="file" accept=".pdf,.doc,.docx"
+                className="w-full text-sm text-gray-light file:me-3 file:rounded-md file:border file:border-white/20 file:bg-white/5 file:px-4 file:py-2 file:text-sm file:text-snow"
+                onChange={(e) => setCv(e.target.files?.[0] ?? null)} />
+              {cv && <p className="mt-1 text-xs text-gray-light">{cv.name}</p>}
             </div>
             <p className="text-[11px] text-gray-medium">
               لا ترفع أو تشارك أي ملفات أو بيانات سرية مملوكة لعملائك أو أصحاب

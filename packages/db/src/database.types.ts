@@ -451,6 +451,8 @@ export type Database = {
           city: string | null
           cover_note: string | null
           created_at: string
+          cv_filename: string | null
+          cv_path: string | null
           email: string
           english_level: string | null
           experience_level: string | null
@@ -478,6 +480,8 @@ export type Database = {
           city?: string | null
           cover_note?: string | null
           created_at?: string
+          cv_filename?: string | null
+          cv_path?: string | null
           email: string
           english_level?: string | null
           experience_level?: string | null
@@ -505,6 +509,8 @@ export type Database = {
           city?: string | null
           cover_note?: string | null
           created_at?: string
+          cv_filename?: string | null
+          cv_path?: string | null
           email?: string
           english_level?: string | null
           experience_level?: string | null

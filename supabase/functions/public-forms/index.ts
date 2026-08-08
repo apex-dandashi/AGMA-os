@@ -91,9 +91,19 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: 'method_not_allowed' }), { status: 405, headers });
   }
 
+  // JSON عادي، أو multipart عند إرفاق سيرة ذاتية (حقل payload + ملف cv)
   let raw: unknown;
+  let cvFile: File | null = null;
   try {
-    raw = await req.json();
+    const ct = req.headers.get('content-type') ?? '';
+    if (ct.includes('multipart/form-data')) {
+      const fd = await req.formData();
+      raw = JSON.parse(String(fd.get('payload') ?? '{}'));
+      const f = fd.get('cv');
+      if (f instanceof File && f.size > 0) cvFile = f;
+    } else {
+      raw = await req.json();
+    }
   } catch {
     return new Response(JSON.stringify({ error: 'invalid_json' }), { status: 400, headers });
   }
@@ -178,8 +188,36 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: 'job_closed' }), { status: 400, headers });
       }
     }
+    // السيرة الذاتية: PDF/DOC/DOCX حتى ٥MB، باسم عشوائي في دلو خاص
+    let cvPath: string | null = null;
+    let cvName: string | null = null;
+    if (cvFile) {
+      const ALLOWED: Record<string, string> = {
+        'application/pdf': 'pdf',
+        'application/msword': 'doc',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+      };
+      const ext = ALLOWED[cvFile.type];
+      const nameExt = cvFile.name.toLowerCase().match(/\.(pdf|docx?)$/)?.[1];
+      if (!ext || !nameExt) {
+        return new Response(JSON.stringify({ error: 'cv_type' }), { status: 400, headers });
+      }
+      if (cvFile.size > 5 * 1024 * 1024) {
+        return new Response(JSON.stringify({ error: 'cv_size' }), { status: 400, headers });
+      }
+      cvPath = `${crypto.randomUUID()}.${ext}`;
+      cvName = cvFile.name.slice(0, 200);
+      const { error: upErr } = await supabase.storage.from('applications')
+        .upload(cvPath, cvFile, { contentType: cvFile.type });
+      if (upErr) {
+        console.error('cv upload', upErr.message);
+        return new Response(JSON.stringify({ error: 'server' }), { status: 500, headers });
+      }
+    }
+
     const { data, error } = await supabase.from('career_applications')
-      .insert(row).select('public_reference').single();
+      .insert({ ...row, cv_path: cvPath, cv_filename: cvName })
+      .select('public_reference').single();
     if (error) {
       console.error('application insert', error.code);
       return new Response(JSON.stringify({ error: 'server' }), { status: 500, headers });

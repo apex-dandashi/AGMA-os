@@ -23,3 +23,7 @@ verify_jwt = false
 # Public error sink — browser errors carry no user JWT.
 [functions.client-errors]
 verify_jwt = false
+
+# Public voice/careers forms — same rationale as lead-intake.
+[functions.public-forms]
+verify_jwt = false

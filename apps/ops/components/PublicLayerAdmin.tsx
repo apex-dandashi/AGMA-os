@@ -231,6 +231,16 @@ export function CareersSection() {
                 <a href={a.portfolio_url} target="_blank" rel="noreferrer" dir="ltr"
                   className="text-xs text-pulse-orange underline-offset-2 hover:underline">أعماله</a>
               )}
+              {a.cv_path && (
+                <Button variant="ghost" size="xs"
+                  onClick={async () => {
+                    const { data, error } = await getSupabase().storage
+                      .from('applications').createSignedUrl(a.cv_path!, 120);
+                    if (!error && data) window.open(data.signedUrl, '_blank');
+                  }}>
+                  السيرة الذاتية
+                </Button>
+              )}
               {a.talent_pool_consent && <Badge variant="outline">مواهب حتى {a.talent_pool_until}</Badge>}
               <span className="ms-auto">
                 <Select value={a.status} aria-label={`حالة ${a.public_reference}`}

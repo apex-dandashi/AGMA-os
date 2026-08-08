@@ -74,6 +74,29 @@ stamp/signature + per-user signatures, and «أين أدخل السجل التج
   where to enter client CR/VAT — discoverability fix).
 - Gauntlet green; migration pushed to production.
 
+## Public layer hotfix + CV upload log (2026-08-08)
+
+Owner hit «تعذر الإرسال» on the live careers form and asked why + where's
+the CV upload.
+
+- Root cause of the failure: `public-forms` was deployed WITHOUT a
+  config.toml `verify_jwt = false` entry (lead-intake had one) → production
+  required an Authorization header the browser never sends → 401 → generic
+  error. Fixed in config.toml + redeployed; verified live against
+  production: 200 with no auth header. Lesson: every public edge function
+  needs its config.toml entry BEFORE first deploy.
+- CV upload (was 🟡 in docs/16, built now on request): private
+  'applications' bucket (5MB, PDF/DOC/DOCX mime allowlist at bucket level),
+  upload only via the edge function (service role) — multipart form-data
+  (payload JSON + cv file), double validation (mime + extension), random
+  server filename, original name stored separately; hr/admin read via
+  120s signed URLs («السيرة الذاتية» button in التوظيف). Tested locally:
+  PDF stored in bucket + row updated; .exe rejected with cv_type.
+- CareersClient: file input + specific Arabic errors (type/size/rate-limit).
+- e2e latent flake fixed: empty pipeline shows two «+ عميل محتمل» buttons
+  (header + empty-state CTA) — spec now picks .first(); it had been masked
+  by rls-check seeding a lead before e2e in the usual pipeline order.
+
 ## Public layer log (2026-08-08) — docs/16, sixth owner study
 
 Study: «الإضافات الاحترافية للواجهة وبوابة الشكاوى والتوظيف الذكي».

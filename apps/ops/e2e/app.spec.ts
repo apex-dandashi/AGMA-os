@@ -85,8 +85,9 @@ test('login, enroll MFA, work the pipeline, open documents', async ({ page }) =>
     timeout: 15_000,
   });
 
-  // -- create a lead through the validated modal
-  await page.getByRole('button', { name: '+ عميل محتمل' }).click();
+  // -- create a lead through the validated modal (empty board also shows the
+  // empty-state CTA with the same label → pick the header button explicitly)
+  await page.getByRole('button', { name: '+ عميل محتمل' }).first().click();
   await page.getByLabel('الاسم').fill('عميل الاختبار الشامل');
   await page.getByLabel('الشركة').fill('شركة E2E');
   await page.getByRole('button', { name: 'حفظ' }).click();
