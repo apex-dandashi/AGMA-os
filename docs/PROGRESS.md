@@ -74,6 +74,40 @@ stamp/signature + per-user signatures, and «أين أدخل السجل التج
   where to enter client CR/VAT — discoverability fix).
 - Gauntlet green; migration pushed to production.
 
+## IMS Phase 1 log (2026-08-08) — docs/15, fifth owner study
+
+Study: «AGMA Integrated Management System» (ISO 9001/27001/27701/22301/20000/
+42001/37301 + PDPL + NCA). Verdicts sized to a 2-person agency in docs/15;
+much of the spec's core already existed (immutable audit trail, versioned
+document control, SoD, MFA). Built now — the audit-evidence core:
+
+- `20260808130000_ims_core.sql`: versioned ims_frameworks (5 seeded incl.
+  NCNICC as *planned/استرشادي* — applicability is a field, never hardcoded)
+  + 27 controls with honest statuses (system_enforced vs manual required)
+  + m2m control_mappings (access review → 27001+PDPL+NCNICC proven pattern)
+  + evidence center (one evidence → many controls, valid_until) + unified
+  risk register (guard: residual ≥12 acceptance is admin-only w/ written
+  reason — first version read generated columns inside a BEFORE trigger,
+  which are not yet computed there; fixed by computing inline) + legal
+  obligations register (6 seeded) + NCR/CAPA with double close-gate
+  (effectiveness note required + verifier ≠ owner).
+- `20260808140000_ims_privacy.sql`: ROPA (ended activities kept 5y, DPIA
+  auto-required on sensitive/cross-border), DSAR (statutory 30d computed
+  from received_at in Riyadh tz via trigger — generated columns rejected
+  tz expressions as non-immutable; extension ≤30d needs written reason),
+  privacy_breaches (72h clock from aware_at, instant escalation to
+  admin/dpo/legal + daily countdown reminders), ai_systems register
+  (approval is admin-only, stamped), run_daily_jobs_v6 (DSAR 15/7/3/1/
+  overdue, breach clock, obligations 30/7, control review→review_required).
+- All guards fixture-proved per persona (strategist blocked from critical
+  risk acceptance; owner blocked from closing own CAPA; dpo blocked from
+  AI approval; extension w/o reason rejected; 62h countdown correct).
+- UI: new nav «الحوكمة» — 7 tabs (overview w/ honest readiness cards,
+  controls w/ framework filter + mapping badges, risks w/ scored accept
+  flow, obligations, privacy [breaches w/ live countdown → DSAR w/ days
+  left → ROPA], CAPA w/ effectiveness-close form, AI register).
+- Gauntlet green; both migrations pushed to production.
+
 ## God mode + all-tasks log (2026-08-08)
 
 Owner: «خلي مدير النظام عنده القدرة على تعديل أي شيء أو حذفه» + mid-turn

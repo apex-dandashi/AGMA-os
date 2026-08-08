@@ -158,6 +158,83 @@ export type Database = {
           },
         ]
       }
+      ai_systems: {
+        Row: {
+          approved: boolean
+          approved_at: string | null
+          approved_by: string | null
+          automated_decision: boolean
+          client_confidential: boolean
+          created_at: string
+          cross_border: boolean
+          human_review: boolean
+          id: string
+          internal_or_external: string
+          last_review_on: string | null
+          model: string | null
+          name: string
+          personal_data: boolean
+          prohibited_uses: string | null
+          provider: string
+          purpose: string | null
+          risk_note: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          approved?: boolean
+          approved_at?: string | null
+          approved_by?: string | null
+          automated_decision?: boolean
+          client_confidential?: boolean
+          created_at?: string
+          cross_border?: boolean
+          human_review?: boolean
+          id?: string
+          internal_or_external?: string
+          last_review_on?: string | null
+          model?: string | null
+          name: string
+          personal_data?: boolean
+          prohibited_uses?: string | null
+          provider: string
+          purpose?: string | null
+          risk_note?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          approved?: boolean
+          approved_at?: string | null
+          approved_by?: string | null
+          automated_decision?: boolean
+          client_confidential?: boolean
+          created_at?: string
+          cross_border?: boolean
+          human_review?: boolean
+          id?: string
+          internal_or_external?: string
+          last_review_on?: string | null
+          model?: string | null
+          name?: string
+          personal_data?: boolean
+          prohibited_uses?: string | null
+          provider?: string
+          purpose?: string | null
+          risk_note?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_systems_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       allocation_rules: {
         Row: {
           bucket: string
@@ -595,6 +672,136 @@ export type Database = {
           },
         ]
       }
+      control_mappings: {
+        Row: {
+          framework_id: string
+          id: string
+          mapped_ref: string
+          note: string | null
+          source_control_id: string
+        }
+        Insert: {
+          framework_id: string
+          id?: string
+          mapped_ref: string
+          note?: string | null
+          source_control_id: string
+        }
+        Update: {
+          framework_id?: string
+          id?: string
+          mapped_ref?: string
+          note?: string | null
+          source_control_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "control_mappings_framework_id_fkey"
+            columns: ["framework_id"]
+            isOneToOne: false
+            referencedRelation: "ims_frameworks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "control_mappings_source_control_id_fkey"
+            columns: ["source_control_id"]
+            isOneToOne: false
+            referencedRelation: "ims_controls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      data_subject_requests: {
+        Row: {
+          channel: string | null
+          client_id: string | null
+          contact: string | null
+          created_at: string
+          details: string | null
+          extended: boolean
+          extended_due_on: string | null
+          extension_reason: string | null
+          id: string
+          identity_verified_at: string | null
+          kind: Database["public"]["Enums"]["dsar_kind"]
+          owner: string | null
+          received_at: string
+          responded_at: string | null
+          response_summary: string | null
+          status: Database["public"]["Enums"]["dsar_status"]
+          statutory_due_on: string
+          subject_name: string
+          subject_notified_of_extension_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          channel?: string | null
+          client_id?: string | null
+          contact?: string | null
+          created_at?: string
+          details?: string | null
+          extended?: boolean
+          extended_due_on?: string | null
+          extension_reason?: string | null
+          id?: string
+          identity_verified_at?: string | null
+          kind: Database["public"]["Enums"]["dsar_kind"]
+          owner?: string | null
+          received_at?: string
+          responded_at?: string | null
+          response_summary?: string | null
+          status?: Database["public"]["Enums"]["dsar_status"]
+          statutory_due_on?: string
+          subject_name: string
+          subject_notified_of_extension_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          channel?: string | null
+          client_id?: string | null
+          contact?: string | null
+          created_at?: string
+          details?: string | null
+          extended?: boolean
+          extended_due_on?: string | null
+          extension_reason?: string | null
+          id?: string
+          identity_verified_at?: string | null
+          kind?: Database["public"]["Enums"]["dsar_kind"]
+          owner?: string | null
+          received_at?: string
+          responded_at?: string | null
+          response_summary?: string | null
+          status?: Database["public"]["Enums"]["dsar_status"]
+          statutory_due_on?: string
+          subject_name?: string
+          subject_notified_of_extension_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_subject_requests_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_360"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "data_subject_requests_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "data_subject_requests_owner_fkey"
+            columns: ["owner"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_costs: {
         Row: {
           costs: Json
@@ -837,6 +1044,83 @@ export type Database = {
           },
         ]
       }
+      evidence: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          kind: string
+          owner: string | null
+          period_from: string | null
+          period_to: string | null
+          source: string
+          title: string
+          valid_until: string | null
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          kind?: string
+          owner?: string | null
+          period_from?: string | null
+          period_to?: string | null
+          source?: string
+          title: string
+          valid_until?: string | null
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          kind?: string
+          owner?: string | null
+          period_from?: string | null
+          period_to?: string | null
+          source?: string
+          title?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evidence_owner_fkey"
+            columns: ["owner"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evidence_controls: {
+        Row: {
+          control_id: string
+          evidence_id: string
+        }
+        Insert: {
+          control_id: string
+          evidence_id: string
+        }
+        Update: {
+          control_id?: string
+          evidence_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evidence_controls_control_id_fkey"
+            columns: ["control_id"]
+            isOneToOne: false
+            referencedRelation: "ims_controls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evidence_controls_evidence_id_fkey"
+            columns: ["evidence_id"]
+            isOneToOne: false
+            referencedRelation: "evidence"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expenses: {
         Row: {
           amount: number
@@ -987,6 +1271,116 @@ export type Database = {
           id?: string
           key?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      ims_controls: {
+        Row: {
+          applicability_reason: string | null
+          applicable: boolean
+          created_at: string
+          framework_id: string
+          id: string
+          implementation_mode: Database["public"]["Enums"]["control_impl_mode"]
+          implementation_note: string | null
+          last_reviewed_on: string | null
+          next_review_on: string | null
+          owner_role: Database["public"]["Enums"]["user_role"] | null
+          ref_code: string
+          requirement_ar: string | null
+          review_months: number
+          status: Database["public"]["Enums"]["control_status"]
+          title_ar: string
+          updated_at: string
+        }
+        Insert: {
+          applicability_reason?: string | null
+          applicable?: boolean
+          created_at?: string
+          framework_id: string
+          id?: string
+          implementation_mode?: Database["public"]["Enums"]["control_impl_mode"]
+          implementation_note?: string | null
+          last_reviewed_on?: string | null
+          next_review_on?: string | null
+          owner_role?: Database["public"]["Enums"]["user_role"] | null
+          ref_code: string
+          requirement_ar?: string | null
+          review_months?: number
+          status?: Database["public"]["Enums"]["control_status"]
+          title_ar: string
+          updated_at?: string
+        }
+        Update: {
+          applicability_reason?: string | null
+          applicable?: boolean
+          created_at?: string
+          framework_id?: string
+          id?: string
+          implementation_mode?: Database["public"]["Enums"]["control_impl_mode"]
+          implementation_note?: string | null
+          last_reviewed_on?: string | null
+          next_review_on?: string | null
+          owner_role?: Database["public"]["Enums"]["user_role"] | null
+          ref_code?: string
+          requirement_ar?: string | null
+          review_months?: number
+          status?: Database["public"]["Enums"]["control_status"]
+          title_ar?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ims_controls_framework_id_fkey"
+            columns: ["framework_id"]
+            isOneToOne: false
+            referencedRelation: "ims_frameworks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ims_frameworks: {
+        Row: {
+          applicability_note: string | null
+          certifiable: boolean
+          created_at: string
+          effective_from: string | null
+          id: string
+          key: string
+          kind: string
+          name_ar: string
+          notes: string | null
+          status: Database["public"]["Enums"]["framework_status"]
+          superseded_on: string | null
+          version: string
+        }
+        Insert: {
+          applicability_note?: string | null
+          certifiable?: boolean
+          created_at?: string
+          effective_from?: string | null
+          id?: string
+          key: string
+          kind: string
+          name_ar: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["framework_status"]
+          superseded_on?: string | null
+          version: string
+        }
+        Update: {
+          applicability_note?: string | null
+          certifiable?: boolean
+          created_at?: string
+          effective_from?: string | null
+          id?: string
+          key?: string
+          kind?: string
+          name_ar?: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["framework_status"]
+          superseded_on?: string | null
+          version?: string
         }
         Relationships: []
       }
@@ -1378,6 +1772,57 @@ export type Database = {
           },
         ]
       }
+      legal_obligations: {
+        Row: {
+          applicability_reason: string | null
+          applicable: boolean
+          authority: string | null
+          created_at: string
+          frequency: string | null
+          id: string
+          last_review_on: string | null
+          law: string
+          next_due_on: string | null
+          notes: string | null
+          owner_role: Database["public"]["Enums"]["user_role"]
+          status: string
+          summary_ar: string
+          updated_at: string
+        }
+        Insert: {
+          applicability_reason?: string | null
+          applicable?: boolean
+          authority?: string | null
+          created_at?: string
+          frequency?: string | null
+          id?: string
+          last_review_on?: string | null
+          law: string
+          next_due_on?: string | null
+          notes?: string | null
+          owner_role?: Database["public"]["Enums"]["user_role"]
+          status?: string
+          summary_ar: string
+          updated_at?: string
+        }
+        Update: {
+          applicability_reason?: string | null
+          applicable?: boolean
+          authority?: string | null
+          created_at?: string
+          frequency?: string | null
+          id?: string
+          last_review_on?: string | null
+          law?: string
+          next_due_on?: string | null
+          notes?: string | null
+          owner_role?: Database["public"]["Enums"]["user_role"]
+          status?: string
+          summary_ar?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       meeting_todos: {
         Row: {
           created_at: string
@@ -1555,6 +2000,98 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nonconformities: {
+        Row: {
+          action_plan: string | null
+          client_id: string | null
+          containment: string | null
+          created_at: string
+          description: string | null
+          due_on: string | null
+          effectiveness_note: string | null
+          id: string
+          owner: string | null
+          root_cause: string | null
+          root_cause_method: string | null
+          severity: string
+          source: string
+          status: Database["public"]["Enums"]["ncr_status"]
+          title: string
+          updated_at: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          action_plan?: string | null
+          client_id?: string | null
+          containment?: string | null
+          created_at?: string
+          description?: string | null
+          due_on?: string | null
+          effectiveness_note?: string | null
+          id?: string
+          owner?: string | null
+          root_cause?: string | null
+          root_cause_method?: string | null
+          severity?: string
+          source?: string
+          status?: Database["public"]["Enums"]["ncr_status"]
+          title: string
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          action_plan?: string | null
+          client_id?: string | null
+          containment?: string | null
+          created_at?: string
+          description?: string | null
+          due_on?: string | null
+          effectiveness_note?: string | null
+          id?: string
+          owner?: string | null
+          root_cause?: string | null
+          root_cause_method?: string | null
+          severity?: string
+          source?: string
+          status?: Database["public"]["Enums"]["ncr_status"]
+          title?: string
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nonconformities_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_360"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nonconformities_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nonconformities_owner_fkey"
+            columns: ["owner"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nonconformities_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -2192,6 +2729,174 @@ export type Database = {
           },
         ]
       }
+      privacy_breaches: {
+        Row: {
+          authority_deadline_at: string
+          authority_notification_required: boolean | null
+          authority_notified_at: string | null
+          aware_at: string
+          containment: string | null
+          corrective_actions: string | null
+          created_at: string
+          data_categories: string | null
+          harm_likely: boolean | null
+          id: string
+          nonconformity_id: string | null
+          owner: string | null
+          risk_assessment: string | null
+          sensitive_data: boolean
+          status: string
+          subjects_estimate: number | null
+          subjects_notification_required: boolean | null
+          subjects_notified_at: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          authority_deadline_at?: string
+          authority_notification_required?: boolean | null
+          authority_notified_at?: string | null
+          aware_at?: string
+          containment?: string | null
+          corrective_actions?: string | null
+          created_at?: string
+          data_categories?: string | null
+          harm_likely?: boolean | null
+          id?: string
+          nonconformity_id?: string | null
+          owner?: string | null
+          risk_assessment?: string | null
+          sensitive_data?: boolean
+          status?: string
+          subjects_estimate?: number | null
+          subjects_notification_required?: boolean | null
+          subjects_notified_at?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          authority_deadline_at?: string
+          authority_notification_required?: boolean | null
+          authority_notified_at?: string | null
+          aware_at?: string
+          containment?: string | null
+          corrective_actions?: string | null
+          created_at?: string
+          data_categories?: string | null
+          harm_likely?: boolean | null
+          id?: string
+          nonconformity_id?: string | null
+          owner?: string | null
+          risk_assessment?: string | null
+          sensitive_data?: boolean
+          status?: string
+          subjects_estimate?: number | null
+          subjects_notification_required?: boolean | null
+          subjects_notified_at?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "privacy_breaches_nonconformity_id_fkey"
+            columns: ["nonconformity_id"]
+            isOneToOne: false
+            referencedRelation: "nonconformities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "privacy_breaches_owner_fkey"
+            columns: ["owner"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      processing_activities: {
+        Row: {
+          agma_role: string
+          created_at: string
+          cross_border: boolean
+          cross_border_note: string | null
+          data_categories: string | null
+          data_subjects: string | null
+          department: string | null
+          dpia_note: string | null
+          dpia_required: boolean
+          ended_on: string | null
+          id: string
+          last_review_on: string | null
+          legal_basis: Database["public"]["Enums"]["pdpl_legal_basis"]
+          name: string
+          next_review_on: string | null
+          processors: string | null
+          purpose: string
+          recipients: string | null
+          retention: string | null
+          security_measures: string | null
+          sensitive_data: boolean
+          status: string
+          storage_location: string | null
+          systems: string | null
+          updated_at: string
+        }
+        Insert: {
+          agma_role?: string
+          created_at?: string
+          cross_border?: boolean
+          cross_border_note?: string | null
+          data_categories?: string | null
+          data_subjects?: string | null
+          department?: string | null
+          dpia_note?: string | null
+          dpia_required?: boolean
+          ended_on?: string | null
+          id?: string
+          last_review_on?: string | null
+          legal_basis: Database["public"]["Enums"]["pdpl_legal_basis"]
+          name: string
+          next_review_on?: string | null
+          processors?: string | null
+          purpose: string
+          recipients?: string | null
+          retention?: string | null
+          security_measures?: string | null
+          sensitive_data?: boolean
+          status?: string
+          storage_location?: string | null
+          systems?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agma_role?: string
+          created_at?: string
+          cross_border?: boolean
+          cross_border_note?: string | null
+          data_categories?: string | null
+          data_subjects?: string | null
+          department?: string | null
+          dpia_note?: string | null
+          dpia_required?: boolean
+          ended_on?: string | null
+          id?: string
+          last_review_on?: string | null
+          legal_basis?: Database["public"]["Enums"]["pdpl_legal_basis"]
+          name?: string
+          next_review_on?: string | null
+          processors?: string | null
+          purpose?: string
+          recipients?: string | null
+          retention?: string | null
+          security_measures?: string | null
+          sensitive_data?: boolean
+          status?: string
+          storage_location?: string | null
+          systems?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           active: boolean
@@ -2545,6 +3250,99 @@ export type Database = {
             columns: ["document_id"]
             isOneToOne: false
             referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      risks: {
+        Row: {
+          acceptance_reason: string | null
+          accepted_at: string | null
+          accepted_by: string | null
+          category: Database["public"]["Enums"]["risk_category"]
+          cause: string | null
+          consequence: string | null
+          created_at: string
+          due_on: string | null
+          existing_controls: string | null
+          id: string
+          impact: number
+          inherent_score: number | null
+          likelihood: number
+          next_review_on: string | null
+          owner: string | null
+          residual_impact: number | null
+          residual_likelihood: number | null
+          residual_score: number | null
+          status: Database["public"]["Enums"]["risk_status"]
+          title: string
+          treatment: Database["public"]["Enums"]["risk_treatment"] | null
+          treatment_plan: string | null
+          updated_at: string
+        }
+        Insert: {
+          acceptance_reason?: string | null
+          accepted_at?: string | null
+          accepted_by?: string | null
+          category: Database["public"]["Enums"]["risk_category"]
+          cause?: string | null
+          consequence?: string | null
+          created_at?: string
+          due_on?: string | null
+          existing_controls?: string | null
+          id?: string
+          impact: number
+          inherent_score?: number | null
+          likelihood: number
+          next_review_on?: string | null
+          owner?: string | null
+          residual_impact?: number | null
+          residual_likelihood?: number | null
+          residual_score?: number | null
+          status?: Database["public"]["Enums"]["risk_status"]
+          title: string
+          treatment?: Database["public"]["Enums"]["risk_treatment"] | null
+          treatment_plan?: string | null
+          updated_at?: string
+        }
+        Update: {
+          acceptance_reason?: string | null
+          accepted_at?: string | null
+          accepted_by?: string | null
+          category?: Database["public"]["Enums"]["risk_category"]
+          cause?: string | null
+          consequence?: string | null
+          created_at?: string
+          due_on?: string | null
+          existing_controls?: string | null
+          id?: string
+          impact?: number
+          inherent_score?: number | null
+          likelihood?: number
+          next_review_on?: string | null
+          owner?: string | null
+          residual_impact?: number | null
+          residual_likelihood?: number | null
+          residual_score?: number | null
+          status?: Database["public"]["Enums"]["risk_status"]
+          title?: string
+          treatment?: Database["public"]["Enums"]["risk_treatment"] | null
+          treatment_plan?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "risks_accepted_by_fkey"
+            columns: ["accepted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "risks_owner_fkey"
+            columns: ["owner"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -3752,6 +4550,15 @@ export type Database = {
       normalize_ar: { Args: { t: string }; Returns: string }
       normalize_digits: { Args: { t: string }; Returns: string }
       normalize_phone_sa: { Args: { t: string }; Returns: string }
+      notify_governance: {
+        Args: {
+          p_dedupe_prefix?: string
+          p_event: string
+          p_payload: Json
+          p_template: string
+        }
+        Returns: undefined
+      }
       notify_team: {
         Args: {
           p_client?: string
@@ -3772,7 +4579,9 @@ export type Database = {
       run_daily_jobs_v3: { Args: never; Returns: undefined }
       run_daily_jobs_v4: { Args: never; Returns: undefined }
       run_daily_jobs_v5: { Args: never; Returns: undefined }
+      run_daily_jobs_v6: { Args: never; Returns: undefined }
       run_dunning: { Args: never; Returns: undefined }
+      run_ims_alerts: { Args: never; Returns: undefined }
       send_contract_renewals: { Args: never; Returns: undefined }
       send_overdue_reminders: { Args: never; Returns: undefined }
       send_tax_reminders: { Args: never; Returns: undefined }
@@ -3792,6 +4601,21 @@ export type Database = {
       approval_status: "pending" | "approved" | "rejected"
       checklist_run_status: "in_progress" | "passed" | "flagged"
       client_status: "active" | "paused" | "archived"
+      control_impl_mode:
+        | "system_enforced"
+        | "workflow_enforced"
+        | "automated_evidence"
+        | "manual_evidence"
+        | "external_technical"
+        | "organizational"
+        | "contractual"
+        | "not_applicable"
+      control_status:
+        | "implemented"
+        | "partial"
+        | "required"
+        | "review_required"
+        | "not_applicable"
       document_status:
         | "draft"
         | "sent"
@@ -3826,8 +4650,24 @@ export type Database = {
         | "settlement"
         | "authorization"
       documentation_grade: "A" | "B" | "C"
+      dsar_kind:
+        | "access"
+        | "copy"
+        | "correction"
+        | "destruction"
+        | "consent_withdrawal"
+        | "complaint"
+        | "other"
+      dsar_status:
+        | "received"
+        | "identity_verification"
+        | "in_progress"
+        | "responded"
+        | "closed"
+        | "rejected"
       emt_class: "entrepreneur" | "manager" | "technician"
       experiment_status: "proposed" | "running" | "won" | "lost"
+      framework_status: "active" | "planned" | "superseded"
       interaction_kind: "call" | "whatsapp" | "email" | "meeting" | "note"
       issue_status: "identified" | "discussing" | "solved" | "dropped"
       kpi_direction: "up" | "down"
@@ -3845,6 +4685,14 @@ export type Database = {
       message_channel: "portal" | "whatsapp" | "email"
       method_phase: "analyze" | "generate" | "market" | "adapt"
       metric_direction: "up" | "down"
+      ncr_status:
+        | "open"
+        | "containment"
+        | "root_cause"
+        | "action_plan"
+        | "implementation"
+        | "effectiveness_review"
+        | "closed"
       notification_channel: "inapp" | "email" | "whatsapp"
       notification_status:
         | "queued"
@@ -3854,6 +4702,13 @@ export type Database = {
         | "cancelled"
       package_terms: "upfront_100" | "split_50_25_25" | "monthly"
       payment_method: "transfer" | "cash" | "card" | "other"
+      pdpl_legal_basis:
+        | "consent"
+        | "contract"
+        | "legal_obligation"
+        | "vital_interest"
+        | "public_interest"
+        | "legitimate_interest"
       project_mode: "recurring" | "milestone"
       project_status:
         | "planning"
@@ -3861,6 +4716,18 @@ export type Database = {
         | "paused"
         | "completed"
         | "archived"
+      risk_category:
+        | "business"
+        | "quality"
+        | "security"
+        | "privacy"
+        | "continuity"
+        | "ai"
+        | "compliance"
+        | "supplier"
+        | "project"
+      risk_status: "open" | "treating" | "accepted" | "closed"
+      risk_treatment: "mitigate" | "avoid" | "transfer" | "accept"
       rock_status: "on_track" | "off_track" | "done" | "dropped"
       scope_status: "draft" | "sent" | "approved" | "rejected"
       task_status: "todo" | "in_progress" | "review" | "done" | "blocked"
@@ -4013,6 +4880,23 @@ export const Constants = {
       approval_status: ["pending", "approved", "rejected"],
       checklist_run_status: ["in_progress", "passed", "flagged"],
       client_status: ["active", "paused", "archived"],
+      control_impl_mode: [
+        "system_enforced",
+        "workflow_enforced",
+        "automated_evidence",
+        "manual_evidence",
+        "external_technical",
+        "organizational",
+        "contractual",
+        "not_applicable",
+      ],
+      control_status: [
+        "implemented",
+        "partial",
+        "required",
+        "review_required",
+        "not_applicable",
+      ],
       document_status: ["draft", "sent", "signed", "active", "expired", "void"],
       document_type: [
         "quote",
@@ -4042,8 +4926,26 @@ export const Constants = {
         "authorization",
       ],
       documentation_grade: ["A", "B", "C"],
+      dsar_kind: [
+        "access",
+        "copy",
+        "correction",
+        "destruction",
+        "consent_withdrawal",
+        "complaint",
+        "other",
+      ],
+      dsar_status: [
+        "received",
+        "identity_verification",
+        "in_progress",
+        "responded",
+        "closed",
+        "rejected",
+      ],
       emt_class: ["entrepreneur", "manager", "technician"],
       experiment_status: ["proposed", "running", "won", "lost"],
+      framework_status: ["active", "planned", "superseded"],
       interaction_kind: ["call", "whatsapp", "email", "meeting", "note"],
       issue_status: ["identified", "discussing", "solved", "dropped"],
       kpi_direction: ["up", "down"],
@@ -4062,12 +4964,42 @@ export const Constants = {
       message_channel: ["portal", "whatsapp", "email"],
       method_phase: ["analyze", "generate", "market", "adapt"],
       metric_direction: ["up", "down"],
+      ncr_status: [
+        "open",
+        "containment",
+        "root_cause",
+        "action_plan",
+        "implementation",
+        "effectiveness_review",
+        "closed",
+      ],
       notification_channel: ["inapp", "email", "whatsapp"],
       notification_status: ["queued", "sent", "failed", "skipped", "cancelled"],
       package_terms: ["upfront_100", "split_50_25_25", "monthly"],
       payment_method: ["transfer", "cash", "card", "other"],
+      pdpl_legal_basis: [
+        "consent",
+        "contract",
+        "legal_obligation",
+        "vital_interest",
+        "public_interest",
+        "legitimate_interest",
+      ],
       project_mode: ["recurring", "milestone"],
       project_status: ["planning", "active", "paused", "completed", "archived"],
+      risk_category: [
+        "business",
+        "quality",
+        "security",
+        "privacy",
+        "continuity",
+        "ai",
+        "compliance",
+        "supplier",
+        "project",
+      ],
+      risk_status: ["open", "treating", "accepted", "closed"],
+      risk_treatment: ["mitigate", "avoid", "transfer", "accept"],
       rock_status: ["on_track", "off_track", "done", "dropped"],
       scope_status: ["draft", "sent", "approved", "rejected"],
       task_status: ["todo", "in_progress", "review", "done", "blocked"],
