@@ -17,6 +17,9 @@ importers:
 
   apps/marketing:
     dependencies:
+      '@agma/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       '@hookform/resolvers':
         specifier: ^5.2.1
         version: 5.7.1(react-hook-form@7.84.0(react@19.2.8))(zod@3.25.76)

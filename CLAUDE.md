@@ -51,6 +51,38 @@ docs/ | .github/workflows/
 9. **Secrets** only in GitHub Actions secrets / Supabase Vault / `.env.local` (gitignored). Credentials vault entries encrypted, access-logged.
 10. **PDPL:** consent records on client PII, right-to-deletion workflow, data-processing register, no PII in logs.
 
+## قوانين المالك (Owner Laws — binding on EVERY form/screen, existing and new)
+Repeated owner feedback, codified 2026-08-08. Violating these in a new feature
+is a bug, not a style choice. Check each law when touching ANY form or screen:
+
+L1. **Dropdowns everywhere sensible.** Any field with an enumerable answer gets
+    a select/datalist — never a bare text input. Cities → `SAUDI_CITIES`,
+    sectors → `SECTORS`, tiers → `BUDGET_TIERS` (all from `packages/ui` geo).
+L2. **Phone fields get a dial-code select** (`DIAL_CODES`, السعودية +966
+    default). **Israel is excluded from all country/dial lists by KSA legal
+    requirement — never add it.** Local numbers compose to E.164.
+L3. **No raw keys in UI.** Metric keys, enum values, status codes always render
+    their Arabic label (e.g. scorecard metrics by `name_ar`, never
+    `on_time_tasks_pct`).
+L4. **No dead-end screens.** Every displayed item links to where it is edited
+    (task → project, client name → profile, document → client). If the owner
+    asks «وين أعدل هذا؟», that screen has a bug.
+L5. **Hint icons on every number/term** whose source or meaning isn't obvious —
+    what it means, where it comes from, where to change it.
+L6. **Mistake entries are deletable by managers** (client/lead/draft/scope)
+    when they have no financial/legal/compliance links; linked records get an
+    Arabic refusal explaining the alternative. God mode stays admin-only.
+L7. **Saudi-Arabic copy, no literal translations.** Business terms explained
+    in plain language (e.g. «كتيب طريقة العمل» not «الدليل C»).
+L8. **RTL-safe rendering everywhere**: LTR data (numbers, IBAN, emails, refs)
+    wrapped dir="ltr"; print templates tested AR+EN mixed.
+L9. **Public forms**: honeypot + rate limit + Arabic field-specific errors +
+    privacy-notice version stored + data minimization (identity only with
+    explicit permission). Every new public edge function gets its
+    `config.toml` `verify_jwt = false` entry BEFORE first deploy.
+L10. **After adding any public-facing feature, update privacy policy + terms**
+    in the same round — policies must always describe current reality.
+
 ## Conventions
 - TypeScript strict everywhere; Zod validation at every boundary (forms, edge functions, webhooks).
 - DB: snake_case tables/columns; migrations via `supabase migration new <name>`; seed files in `packages/db/seed/` (32 services, 8 playbooks, roles, payment accounts, role_profiles).

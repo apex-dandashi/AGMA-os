@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from '@/lib/publicConfig';
+import { DIAL_CODES, SAUDI_CITIES } from '@agma/ui';
 import { Briefcase, CheckCircle2, Sparkles } from 'lucide-react';
 
 type Job = {
@@ -47,7 +48,7 @@ export default function CareersClient() {
   const [applyJob, setApplyJob] = useState<Job | null>(null);
   const [talentOpen, setTalentOpen] = useState(false);
   const [form, setForm] = useState({
-    role_id: '', full_name: '', email: '', phone: '', city: '',
+    role_id: '', full_name: '', email: '', dial: '+966', phone: '', city: '',
     experience_level: '', work_model_pref: '', start_availability: '',
     arabic_level: '', english_level: '', salary_range: '',
     portfolio_url: '', linkedin_url: '', accommodations: '', accommodations_show: 'لا',
@@ -96,7 +97,11 @@ export default function CareersClient() {
           role_id: applyJob ? undefined : form.role_id,
           full_name: form.full_name.trim(),
           email: form.email.trim(),
-          phone: form.phone.trim() || undefined,
+          phone: form.phone.trim()
+            ? (form.phone.trim().startsWith('+')
+                ? form.phone.trim()
+                : form.dial + form.phone.trim().replace(/^0+/, ''))
+            : undefined,
           city: form.city.trim() || undefined,
           experience_level: form.experience_level || undefined,
           work_model_pref: form.work_model_pref || undefined,
@@ -248,13 +253,26 @@ export default function CareersClient() {
               </div>
               <div>
                 <label htmlFor="a-phone" className={label}>رقم الجوال</label>
-                <input id="a-phone" inputMode="tel" dir="ltr" className={field} value={form.phone}
-                  onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} />
+                <div className="flex gap-2">
+                  <select aria-label="مفتاح الدولة" dir="ltr" className={`${field} w-36`}
+                    value={form.dial}
+                    onChange={(e) => setForm((f) => ({ ...f, dial: e.target.value }))}>
+                    {DIAL_CODES.map((d) => (
+                      <option key={d.code} value={d.code}>{d.country} {d.code}</option>
+                    ))}
+                  </select>
+                  <input id="a-phone" inputMode="tel" dir="ltr" className={field}
+                    placeholder="5XXXXXXXX" value={form.phone}
+                    onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} />
+                </div>
               </div>
               <div>
                 <label htmlFor="a-city" className={label}>المدينة الحالية</label>
-                <input id="a-city" className={field} value={form.city}
+                <input id="a-city" list="dl-careers-cities" className={field} value={form.city}
                   onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))} />
+                <datalist id="dl-careers-cities">
+                  {SAUDI_CITIES.map((c) => <option key={c} value={c} />)}
+                </datalist>
               </div>
               <div>
                 <label htmlFor="a-exp" className={label}>مستوى الخبرة</label>

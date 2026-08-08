@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@agma/ui": "workspace:*",
     "@hookform/resolvers": "^5.2.1",
     "@tailwindcss/postcss": "^4.0.0",
     "autoprefixer": "^10.4.21",

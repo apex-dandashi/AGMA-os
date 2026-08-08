@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { SUPABASE_URL } from '@/lib/publicConfig';
+import { DIAL_CODES } from '@agma/ui';
 import {
   CheckCircle2, FileWarning, MessageSquareHeart, SearchCheck, ShieldAlert,
 } from 'lucide-react';
@@ -24,7 +25,7 @@ const label = 'mb-1.5 block text-xs font-bold text-gray-light';
 export default function ComplaintsClient() {
   const [mode, setMode] = useState<'choose' | 'complaint' | 'track'>('choose');
   const [form, setForm] = useState({
-    complainant_type: 'client', name: '', email: '', phone: '', organization: '',
+    complainant_type: 'client', name: '', email: '', dial: '+966', phone: '', organization: '',
     category: '', subject: '', description: '', desired_resolution: '',
     confidential_flag: false, privacy_ok: false,
   });
@@ -59,7 +60,11 @@ export default function ComplaintsClient() {
           complainant_type: form.complainant_type,
           name: form.name.trim() || undefined,
           email: form.email.trim() || undefined,
-          phone: form.phone.trim() || undefined,
+          phone: form.phone.trim()
+            ? (form.phone.trim().startsWith('+')
+                ? form.phone.trim()
+                : form.dial + form.phone.trim().replace(/^0+/, ''))
+            : undefined,
           organization: form.organization.trim() || undefined,
           category: form.category,
           subject: form.subject.trim(),
@@ -187,8 +192,18 @@ export default function ComplaintsClient() {
               </div>
               <div>
                 <label htmlFor="c-phone" className={label}>رقم الجوال</label>
-                <input id="c-phone" inputMode="tel" dir="ltr" className={field} value={form.phone}
-                  onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} />
+                <div className="flex gap-2">
+                  <select aria-label="مفتاح الدولة" dir="ltr" className={`${field} w-36`}
+                    value={form.dial}
+                    onChange={(e) => setForm((f) => ({ ...f, dial: e.target.value }))}>
+                    {DIAL_CODES.map((d) => (
+                      <option key={d.code} value={d.code}>{d.country} {d.code}</option>
+                    ))}
+                  </select>
+                  <input id="c-phone" inputMode="tel" dir="ltr" className={field}
+                    placeholder="5XXXXXXXX" value={form.phone}
+                    onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} />
+                </div>
               </div>
             </div>
             <div>

@@ -74,6 +74,32 @@ stamp/signature + per-user signatures, and «أين أدخل السجل التج
   where to enter client CR/VAT — discoverability fix).
 - Gauntlet green; migration pushed to production.
 
+## Owner laws round log (2026-08-08) — docs/17
+
+Owner: «ملاحظاتي مكررة… كيف نخليها قوانين؟ وقبل المرحلة ٧ نراجع الربط
+كامل، والسياسات لازم تتجدد».
+
+- CLAUDE.md new binding section «قوانين المالك (Owner Laws)» L1–L10:
+  dropdowns everywhere, dial codes w/ Israel permanently excluded, no raw
+  keys, no dead ends, Hints on numbers, deletable mistakes, Saudi Arabic,
+  RTL-safe, public-form standards (incl. verify_jwt config BEFORE deploy),
+  and policies updated in the same round as any public feature. Also saved
+  to persistent memory.
+- geo lists moved to packages/ui (single source for ops + marketing;
+  ops lib/geo.ts re-exports). Careers form: city datalist + dial select
+  (+966 default, E.164 compose). Complaints form: dial select likewise.
+- Privacy policy §6.1 added (complaints, anonymous feedback, applicants,
+  private CV storage, no discriminatory fields, talent pool 12mo +
+  auto-anonymization, privacy-report lane). Terms §17 added (SLA is a
+  service policy not a legal promise; no hiring obligation; upload rules).
+- docs/17-integration-review.md — the pre-Phase-7 linkage audit: laws
+  compliance table per screen, verified public→IMS wiring map, remaining
+  gaps G1–G6 prioritized (none blocking Phase 7; G1 complaint→client link
+  lands with the portal round; G3/G4 email notices wait on SendGrid).
+- RLS harness made rerunnable on a non-fresh stack (frozen fixture doc now
+  on-conflict-do-nothing — it collided when run twice without reset).
+- Gauntlet green; shipped.
+
 ## Careers admin round log (2026-08-08)
 
 Owner: «وين أشوف المواهب ونتائجها والسير الذاتية؟» + mid-turn «كيف أنشئ

@@ -155,9 +155,11 @@ begin
     '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}', true);
   perform set_config('role', 'authenticated', true);
 
+  -- rerunnable on a non-fresh stack: the frozen fixture may already exist
   insert into public.documents (id, type, client_id, payload, number, status, issued_on)
   values ('80000000-0000-0000-0000-0000000000aa', 'quote',
-          '10000000-0000-0000-0000-0000000000aa', '{"x":1}', 'Q-99999', 'sent', current_date);
+          '10000000-0000-0000-0000-0000000000aa', '{"x":1}', 'Q-99999', 'sent', current_date)
+  on conflict (id) do nothing;
 
   begin
     update public.documents set payload = '{"tampered":true}'
