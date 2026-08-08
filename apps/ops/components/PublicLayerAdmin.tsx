@@ -210,6 +210,14 @@ export function CareersSection() {
     },
     { invalidate: [key], successMessage: 'نُشرت الوظيفة على agma.com.sa/careers' }
   );
+  const patchJob = useAppMutation(
+    async ({ id, status }: { id: string; status: string }) => {
+      const { error } = await getSupabase().from('career_jobs')
+        .update({ status }).eq('id', id);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [key], successMessage: 'حُدّثت حالة الوظيفة — تختفي من الموقع فوراً' }
+  );
 
   const [showJobForm, setShowJobForm] = useState(false);
   const [job, setJob] = useState({
@@ -424,12 +432,25 @@ export function CareersSection() {
                  paused: 'موقوفة', closed: 'مغلقة', archived: 'مؤرشفة' }[j.status]}
             </Badge>
             {j.close_date && <span dir="ltr" className="text-xs text-gray-medium">حتى {j.close_date}</span>}
-            {j.status !== 'published' && j.status !== 'archived' && (
-              <Button variant="outline" size="xs" className="ms-auto"
-                loading={publish.isPending} onClick={() => publish.mutate(j.id)}>
-                نشر (تفحصه القاعدة)
-              </Button>
-            )}
+            <span className="ms-auto flex gap-1.5">
+              {j.status === 'published' ? (
+                <>
+                  <Button variant="ghost" size="xs" loading={patchJob.isPending}
+                    onClick={() => patchJob.mutate({ id: j.id, status: 'paused' })}>
+                    إيقاف النشر مؤقتاً
+                  </Button>
+                  <Button variant="ghost" size="xs" loading={patchJob.isPending}
+                    onClick={() => patchJob.mutate({ id: j.id, status: 'closed' })}>
+                    إغلاق الإعلان
+                  </Button>
+                </>
+              ) : j.status !== 'archived' && (
+                <Button variant="outline" size="xs"
+                  loading={publish.isPending} onClick={() => publish.mutate(j.id)}>
+                  {j.status === 'paused' || j.status === 'closed' ? 'إعادة النشر' : 'نشر (تفحصه القاعدة)'}
+                </Button>
+              )}
+            </span>
           </div>
         ))}
         {data.jobs.length === 0 && !showJobForm && (
