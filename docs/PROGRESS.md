@@ -66,6 +66,37 @@ Owner actions pending: ONE of OPENROUTER_API_KEY (free models) or
 ANTHROPIC_API_KEY (best Arabic quality) — see 8c below; plus
 HOSTINGER_DEPLOY_HOOK_MAIN (daily static rebake).
 
+## Phase 8g log (2026-08-08) — Support chat, admin oversight, WhatsApp rail
+
+Owner: «طورلي الشات أقصى ما تستطيع + support chat من العميل للأقسام + مدير
+النظام على اطلاع كامل بآلية منفصلة + أرد عن الشخص المعني + تنبيهات واتساب
+للجميع حسب الدور».
+
+- `20260809040000_support_oversight_whatsapp.sql`:
+  support_threads/messages — client opens thread to a department
+  (general/projects/finance/legal/technical); dept_roles() maps roles;
+  serves_dept() drives RLS (admin+strategist see ALL — reply-on-behalf is
+  just RLS-allowed insert, sender stays truthful for audit). Dept isolation
+  persona-proven (pm cannot see legal). Notifications both ways
+  (support_client_msg to dept roles+admins، support_team_reply to client).
+  Explicit oversight policy: admin reads all team_chat incl. DMs —
+  documented in-schema as a declared administrative mechanism.
+  chat_reads (user × thread_key) → unread badges.
+  profiles.whatsapp_enabled + notifications.whatsapp_sent_at + 5-min cron.
+- `whatsapp-dispatch` (cron, no input): renders template body from
+  notification_templates + payload, sends via Meta Cloud API template
+  message; exits silently without WHATSAPP_TOKEN/PHONE_ID; failures never
+  block the queue. **Owner setup**: Meta Business app → WhatsApp → permanent
+  token + phone id → secrets WHATSAPP_TOKEN/WHATSAPP_PHONE_ID + approved
+  Arabic template 'agma_notification' with one {{1}} body var.
+- ChatPanel rebuilt as محادثات center: #عام + دعم العملاء (with unread dots
+  everywhere) + خاص; admin gets «الإشراف» toggle — all support across depts
+  + read-only view of every DM pair; support threads open/close.
+- Portal: «الدعم» tab — create request (dept select), thread list, live
+  conversation, closed-state handling.
+- Gauntlet green (typecheck/build/harness incl. new support section/e2e);
+  migration + function in production.
+
 ## Phase 8f log (2026-08-08) — Snapshot bake architecture + editor
 
 - Full ArticleEditor (markdown/HTML, live site-parity preview via marked,

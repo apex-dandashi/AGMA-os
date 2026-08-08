@@ -62,3 +62,7 @@ verify_jwt = false
 # الجمع اليومي للمقالات — يستدعيه cron عبر pg_net بلا توثيق؛ لا يقبل مدخلات (L9).
 [functions.content-collect]
 verify_jwt = false
+
+# مرسل واتساب — cron كل ٥ دقائق؛ لا يقبل مدخلات (L9).
+[functions.whatsapp-dispatch]
+verify_jwt = false

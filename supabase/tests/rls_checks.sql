@@ -301,4 +301,43 @@ begin
   delete from public.team_chat where body like '%حزام%';
 end $$;
 
+-- ---------- support routing + admin oversight (المرحلة ٨ز) -------------------
+do $$
+declare v_th uuid; n int;
+begin
+  -- العميل يفتح محادثة قانونية
+  perform set_config('request.jwt.claims',
+    '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated"}', true);
+  perform set_config('role', 'authenticated', true);
+  insert into public.support_threads (client_id, department, subject)
+  values ('10000000-0000-0000-0000-0000000000aa', 'legal', 'حزام: سؤال قانوني')
+  returning id into v_th;
+  insert into public.support_messages (thread_id, sender, body)
+  values (v_th, '00000000-0000-0000-0000-0000000000c1', 'حزام: نص');
+
+  -- المنفذ (قسم المشاريع): معزول عن القانونية
+  perform set_config('request.jwt.claims',
+    '{"sub":"00000000-0000-0000-0000-0000000000e1","role":"authenticated"}', true);
+  select count(*) into n from public.support_threads where subject like 'حزام:%';
+  if n <> 0 then raise exception 'executor: legal support must be invisible, got %', n; end if;
+
+  -- الاستراتيجي: يرى الكل (إشراف+)
+  perform set_config('request.jwt.claims',
+    '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}', true);
+  select count(*) into n from public.support_threads where subject like 'حزام:%';
+  if n <> 1 then raise exception 'strategist: must see all support, got %', n; end if;
+  insert into public.support_messages (thread_id, sender, body)
+  values (v_th, '00000000-0000-0000-0000-0000000000a1', 'حزام: رد بدل المختص');
+
+  -- العميل يرى الرد
+  perform set_config('request.jwt.claims',
+    '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated"}', true);
+  select count(*) into n from public.support_messages where thread_id = v_th;
+  if n <> 2 then raise exception 'client: support replies expected 2 got %', n; end if;
+
+  -- تنظيف
+  perform set_config('role', 'postgres', true);
+  delete from public.support_threads where subject like 'حزام:%';
+end $$;
+
 select 'RLS_CHECKS_PASSED' as result;

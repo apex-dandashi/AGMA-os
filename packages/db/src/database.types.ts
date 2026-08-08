@@ -817,6 +817,32 @@ export type Database = {
           },
         ]
       }
+      chat_reads: {
+        Row: {
+          last_read_at: string
+          thread_key: string
+          user_id: string
+        }
+        Insert: {
+          last_read_at?: string
+          thread_key: string
+          user_id: string
+        }
+        Update: {
+          last_read_at?: string
+          thread_key?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_reads_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checklist_runs: {
         Row: {
           allocation_id: string | null
@@ -3212,6 +3238,7 @@ export type Database = {
           sent_at: string | null
           status: Database["public"]["Enums"]["notification_status"]
           template_key: string
+          whatsapp_sent_at: string | null
         }
         Insert: {
           channel: Database["public"]["Enums"]["notification_channel"]
@@ -3232,6 +3259,7 @@ export type Database = {
           sent_at?: string | null
           status?: Database["public"]["Enums"]["notification_status"]
           template_key: string
+          whatsapp_sent_at?: string | null
         }
         Update: {
           channel?: Database["public"]["Enums"]["notification_channel"]
@@ -3252,6 +3280,7 @@ export type Database = {
           sent_at?: string | null
           status?: Database["public"]["Enums"]["notification_status"]
           template_key?: string
+          whatsapp_sent_at?: string | null
         }
         Relationships: [
           {
@@ -3980,6 +4009,7 @@ export type Database = {
           signature_data: string | null
           skills: string[]
           updated_at: string
+          whatsapp_enabled: boolean
         }
         Insert: {
           active?: boolean
@@ -3997,6 +4027,7 @@ export type Database = {
           signature_data?: string | null
           skills?: string[]
           updated_at?: string
+          whatsapp_enabled?: boolean
         }
         Update: {
           active?: boolean
@@ -4014,6 +4045,7 @@ export type Database = {
           signature_data?: string | null
           skills?: string[]
           updated_at?: string
+          whatsapp_enabled?: boolean
         }
         Relationships: [
           {
@@ -4921,6 +4953,103 @@ export type Database = {
           },
         ]
       }
+      support_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          sender: string
+          thread_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          sender?: string
+          thread_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          sender?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_sender_fkey"
+            columns: ["sender"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "support_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_threads: {
+        Row: {
+          client_id: string
+          created_at: string
+          created_by: string
+          department: Database["public"]["Enums"]["support_department"]
+          id: string
+          last_message_at: string
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          created_by?: string
+          department?: Database["public"]["Enums"]["support_department"]
+          id?: string
+          last_message_at?: string
+          status?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          created_by?: string
+          department?: Database["public"]["Enums"]["support_department"]
+          id?: string
+          last_message_at?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_threads_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_360"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_threads_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_threads_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_comments: {
         Row: {
           author: string
@@ -5643,6 +5772,10 @@ export type Database = {
         Args: { p_client: string }
         Returns: undefined
       }
+      dept_roles: {
+        Args: { p_dept: Database["public"]["Enums"]["support_department"] }
+        Returns: Database["public"]["Enums"]["user_role"][]
+      }
       dispatch_notifications: { Args: never; Returns: undefined }
       enqueue_notification: {
         Args: {
@@ -5710,6 +5843,10 @@ export type Database = {
       send_contract_renewals: { Args: never; Returns: undefined }
       send_overdue_reminders: { Args: never; Returns: undefined }
       send_tax_reminders: { Args: never; Returns: undefined }
+      serves_dept: {
+        Args: { p_dept: Database["public"]["Enums"]["support_department"] }
+        Returns: boolean
+      }
       set_my_signature: { Args: { p_data: string }; Returns: undefined }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
@@ -5888,6 +6025,12 @@ export type Database = {
       risk_treatment: "mitigate" | "avoid" | "transfer" | "accept"
       rock_status: "on_track" | "off_track" | "done" | "dropped"
       scope_status: "draft" | "sent" | "approved" | "rejected"
+      support_department:
+        | "general"
+        | "projects"
+        | "finance"
+        | "legal"
+        | "technical"
       task_status: "todo" | "in_progress" | "review" | "done" | "blocked"
       user_role:
         | "admin"
@@ -6203,6 +6346,13 @@ export const Constants = {
       risk_treatment: ["mitigate", "avoid", "transfer", "accept"],
       rock_status: ["on_track", "off_track", "done", "dropped"],
       scope_status: ["draft", "sent", "approved", "rejected"],
+      support_department: [
+        "general",
+        "projects",
+        "finance",
+        "legal",
+        "technical",
+      ],
       task_status: ["todo", "in_progress", "review", "done", "blocked"],
       user_role: [
         "admin",

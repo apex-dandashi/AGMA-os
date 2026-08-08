@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { useQuery, QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useQuery, useQueryClient, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { Session } from '@supabase/supabase-js';
 import {
   Badge, Button, Card, EmptyState, Input, Modal, SkeletonList, Spinner,
@@ -249,6 +249,7 @@ function Portal({ profile }: { profile: Tables<'profiles'> }) {
           { key: 'dlv', label: 'المخرجات' },
           { key: 'docs', label: 'المستندات' },
           { key: 'pay', label: 'الفواتير والدفع' },
+          { key: 'support', label: 'الدعم' },
         ]} />
 
         <div className="mt-5 space-y-4">
@@ -402,6 +403,8 @@ function Portal({ profile }: { profile: Tables<'profiles'> }) {
             })
           )}
 
+          {tab === 'support' && <ClientSupport profile={profile} />}
+
           {tab === 'pay' && (
             <>
               {invoices.length === 0 ? (
@@ -467,6 +470,191 @@ function Portal({ profile }: { profile: Tables<'profiles'> }) {
 /* ---------------------------------------------------------- deliverables */
 
 /** مخرجات العميل: صورة أحدث إصدار، اضغط أي نقطة لتعليق مثبت، ثم قرارك. */
+
+/* ------------------------------------------------------------ support */
+
+const SUPPORT_DEPT_AR: Record<string, string> = {
+  general: 'استفسار عام', projects: 'المشاريع والتنفيذ', finance: 'الفواتير والمالية',
+  legal: 'قانوني وعقود', technical: 'دعم تقني',
+};
+
+function ClientSupport({ profile }: { profile: Tables<'profiles'> }) {
+  const toast = useToast();
+  const key = ['portal_support'];
+  const qc = useQueryClient();
+  const [openThread, setOpenThread] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [dept, setDept] = useState('general');
+  const [subject, setSubject] = useState('');
+  const [firstMsg, setFirstMsg] = useState('');
+  const [reply, setReply] = useState('');
+  const endRef = useRef<HTMLDivElement>(null);
+
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: key,
+    queryFn: async () => {
+      const s = getSupabase();
+      const [threads, msgs] = await Promise.all([
+        s.from('support_threads').select('*').order('last_message_at', { ascending: false }),
+        s.from('support_messages').select('*').order('created_at', { ascending: true }),
+      ]);
+      return { threads: threads.data ?? [], msgs: msgs.data ?? [] };
+    },
+  });
+
+  useEffect(() => {
+    const s = getSupabase();
+    const ch = s.channel('portal-support-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'support_messages' },
+        () => qc.invalidateQueries({ queryKey: key }))
+      .subscribe();
+    return () => { s.removeChannel(ch); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: 'end' });
+  }, [data?.msgs.length, openThread]);
+
+  async function createThread(e: React.FormEvent) {
+    e.preventDefault();
+    const s = getSupabase();
+    const { data: th, error } = await s.from('support_threads').insert({
+      client_id: profile.client_id!, department: dept as Enums<'support_department'>,
+      subject: subject.trim(),
+    }).select('id').single();
+    if (error || !th) { toast.error('تعذر فتح المحادثة — حاول مجدداً'); return; }
+    if (firstMsg.trim()) {
+      await s.from('support_messages').insert({ thread_id: th.id, body: firstMsg.trim() });
+    }
+    setCreating(false); setSubject(''); setFirstMsg(''); setDept('general');
+    setOpenThread(th.id);
+    toast.success('وصل طلبكم للقسم المختص — سنرد سريعاً');
+    refetch();
+  }
+
+  async function sendReply(e: React.FormEvent) {
+    e.preventDefault();
+    if (!openThread || !reply.trim()) return;
+    const { error } = await getSupabase().from('support_messages')
+      .insert({ thread_id: openThread, body: reply.trim() });
+    if (error) toast.error('تعذر الإرسال');
+    else { setReply(''); refetch(); }
+  }
+
+  if (isLoading || !data) return <SkeletonList rows={3} />;
+  const active = openThread ? data.threads.find((t) => t.id === openThread) : null;
+
+  if (active) {
+    const msgs = data.msgs.filter((m) => m.thread_id === active.id);
+    return (
+      <Card className="flex min-h-[50vh] flex-col p-0">
+        <div className="flex flex-wrap items-center gap-2 border-b border-gray-dark px-4 py-3 text-sm">
+          <Button variant="ghost" size="xs" onClick={() => setOpenThread(null)}>→ كل الطلبات</Button>
+          <b>{active.subject}</b>
+          <Badge variant="outline">{SUPPORT_DEPT_AR[active.department] ?? active.department}</Badge>
+          {active.status === 'closed' && <Badge variant="neutral">مغلقة</Badge>}
+        </div>
+        <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+          {msgs.map((m) => {
+            const mine = m.sender === profile.id;
+            return (
+              <div key={m.id} className={`flex ${mine ? 'justify-start flex-row-reverse' : ''}`}>
+                <div className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
+                  mine ? 'bg-pulse-orange/15' : 'bg-white/5'
+                }`}>
+                  {!mine && <p className="mb-0.5 text-[11px] font-bold text-pulse-orange">فريق AGMA</p>}
+                  <p className="whitespace-pre-wrap leading-relaxed">{m.body}</p>
+                  <p className="mt-1 text-[10px] text-gray-medium">
+                    {new Date(m.created_at).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+          <div ref={endRef} />
+        </div>
+        {active.status === 'open' ? (
+          <form onSubmit={sendReply} className="flex gap-2 border-t border-gray-dark p-3">
+            <input value={reply} onChange={(e) => setReply(e.target.value)} maxLength={4000}
+              placeholder="اكتب ردكم…"
+              className="min-w-0 flex-1 rounded-sm border border-gray-dark bg-transparent px-3 py-2 text-sm text-snow placeholder:text-gray-medium focus:border-pulse-orange focus:outline-none" />
+            <Button type="submit" size="sm" disabled={!reply.trim()}>أرسل</Button>
+          </form>
+        ) : (
+          <p className="border-t border-gray-dark p-3 text-xs text-gray-medium">
+            أُغلقت هذه المحادثة — افتحوا طلباً جديداً إن احتجتم.
+          </p>
+        )}
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {creating ? (
+        <Card className="p-4">
+          <p className="mb-3 text-sm font-bold">طلب دعم جديد</p>
+          <form onSubmit={createThread} className="space-y-3">
+            <label className="block text-xs text-gray-light">
+              القسم
+              <select value={dept} onChange={(e) => setDept(e.target.value)}
+                className="mt-1 w-full rounded-sm border border-gray-dark bg-transparent px-3 py-2 text-sm text-snow focus:border-pulse-orange focus:outline-none">
+                {Object.entries(SUPPORT_DEPT_AR).map(([k, v]) => (
+                  <option key={k} value={k} className="bg-pure-ink">{v}</option>
+                ))}
+              </select>
+            </label>
+            <Input label="الموضوع" value={subject} onChange={(e) => setSubject(e.target.value)} />
+            <label className="block text-xs text-gray-light">
+              رسالتكم
+              <textarea value={firstMsg} onChange={(e) => setFirstMsg(e.target.value)} rows={4}
+                maxLength={4000}
+                className="mt-1 w-full rounded-sm border border-gray-dark bg-transparent px-3 py-2 text-sm text-snow focus:border-pulse-orange focus:outline-none" />
+            </label>
+            <div className="flex gap-2">
+              <Button type="submit" size="sm"
+                disabled={subject.trim().length < 3 || firstMsg.trim().length < 2}>
+                أرسل الطلب
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setCreating(false)}>
+                إلغاء
+              </Button>
+            </div>
+          </form>
+        </Card>
+      ) : (
+        <Button size="sm" onClick={() => setCreating(true)}>+ طلب دعم جديد</Button>
+      )}
+
+      {data.threads.length === 0 && !creating ? (
+        <Card className="p-4 text-sm text-gray-light">
+          تحتاجون شيئاً؟ افتحوا طلب دعم وسيصل مباشرة للقسم المختص في AGMA —
+          قانوني، مالي، مشاريع أو تقني.
+        </Card>
+      ) : data.threads.map((t) => {
+        const last = [...data.msgs].reverse().find((m) => m.thread_id === t.id);
+        return (
+          <Card key={t.id} className="cursor-pointer p-3 text-sm transition-colors hover:border-pulse-orange/50"
+            onClick={() => setOpenThread(t.id)}>
+            <div className="flex flex-wrap items-center gap-2">
+              <b>{t.subject}</b>
+              <Badge variant="outline">{SUPPORT_DEPT_AR[t.department] ?? t.department}</Badge>
+              <Badge variant={t.status === 'open' ? 'accent' : 'neutral'}>
+                {t.status === 'open' ? 'مفتوحة' : 'مغلقة'}
+              </Badge>
+              <span className="ms-auto text-[11px] text-gray-medium">
+                {new Date(t.last_message_at).toLocaleDateString('ar-SA')}
+              </span>
+            </div>
+            {last && <p className="mt-1 truncate text-xs text-gray-medium">{last.body}</p>}
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
 function ClientDeliverables({ refetchAll }: { refetchAll: () => void }) {
   const toast = useToast();
   const key = ['portal-dlv'];
