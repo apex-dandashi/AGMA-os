@@ -30,9 +30,9 @@ const TERMS_LABEL: Record<Enums<'package_terms'>, string> = {
 };
 
 const GRADE_HINT: Record<Enums<'documentation_grade'>, string> = {
-  A: 'موثّق بالكامل — قابل للبيع والتفويض',
-  B: 'موثّق جزئياً — قابل للبيع بإشراف',
-  C: 'غير موثّق — لا يُباع كباقة',
+  A: 'موثَّق كاملاً — يُنفَّذ بدون الشركاء',
+  B: 'خطواته مكتوبة — يحتاج إشرافاً',
+  C: 'غير مكتوب — في الرؤوس فقط',
 };
 
 /* ------------------------------------------------------------ الباقات + TVR */
@@ -113,8 +113,8 @@ export function PackagesTab() {
                 <div className="mt-2 space-y-0.5 text-xs text-gray-medium">
                   {pbs.map((p) => (
                     <p key={p.id}>
-                      دليل {p.name_ar}: <b className={p.documentation_grade === 'C' ? 'text-pulse-orange' : ''}>
-                        {p.documentation_grade}</b>
+                      كتيب {p.name_ar}: <b className={p.documentation_grade === 'C' ? 'text-pulse-orange' : ''}>
+                        {GRADE_HINT[p.documentation_grade]}</b>
                     </p>
                   ))}
                 </div>
@@ -504,11 +504,16 @@ function PlaybookDocsSection({ playbooks, versions, isAdmin, invalidate }: {
 
   return (
     <div>
-      <h3 className="mb-1 font-bold text-gray-light">توثيق الأدلة — النموذج القابل للامتياز</h3>
+      <h3 className="mb-1 flex items-center gap-1.5 font-bold text-gray-light">
+        كتيبات طريقة العمل — هل تُنفَّذ الخدمة بدونك؟
+        <Hint text="لكل خدمة «كتيب طريقة عمل»: الخطوات المكتوبة التي تجعل أي عضو فريق يسلّمها بنفس الجودة بدون الشركاء. هذا ما يجعل الشركة قابلة للبيع كباقات — الخبرة في الكتيب لا في الرأس." />
+      </h3>
       <p className="mb-2 text-xs text-gray-medium">
-        تغيير طريقة التسليم إصدارٌ له رقم، لا انجرافَ عادات. درجة C لا تُباع كباقة.
+        قيّم كل كتيب بصراحة: «في الرؤوس» يعني الخدمة تتوقف لو غبت — والباقة لا
+        تُعرض للبيع إلا بكتيب مكتوب. وكل تحسين فائز من التجارب أعلاه يُسجَّل
+        إصداراً جديداً برقم، حتى لا تنجرف طريقة العمل بصمت.
       </p>
-      <Table head={['الدليل', 'الدرجة', 'آخر إصدار', 'الإصدارات']}>
+      <Table head={['الخدمة', 'جاهزية الكتيب', 'الإصدار الحالي', 'آخر التحديثات']}>
         {playbooks.map((p) => {
           const pv = versions.filter((v) => v.playbook_id === p.id);
           return (
@@ -516,22 +521,31 @@ function PlaybookDocsSection({ playbooks, versions, isAdmin, invalidate }: {
               <Td className="font-medium">{p.name_ar}</Td>
               <Td>
                 {isAdmin ? (
-                  <Select value={p.documentation_grade} aria-label={`درجة ${p.name_ar}`}
+                  <Select value={p.documentation_grade} aria-label={`جاهزية كتيب ${p.name_ar}`}
+                    className="min-w-48"
                     onChange={(e) => grade.mutate({ id: p.id, g: e.target.value as Enums<'documentation_grade'> })}>
-                    {(['A', 'B', 'C'] as const).map((g) => <option key={g} value={g}>{g}</option>)}
+                    <option value="C">غير مكتوب — في الرؤوس فقط</option>
+                    <option value="B">خطواته مكتوبة — يحتاج إشرافاً</option>
+                    <option value="A">موثَّق كاملاً — يُنفَّذ بدون الشركاء</option>
                   </Select>
                 ) : (
                   <Badge variant={p.documentation_grade === 'C' ? 'outline' : 'accent'}>
-                    {p.documentation_grade}
+                    {GRADE_HINT[p.documentation_grade]}
                   </Badge>
                 )}
-                <span className="ms-2 text-xs text-gray-medium">{GRADE_HINT[p.documentation_grade]}</span>
+                {p.documentation_grade === 'C' && (
+                  <p className="mt-1 text-xs text-pulse-orange">
+                    لا تُباع كباقة قبل كتابة الخطوات
+                  </p>
+                )}
               </Td>
               <Td dir="ltr">{pv[0]?.version ?? '1.0.0'}</Td>
               <Td className="text-xs text-gray-light">
-                {pv.length === 0 ? '—' : pv.slice(0, 3).map((v) => (
-                  <p key={v.id}><b dir="ltr">{v.version}</b> — {v.changelog}</p>
-                ))}
+                {pv.length === 0
+                  ? <span className="text-gray-medium">لم يُحدَّث بعد — أول تجربة فائزة تسجَّل هنا</span>
+                  : pv.slice(0, 3).map((v) => (
+                    <p key={v.id}><b dir="ltr">{v.version}</b> — {v.changelog}</p>
+                  ))}
               </Td>
             </Tr>
           );
