@@ -85,10 +85,13 @@ Owner: «طورلي الشات أقصى ما تستطيع + support chat من ا
   profiles.whatsapp_enabled + notifications.whatsapp_sent_at + 5-min cron.
 - `whatsapp-dispatch` (cron, no input): renders template body from
   notification_templates + payload, sends via Meta Cloud API template
-  message; exits silently without WHATSAPP_TOKEN/PHONE_ID; failures never
-  block the queue. **Owner setup**: Meta Business app → WhatsApp → permanent
-  token + phone id → secrets WHATSAPP_TOKEN/WHATSAPP_PHONE_ID + approved
-  Arabic template 'agma_notification' with one {{1}} body var.
+  message; exits silently without provider secrets; failures never block
+  the queue. **Dual-provider** (owner 2026-08-08): WHATSAPP_PROVIDER =
+  meta (default, no BSP markup) | twilio (TWILIO_ACCOUNT_SID/AUTH_TOKEN/
+  WHATSAPP_FROM + CONTENT_SID template; freeform Body fallback for sandbox).
+  **Owner setup (meta)**: Meta app → WhatsApp → permanent token + phone id →
+  WHATSAPP_TOKEN/WHATSAPP_PHONE_ID + approved Arabic template
+  'agma_notification' with one {{1}} var. Email stays Resend (decided).
 - ChatPanel rebuilt as محادثات center: #عام + دعم العملاء (with unread dots
   everywhere) + خاص; admin gets «الإشراف» toggle — all support across depts
   + read-only view of every DM pair; support threads open/close.
