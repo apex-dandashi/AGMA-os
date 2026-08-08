@@ -83,8 +83,8 @@ export default function BlogAdmin() {
       const { data: res, error } = await getSupabase().functions
         .invoke('generate-article', { body });
       if (error) {
-        const ctx = (error as { context?: Response }).context;
-        if (ctx) {
+        const ctx = (error as { context?: unknown }).context;
+        if (ctx instanceof Response) {
           const b = await ctx.json().catch(() => null);
           if (b?.message) throw new Error(b.message);
         }

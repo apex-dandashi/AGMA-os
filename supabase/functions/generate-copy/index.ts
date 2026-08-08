@@ -10,6 +10,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3';
 import { LLM_SETUP_MSG, completeText, llmConfigured } from '../_shared/llm.ts';
+import { teamCors } from '../_shared/team-cors.ts';
 
 const schema = z.object({
   content_item_id: z.string().uuid(),
@@ -25,7 +26,8 @@ const CHANNEL_GUIDE: Record<string, string> = {
 };
 
 Deno.serve(async (req) => {
-  const headers = { 'content-type': 'application/json' };
+  const headers = teamCors(req.headers.get('origin'));
+  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers });
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'method_not_allowed' }), { status: 405, headers });
   }

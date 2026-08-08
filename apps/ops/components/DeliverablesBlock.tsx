@@ -124,8 +124,8 @@ export default function DeliverablesBlock({ projectId, clientId }: {
       });
       if (error) {
         // رسالة عدم التهيئة تصل من جسم الاستجابة
-        const ctx = (error as { context?: Response }).context;
-        if (ctx) {
+        const ctx = (error as { context?: unknown }).context;
+        if (ctx instanceof Response) {
           const body = await ctx.json().catch(() => null);
           if (body?.message) throw new Error(body.message);
         }

@@ -116,8 +116,8 @@ export default function ContentPanel() {
         body: { content_item_id: id, directions: genDirections.trim() || undefined },
       });
       if (error) {
-        const ctx = (error as { context?: Response }).context;
-        if (ctx) {
+        const ctx = (error as { context?: unknown }).context;
+        if (ctx instanceof Response) {
           const body = await ctx.json().catch(() => null);
           if (body?.message) throw new Error(body.message);
         }
