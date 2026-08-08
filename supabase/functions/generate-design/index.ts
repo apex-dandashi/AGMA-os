@@ -12,6 +12,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3';
 import { teamCors } from '../_shared/team-cors.ts';
+import { verifiedUserId } from '../_shared/auth.ts';
 
 const schema = z.object({
   deliverable_id: z.string().uuid(),
@@ -25,23 +26,17 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: 'method_not_allowed' }), { status: 405, headers });
   }
 
-  const authHeader = req.headers.get('authorization') ?? '';
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   );
-  // من الطالب؟ فريق فقط
-  const userClient = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_ANON_KEY')!,
-    { global: { headers: { authorization: authHeader } } },
-  );
-  const { data: userData } = await userClient.auth.getUser();
-  if (!userData?.user) {
+  // من الطالب؟ فريق فقط — البوابة تحققت من الرمز، نفك الهوية مباشرة
+  const userId = verifiedUserId(req);
+  if (!userId) {
     return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers });
   }
   const { data: profile } = await supabase.from('profiles')
-    .select('role').eq('id', userData.user.id).single();
+    .select('role').eq('id', userId).single();
   if (!profile || profile.role === 'client') {
     return new Response(JSON.stringify({ error: 'forbidden' }), { status: 403, headers });
   }
@@ -115,7 +110,7 @@ Deno.serve(async (req) => {
     const { error: verErr } = await supabase.from('deliverable_versions').insert({
       deliverable_id, version_number: nextNum, file_path: path,
       note: `مولَّد بالذكاء الاصطناعي — راجعه بشرياً قبل عرضه على العميل. الوصف: ${prompt.slice(0, 300)}`,
-      created_by: userData.user.id,
+      created_by: userId,
     });
     if (verErr) throw new Error(verErr.message);
 

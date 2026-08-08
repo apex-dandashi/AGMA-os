@@ -62,7 +62,7 @@ export async function draftArticle(
   ].join('\n');
 
   const draft = await completeJSON<ArticleDraft>(
-    system, prompt, SCHEMA as unknown as Record<string, unknown>);
+    system, prompt, SCHEMA as unknown as Record<string, unknown>, 5000);
   // تعقيم الرابط الثابت مهما أعاد النموذج
   draft.slug = draft.slug.toLowerCase().replace(/[^a-z0-9-]+/g, '-')
     .replace(/^-+|-+$/g, '').slice(0, 80) || `article-${Date.now()}`;

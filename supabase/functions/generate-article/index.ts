@@ -6,6 +6,7 @@ import { z } from 'npm:zod@3';
 import { draftArticle, type Signal } from '../_shared/article.ts';
 import { LLM_SETUP_MSG, llmConfigured, llmErrorMessage } from '../_shared/llm.ts';
 import { teamCors } from '../_shared/team-cors.ts';
+import { verifiedUserId } from '../_shared/auth.ts';
 
 const schema = z.object({
   signal_ids: z.array(z.string().uuid()).max(12).optional(),
@@ -25,17 +26,13 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   );
-  const userClient = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_ANON_KEY')!,
-    { global: { headers: { authorization: req.headers.get('authorization') ?? '' } } },
-  );
-  const { data: userData } = await userClient.auth.getUser();
-  if (!userData?.user) {
+  // البوابة (verify_jwt) تحققت من الرمز قبل تشغيلنا — نفك الهوية مباشرة
+  const userId = verifiedUserId(req);
+  if (!userId) {
     return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers });
   }
   const { data: profile } = await supabase.from('profiles')
-    .select('role').eq('id', userData.user.id).single();
+    .select('role').eq('id', userId).single();
   if (!profile || profile.role === 'client') {
     return new Response(JSON.stringify({ error: 'forbidden' }), { status: 403, headers });
   }
@@ -71,7 +68,7 @@ Deno.serve(async (req) => {
       tags: draft.tags, sources: signals.map((s) => ({ title: s.title, url: s.url })),
       status: 'review', ai_generated: true,
       seo_title: draft.seo_title, seo_description: draft.seo_description,
-      created_by: userData.user.id,
+      created_by: userId,
     }).select('id').single();
     if (insert.error?.code === '23505') {
       slug = `${draft.slug}-${Date.now().toString(36)}`;
@@ -80,7 +77,7 @@ Deno.serve(async (req) => {
         tags: draft.tags, sources: signals.map((s) => ({ title: s.title, url: s.url })),
         status: 'review', ai_generated: true,
         seo_title: draft.seo_title, seo_description: draft.seo_description,
-        created_by: userData.user.id,
+        created_by: userId,
       }).select('id').single();
     }
     if (insert.error) throw new Error(insert.error.message);

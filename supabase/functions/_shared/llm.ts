@@ -22,25 +22,33 @@ async function openrouterOnce(
 ): Promise<{ ok: true; text: string } | { ok: false; status: number; body: string }> {
   const key = Deno.env.get('OPENROUTER_API_KEY')!;
   const model = Deno.env.get('OPENROUTER_MODEL') || 'openrouter/free';
-  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${key}`,
-      'content-type': 'application/json',
-      'HTTP-Referer': 'https://agma.com.sa',
-      'X-Title': 'AGMA OS',
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: maxTokens,
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: prompt },
-      ],
-      ...(jsonMode ? { response_format: { type: 'json_object' } } : {}),
-    }),
-    signal: AbortSignal.timeout(120_000),
-  });
+  let res: Response;
+  try {
+    res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${key}`,
+        'content-type': 'application/json',
+        'HTTP-Referer': 'https://agma.com.sa',
+        'X-Title': 'AGMA OS',
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: maxTokens,
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: prompt },
+        ],
+        ...(jsonMode ? { response_format: { type: 'json_object' } } : {}),
+      }),
+      signal: AbortSignal.timeout(110_000),
+    });
+  } catch (e) {
+    if ((e as Error).name === 'TimeoutError' || (e as Error).name === 'AbortError') {
+      throw new Error('timeout');
+    }
+    throw e;
+  }
   const bodyText = await res.text();
   if (!res.ok) {
     console.error('openrouter', res.status, bodyText.slice(0, 400));
@@ -96,6 +104,9 @@ export function llmErrorMessage(e: Error): string | null {
   if (m.startsWith('provider:')) {
     const [, status, detail] = m.split(':');
     return `مزود التوليد رفض الطلب (${status}): ${detail}`;
+  }
+  if (m === 'timeout') {
+    return 'النموذج المجاني تجاوز المهلة — أعد المحاولة (غالباً ينجح ثانيةً)، أو ثبّت نموذجاً أسرع عبر OPENROUTER_MODEL';
   }
   if (m === 'bad_json') {
     return 'النموذج المجاني أعاد نصاً غير صالح — جرّب مجدداً، أو ثبّت نموذجاً أقوى عبر OPENROUTER_MODEL (مثل deepseek/deepseek-chat-v3-0324:free)';
