@@ -66,3 +66,7 @@ verify_jwt = false
 # مرسل واتساب — cron كل ٥ دقائق؛ لا يقبل مدخلات (L9).
 [functions.whatsapp-dispatch]
 verify_jwt = false
+
+# مساعد RAG — يخدم بوت الموقع العام (حد معدل + فخ روبوتات + معرفة معتمدة فقط، L9).
+[functions.assistant-ask]
+verify_jwt = false

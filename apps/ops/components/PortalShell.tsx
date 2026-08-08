@@ -250,6 +250,7 @@ function Portal({ profile }: { profile: Tables<'profiles'> }) {
           { key: 'docs', label: 'المستندات' },
           { key: 'pay', label: 'الفواتير والدفع' },
           { key: 'support', label: 'الدعم' },
+          { key: 'assistant', label: 'المساعد' },
         ]} />
 
         <div className="mt-5 space-y-4">
@@ -405,6 +406,8 @@ function Portal({ profile }: { profile: Tables<'profiles'> }) {
 
           {tab === 'support' && <ClientSupport profile={profile} />}
 
+          {tab === 'assistant' && <ClientAssistant profile={profile} onOpenSupport={() => setTab('support')} />}
+
           {tab === 'pay' && (
             <>
               {invoices.length === 0 ? (
@@ -470,6 +473,101 @@ function Portal({ profile }: { profile: Tables<'profiles'> }) {
 /* ---------------------------------------------------------- deliverables */
 
 /** مخرجات العميل: صورة أحدث إصدار، اضغط أي نقطة لتعليق مثبت، ثم قرارك. */
+
+
+/* ---------------------------------------------------------- assistant */
+
+function ClientAssistant({ profile, onOpenSupport }: {
+  profile: Tables<'profiles'>; onOpenSupport: () => void;
+}) {
+  const toast = useToast();
+  const [msgs, setMsgs] = useState<{ role: 'user' | 'bot'; text: string; citations?: string[]; offerSupport?: boolean }[]>([{
+    role: 'bot',
+    text: 'حياكم الله — أجيب فوراً عن أسئلتكم حول البوابة والفوترة وطريقة العمل. وما أعجز عنه أحوّله للفريق بضغطة.',
+  }]);
+  const [draft, setDraft] = useState('');
+  const [busy, setBusy] = useState(false);
+  const endRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: 'end' });
+  }, [msgs.length]);
+
+  async function ask(e: React.FormEvent) {
+    e.preventDefault();
+    const q = draft.trim();
+    if (!q || busy) return;
+    setMsgs((m) => [...m, { role: 'user', text: q }]);
+    setDraft('');
+    setBusy(true);
+    const { data, error } = await getSupabase().functions.invoke('assistant-ask', {
+      body: { question: q, surface: 'portal', website: '' },
+    });
+    if (error || !data?.ok) {
+      setMsgs((m) => [...m, { role: 'bot',
+        text: data?.message ?? 'تعذر الرد الآن — افتحوا طلب دعم وسيرد الفريق.',
+        offerSupport: true }]);
+    } else {
+      setMsgs((m) => [...m, { role: 'bot', text: data.answer,
+        citations: data.citations?.length ? data.citations : undefined,
+        offerSupport: !data.confident }]);
+    }
+    setBusy(false);
+  }
+
+  async function escalate(question: string) {
+    const s = getSupabase();
+    const { data: th, error } = await s.from('support_threads').insert({
+      client_id: profile.client_id!, department: 'general',
+      subject: question.slice(0, 120),
+    }).select('id').single();
+    if (error || !th) { toast.error('تعذر التحويل — افتحوا الدعم يدوياً'); return; }
+    await s.from('support_messages').insert({ thread_id: th.id, body: question });
+    toast.success('حُوّل سؤالكم للفريق — تابعوه في تبويب الدعم');
+    onOpenSupport();
+  }
+
+  const lastUserQ = [...msgs].reverse().find((m) => m.role === 'user')?.text ?? '';
+
+  return (
+    <Card className="flex min-h-[55vh] flex-col p-0">
+      <div className="flex items-center gap-2 border-b border-gray-dark px-4 py-3 text-sm font-bold">
+        <Sparkles className="h-4 w-4 text-pulse-orange" aria-hidden />
+        مساعد AGMA الفوري
+      </div>
+      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+        {msgs.map((m, i) => (
+          <div key={i} className={`flex ${m.role === 'user' ? 'justify-start flex-row-reverse' : ''}`}>
+            <div className={`max-w-[85%] rounded-lg px-3 py-2 text-sm leading-relaxed ${
+              m.role === 'user' ? 'bg-pulse-orange/15' : 'bg-white/5'
+            }`}>
+              <p className="whitespace-pre-wrap">{m.text}</p>
+              {m.citations && (
+                <p className="mt-1.5 border-t border-gray-dark pt-1 text-[10px] text-gray-medium">
+                  المصدر: {m.citations.join(' · ')}
+                </p>
+              )}
+              {m.offerSupport && (
+                <Button size="xs" className="mt-2"
+                  onClick={() => escalate(lastUserQ || 'استفسار من المساعد')}>
+                  حوّله طلب دعم للفريق
+                </Button>
+              )}
+            </div>
+          </div>
+        ))}
+        {busy && <p className="text-[11px] text-gray-medium">يكتب…</p>}
+        <div ref={endRef} />
+      </div>
+      <form onSubmit={ask} className="flex gap-2 border-t border-gray-dark p-3">
+        <input value={draft} onChange={(e) => setDraft(e.target.value)} maxLength={600}
+          placeholder="اسألوا عن أي شيء…"
+          className="min-w-0 flex-1 rounded-sm border border-gray-dark bg-transparent px-3 py-2 text-sm text-snow placeholder:text-gray-medium focus:border-pulse-orange focus:outline-none" />
+        <Button type="submit" size="sm" disabled={busy || !draft.trim()}>أرسل</Button>
+      </form>
+    </Card>
+  );
+}
 
 /* ------------------------------------------------------------ support */
 

@@ -66,6 +66,36 @@ Owner actions pending: ONE of OPENROUTER_API_KEY (free models) or
 ANTHROPIC_API_KEY (best Arabic quality) — see 8c below; plus
 HOSTINGER_DEPLOY_HOOK_MAIN (daily static rebake).
 
+## Phase 9 log (2026-08-09) — Knowledge base + RAG assistant (B6/B7 core)
+
+Owner: «انطلق بالمرحلة ٩».
+
+- `20260809050000_knowledge_rag.sql`: pgvector · kb_articles (audience
+  public/client/internal, publish + dirty-tracking via indexed_at) ·
+  kb_chunks(384) service-role-only · match_kb_chunks (definer, filtered by
+  published+audience) · assistant_logs (every Q&A, unconfident = content
+  gap fuel) · 5 seeded public KB articles.
+- `kb-reindex` (team JWT): chunk ~800 chars on headings/paragraphs, embed
+  with built-in gte-small (Supabase.ai — zero keys), cleans unpublished.
+- `assistant-ask` (public, L9: rate-limit 20/h/IP + honeypot + approved-KB
+  only): embed question → top-5 cosine > 0.72 → LLM answers from context
+  only with citations; hardened no-guess sentinel (NO_ANSWER + leak-pattern
+  detection); portal surface decodes client JWT → public+client audience +
+  client_id logging. ONE brain, surfaces: site/portal (whatsapp later).
+- Ops: المحتوى ← «قاعدة المعرفة» tab (KbAdmin): CRUD, audience select,
+  publish, reindex button with dirty count, and «أسئلة عجز عنها المساعد»
+  panel (gap mining).
+- Marketing: floating SiteAssistant bubble site-wide — chat + citations +
+  lead capture on low confidence (name + dial/phone L2+L11 → lead-intake
+  with transcript). Portal: «المساعد» tab — same brain, client audience,
+  one-click escalation creating a support thread with the question.
+- **Live-verified in production**: reindex 5 articles/7s · in-KB question
+  answered correctly with 3 citations · out-of-KB question refused with
+  human handoff · sentinel hardening retested after fix.
+
+Deferred: WhatsApp bot surface (plugs into assistant-ask after Twilio
+number — task #7), internal-KB search UI for team, help-centre public pages.
+
 ## Phase 8g log (2026-08-08) — Support chat, admin oversight, WhatsApp rail
 
 Owner: «طورلي الشات أقصى ما تستطيع + support chat من العميل للأقسام + مدير

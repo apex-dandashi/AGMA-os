@@ -472,6 +472,57 @@ export type Database = {
         }
         Relationships: []
       }
+      assistant_logs: {
+        Row: {
+          answer: string | null
+          cited: string[] | null
+          client_id: string | null
+          confident: boolean
+          created_at: string
+          id: string
+          question: string
+          session_key: string | null
+          surface: string
+        }
+        Insert: {
+          answer?: string | null
+          cited?: string[] | null
+          client_id?: string | null
+          confident?: boolean
+          created_at?: string
+          id?: string
+          question: string
+          session_key?: string | null
+          surface: string
+        }
+        Update: {
+          answer?: string | null
+          cited?: string[] | null
+          client_id?: string | null
+          confident?: boolean
+          created_at?: string
+          id?: string
+          question?: string
+          session_key?: string | null
+          surface?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistant_logs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_360"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assistant_logs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attachments: {
         Row: {
           created_at: string
@@ -2699,6 +2750,85 @@ export type Database = {
             columns: ["raised_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kb_articles: {
+        Row: {
+          audience: Database["public"]["Enums"]["kb_audience"]
+          body_md: string
+          category: string
+          created_at: string
+          created_by: string | null
+          id: string
+          indexed_at: string | null
+          published: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          audience?: Database["public"]["Enums"]["kb_audience"]
+          body_md: string
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          indexed_at?: string | null
+          published?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: Database["public"]["Enums"]["kb_audience"]
+          body_md?: string
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          indexed_at?: string | null
+          published?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kb_articles_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kb_chunks: {
+        Row: {
+          content: string
+          embedding: string
+          id: string
+          kb_id: string
+          seq: number
+        }
+        Insert: {
+          content: string
+          embedding: string
+          id?: string
+          kb_id: string
+          seq: number
+        }
+        Update: {
+          content?: string
+          embedding?: string
+          id?: string
+          kb_id?: string
+          seq?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kb_chunks_kb_id_fkey"
+            columns: ["kb_id"]
+            isOneToOne: false
+            referencedRelation: "kb_articles"
             referencedColumns: ["id"]
           },
         ]
@@ -5800,6 +5930,20 @@ export type Database = {
       is_project_member: { Args: { pid: string }; Returns: boolean }
       is_strategist_plus: { Args: never; Returns: boolean }
       is_team: { Args: never; Returns: boolean }
+      match_kb_chunks: {
+        Args: {
+          p_audiences?: Database["public"]["Enums"]["kb_audience"][]
+          p_count?: number
+          p_embedding: string
+        }
+        Returns: {
+          category: string
+          content: string
+          kb_id: string
+          similarity: number
+          title: string
+        }[]
+      }
       next_complaint_reference: { Args: never; Returns: string }
       next_document_number: { Args: { p_prefix: string }; Returns: string }
       normalize_ar: { Args: { t: string }; Returns: string }
@@ -5965,6 +6109,7 @@ export type Database = {
       framework_status: "active" | "planned" | "superseded"
       interaction_kind: "call" | "whatsapp" | "email" | "meeting" | "note"
       issue_status: "identified" | "discussing" | "solved" | "dropped"
+      kb_audience: "public" | "client" | "internal"
       kpi_direction: "up" | "down"
       lead_outcome: "open" | "won" | "lost"
       lead_source: "call" | "whatsapp" | "email" | "site"
@@ -6292,6 +6437,7 @@ export const Constants = {
       framework_status: ["active", "planned", "superseded"],
       interaction_kind: ["call", "whatsapp", "email", "meeting", "note"],
       issue_status: ["identified", "discussing", "solved", "dropped"],
+      kb_audience: ["public", "client", "internal"],
       kpi_direction: ["up", "down"],
       lead_outcome: ["open", "won", "lost"],
       lead_source: ["call", "whatsapp", "email", "site"],

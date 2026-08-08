@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Tajawal, IBM_Plex_Sans_Arabic } from 'next/font/google';
 import './globals.css';
 import ClientProviders from '@/components/ClientProviders';
+import SiteAssistant from '@/components/SiteAssistant';
 
 const tajawal = Tajawal({
   subsets: ['arabic'],
@@ -45,6 +46,7 @@ export default function RootLayout({
         <ClientProviders>
           {children}
         </ClientProviders>
+        <SiteAssistant />
       </body>
     </html>
   );
