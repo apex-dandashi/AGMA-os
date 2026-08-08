@@ -178,16 +178,21 @@ const APP_STATUS: Record<string, string> = {
 
 export function CareersSection() {
   const key = ['careers-admin'];
+  const [openApp, setOpenApp] = useState<string | null>(null);
   const { data, isLoading } = useQuery({
     queryKey: key,
     queryFn: async () => {
       const s = getSupabase();
-      const [jobs, apps, roles] = await Promise.all([
+      const [jobs, apps, roles, questions] = await Promise.all([
         s.from('career_jobs').select('*').order('created_at', { ascending: false }),
         s.from('career_applications').select('*').order('created_at', { ascending: false }),
         s.from('career_roles').select('id, title_ar'),
+        s.from('assessment_questions').select('id, text_ar, options, scores'),
       ]);
-      return { jobs: jobs.data ?? [], apps: apps.data ?? [], roles: roles.data ?? [] };
+      return {
+        jobs: jobs.data ?? [], apps: apps.data ?? [],
+        roles: roles.data ?? [], questions: questions.data ?? [],
+      };
     },
   });
   const patchApp = useAppMutation(
@@ -205,6 +210,41 @@ export function CareersSection() {
     },
     { invalidate: [key], successMessage: 'نُشرت الوظيفة على agma.com.sa/careers' }
   );
+
+  const [showJobForm, setShowJobForm] = useState(false);
+  const [job, setJob] = useState({
+    role_id: '', public_title_ar: '', description_ar: '', responsibilities: '',
+    qualification: '', skills: '', experience_requirement: '',
+    work_model: 'هجين', working_hours: 'الأحد–الخميس ٩–٥',
+    benefits: '', official_occupation_code: '',
+    open_date: new Date().toISOString().slice(0, 10),
+    close_date: '', localization_cleared: false,
+  });
+  const createJob = useAppMutation(
+    async () => {
+      const slug = `job-${Date.now().toString(36)}`;
+      const { error } = await getSupabase().from('career_jobs').insert({
+        role_id: job.role_id,
+        slug,
+        public_title_ar: job.public_title_ar.trim(),
+        description_ar: job.description_ar.trim() || null,
+        responsibilities: job.responsibilities.trim() || null,
+        qualification: job.qualification.trim() || null,
+        skills: job.skills.trim() || null,
+        experience_requirement: job.experience_requirement.trim() || null,
+        work_model: job.work_model,
+        working_hours: job.working_hours,
+        benefits: job.benefits.trim() || null,
+        official_occupation_code: job.official_occupation_code.trim() || null,
+        open_date: job.open_date || null,
+        close_date: job.close_date || null,
+        localization_review: job.localization_cleared ? 'cleared' : 'pending',
+      });
+      if (error) throw new Error(error.message);
+      setShowJobForm(false);
+    },
+    { invalidate: [key], successMessage: 'حُفظت الوظيفة كمسودة — انشرها بعد اكتمال بياناتها' }
+  );
   if (isLoading || !data) return <SkeletonList rows={3} />;
 
   return (
@@ -219,7 +259,8 @@ export function CareersSection() {
       ) : (
         <div className="mb-3 space-y-1.5">
           {data.apps.map((a) => (
-            <div key={a.id} className="flex flex-wrap items-center gap-2 rounded-sm border border-gray-dark/60 p-2.5 text-sm">
+            <div key={a.id} className="rounded-sm border border-gray-dark/60 p-2.5 text-sm">
+            <div className="flex flex-wrap items-center gap-2">
               <b dir="ltr" className="text-xs">{a.public_reference}</b>
               <span className="font-bold">{a.full_name}</span>
               <span className="text-xs text-gray-medium">
@@ -247,15 +288,131 @@ export function CareersSection() {
                 </Badge>
               )}
               {a.talent_pool_consent && <Badge variant="outline">مواهب حتى {a.talent_pool_until}</Badge>}
-              <span className="ms-auto">
+              <span className="ms-auto flex items-center gap-2">
                 <Select value={a.status} aria-label={`حالة ${a.public_reference}`}
                   className="w-32 py-1 text-xs"
                   onChange={(e) => patchApp.mutate({ id: a.id, p: { status: e.target.value } })}>
                   {Object.entries(APP_STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                 </Select>
+                <Button variant="ghost" size="xs"
+                  onClick={() => setOpenApp(openApp === a.id ? null : a.id)}>
+                  {openApp === a.id ? 'إغلاق' : 'الملف الكامل'}
+                </Button>
               </span>
             </div>
+            {openApp === a.id && (
+              <div className="mt-2 space-y-3 border-t border-gray-dark/60 pt-2">
+                <p className="text-xs text-gray-light">
+                  <span dir="ltr">{a.email}</span>
+                  {a.phone && <> · <span dir="ltr">{a.phone}</span></>}
+                  {a.work_model_pref && <> · {a.work_model_pref}</>}
+                  {a.start_availability && <> · يبدأ: {a.start_availability}</>}
+                  {a.salary_range && <> · الراتب المتوقع: {a.salary_range}</>}
+                  {a.arabic_level && <> · عربي: {a.arabic_level}</>}
+                  {a.english_level && <> · إنجليزي: {a.english_level}</>}
+                </p>
+                {a.cover_note && (
+                  <p className="rounded-sm bg-gray-dark/30 p-2 text-xs leading-relaxed text-gray-light">
+                    {a.cover_note}
+                  </p>
+                )}
+                {a.linkedin_url && (
+                  <a href={a.linkedin_url} target="_blank" rel="noreferrer" dir="ltr"
+                    className="text-xs text-pulse-orange underline-offset-2 hover:underline">
+                    LinkedIn
+                  </a>
+                )}
+                {a.answers && Object.keys(a.answers as object).length > 0 && (
+                  <div>
+                    <p className="mb-1.5 text-xs font-bold text-gray-light">
+                      مراجعة إجابات التقييم (الدرجة القصوى لكل سؤال ٤):
+                    </p>
+                    <ul className="space-y-1.5">
+                      {Object.entries(a.answers as Record<string, string>).map(([qid, val]) => {
+                        const q = data.questions.find((x) => x.id === qid);
+                        if (!q) return null;
+                        const opts = q.options as { v: string; label: string }[];
+                        const chosen = opts.find((o) => o.v === val);
+                        const pts = Number((q.scores as Record<string, number>)[val] ?? 0);
+                        return (
+                          <li key={qid} className="text-xs leading-relaxed">
+                            <span className="text-gray-medium">{q.text_ar}</span>
+                            <br />
+                            <span className={pts >= 4 ? 'text-pulse-orange' : 'text-gray-light'}>
+                              ← {chosen?.label ?? val} ({pts}/4)
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+            </div>
           ))}
+        </div>
+      )}
+      <div className="mb-2">
+        <Button variant="outline" size="xs" onClick={() => setShowJobForm((v) => !v)}>
+          {showJobForm ? 'إغلاق' : '+ وظيفة جديدة'}
+        </Button>
+      </div>
+      {showJobForm && (
+        <div className="mb-3 space-y-2 rounded-sm border border-pulse-orange/40 p-3">
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            <Select label="الدور من الكتالوج *" value={job.role_id}
+              onChange={(e) => {
+                const r = data.roles.find((x) => x.id === e.target.value);
+                setJob((f) => ({ ...f, role_id: e.target.value,
+                  public_title_ar: f.public_title_ar || r?.title_ar || '' }));
+              }}>
+              <option value="">— اختر —</option>
+              {data.roles.map((r) => <option key={r.id} value={r.id}>{r.title_ar}</option>)}
+            </Select>
+            <Input label="المسمى المعلن *" value={job.public_title_ar}
+              onChange={(e) => setJob((f) => ({ ...f, public_title_ar: e.target.value }))} />
+            <Input label="رمز التصنيف السعودي للمهن *" dir="ltr" value={job.official_occupation_code}
+              hint="من منصة التصنيف الموحد — النشر يُرفض بدونه"
+              onChange={(e) => setJob((f) => ({ ...f, official_occupation_code: e.target.value }))} />
+            <Select label="طبيعة العمل *" value={job.work_model}
+              onChange={(e) => setJob((f) => ({ ...f, work_model: e.target.value }))}>
+              {['حضوري في الرياض', 'هجين', 'عن بعد'].map((x) => <option key={x} value={x}>{x}</option>)}
+            </Select>
+            <Input label="ساعات العمل *" value={job.working_hours}
+              onChange={(e) => setJob((f) => ({ ...f, working_hours: e.target.value }))} />
+            <Input label="الخبرة المطلوبة *" value={job.experience_requirement}
+              placeholder="مثال: سنتان في إدارة حملات Meta"
+              onChange={(e) => setJob((f) => ({ ...f, experience_requirement: e.target.value }))} />
+            <Input label="فتح الإعلان *" type="date" dir="ltr" value={job.open_date}
+              onChange={(e) => setJob((f) => ({ ...f, open_date: e.target.value }))} />
+            <Input label="إغلاق الإعلان *" type="date" dir="ltr" value={job.close_date}
+              onChange={(e) => setJob((f) => ({ ...f, close_date: e.target.value }))} />
+            <Input label="المؤهل الأدنى *" value={job.qualification}
+              onChange={(e) => setJob((f) => ({ ...f, qualification: e.target.value }))} />
+          </div>
+          <Textarea label="وصف الوظيفة *" rows={2} value={job.description_ar}
+            onChange={(e) => setJob((f) => ({ ...f, description_ar: e.target.value }))} />
+          <Textarea label="المهام *" rows={2} value={job.responsibilities}
+            onChange={(e) => setJob((f) => ({ ...f, responsibilities: e.target.value }))} />
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Input label="المهارات *" value={job.skills}
+              onChange={(e) => setJob((f) => ({ ...f, skills: e.target.value }))} />
+            <Input label="المزايا *" value={job.benefits}
+              placeholder="تأمين طبي، تطوير مهني، مرونة…"
+              onChange={(e) => setJob((f) => ({ ...f, benefits: e.target.value }))} />
+          </div>
+          <label className="flex items-start gap-2 text-xs text-gray-light">
+            <input type="checkbox" className="mt-0.5" checked={job.localization_cleared}
+              onChange={(e) => setJob((f) => ({ ...f, localization_cleared: e.target.checked }))} />
+            راجعتُ انطباق قرارات التوطين على هذه المهنة (مهن التسويق موطّنة منذ
+            أبريل ٢٠٢٦) وتأكدت من جواز الإعلان
+          </label>
+          <Button size="sm" loading={createJob.isPending}
+            disabled={!job.role_id || job.public_title_ar.trim().length < 3}
+            onClick={() => createJob.mutate(undefined as never)}>
+            حفظ كمسودة
+          </Button>
         </div>
       )}
       <div className="space-y-1.5">
@@ -275,10 +432,9 @@ export function CareersSection() {
             )}
           </div>
         ))}
-        {data.jobs.length === 0 && (
+        {data.jobs.length === 0 && !showJobForm && (
           <p className="text-xs text-gray-medium">
-            لا وظائف بعد — أنشئ وظيفة من كتالوج الأدوار عبر قاعدة البيانات أو
-            اطلب مني فتح واحدة، والنشر يتطلب استيفاء ضوابط الإعلان.
+            لا وظائف بعد — «+ وظيفة جديدة» أعلاه، والنشر يتطلب استيفاء ضوابط الإعلان.
           </p>
         )}
       </div>

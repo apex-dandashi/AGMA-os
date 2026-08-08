@@ -74,6 +74,22 @@ stamp/signature + per-user signatures, and «أين أدخل السجل التج
   where to enter client CR/VAT — discoverability fix).
 - Gauntlet green; migration pushed to production.
 
+## Careers admin round log (2026-08-08)
+
+Owner: «وين أشوف المواهب ونتائجها والسير الذاتية؟» + mid-turn «كيف أنشئ
+وظيفة؟» — both answered in الفريق ← التوظيف and both UIs deepened:
+
+- Applications now expand to «الملف الكامل»: contact/availability/salary/
+  languages line, cover note, LinkedIn, and full answers review — each
+  question with the chosen option and its score (n/4, orange at 4) so HR
+  judges the reasoning, not just the total.
+- «+ وظيفة جديدة» form with every publish-gate field (role from catalog
+  w/ title prefill, occupation code w/ hint, work model/hours, experience,
+  qualification, description, responsibilities, skills, benefits,
+  open/close dates, localization checkbox) — saves as draft; النشر button
+  still lets the DB gate be the judge.
+- No migration; gauntlet green; shipped.
+
 ## Assessments log (2026-08-08)
 
 Owner: «وين شبكة المواهب وفورمات التقييم» — talent network was live on
