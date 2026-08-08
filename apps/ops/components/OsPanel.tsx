@@ -97,6 +97,27 @@ const METRIC_HINTS: Record<string, string> = {
   delivery_by_team_pct: 'نسبة المهام المنجزة بغير الشريكين — مقياس استقلال الوكالة عنكما.',
 };
 
+/** خط اتجاه ١٣ أسبوعاً (docs/09 المرحلة ١٠) — SVG خفيف بلا مكتبات */
+function Sparkline({ values }: { values: (number | null)[] }) {
+  const pts = values
+    .map((v, i) => ({ v, i }))
+    .filter((p): p is { v: number; i: number } => p.v !== null);
+  if (pts.length < 2) return <span className="text-gray-dark">·</span>;
+  const min = Math.min(...pts.map((p) => p.v));
+  const max = Math.max(...pts.map((p) => p.v));
+  const span = max - min || 1;
+  const W = 64, H = 20;
+  const path = pts
+    .map((p) => `${(p.i / (values.length - 1)) * W},${H - 2 - ((p.v - min) / span) * (H - 4)}`)
+    .join(' ');
+  return (
+    <svg width={W} height={H} aria-hidden className="block" style={{ direction: 'ltr' }}>
+      <polyline points={path} fill="none" stroke="#E8542F" strokeWidth="1.5"
+        strokeLinejoin="round" strokeLinecap="round" opacity="0.85" />
+    </svg>
+  );
+}
+
 function ScorecardTab() {
   const { data, isLoading } = useScorecard();
   const me = useProfile();
@@ -136,7 +157,7 @@ function ScorecardTab() {
           title="لا نتائج بعد"
           hint="اضغط «احسب الآن» أو انتظر أحد الساعة السابعة." />
       ) : (
-        <Table head={['المؤشر', 'المقعد', 'الهدف', ...weeks.map((w) => w.slice(5))]}>
+        <Table head={['المؤشر', 'الاتجاه', 'المقعد', 'الهدف', ...weeks.map((w) => w.slice(5))]}>
           {data.metrics.map((m) => {
             const seat = data.seats.find((s) => s.id === m.seat_id);
             return (
@@ -146,6 +167,16 @@ function ScorecardTab() {
                     {m.name_ar}
                     {METRIC_HINTS[m.key] && <Hint text={METRIC_HINTS[m.key]} />}
                   </span>
+                </Td>
+                <Td>
+                  <Sparkline
+                    values={weeks.map((w) => {
+                      const e = data.entries.find(
+                        (x) => x.metric_key === m.key && x.week_start === w
+                      );
+                      return e ? Number(e.value) : null;
+                    })}
+                  />
                 </Td>
                 <Td className="text-gray-light">{seat?.name_ar ?? '—'}</Td>
                 <Td dir="ltr" className="text-gray-medium">

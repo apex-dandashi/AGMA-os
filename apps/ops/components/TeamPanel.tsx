@@ -289,19 +289,198 @@ export default function TeamPanel({ me }: { me: Tables<'profiles'> }) {
                   )}
                 </Td>
                 <Td>
-                  <Badge variant={p.active ? 'accent' : 'neutral'}>
-                    {p.active ? 'نشط' : 'موقوف'}
-                  </Badge>
+                  {isAdmin && isTeamRow && p.id !== me.id ? (
+                    <button type="button"
+                      title={p.active ? 'إيقاف العضو — يبدأ إجراء المغادرة تلقائياً' : 'إعادة تفعيل'}
+                      onClick={() => updateHr.mutate({ id: p.id, patch: { active: !p.active } })}
+                      className="focus-visible:ring-2 focus-visible:ring-pulse-orange/60 focus:outline-none">
+                      <Badge variant={p.active ? 'accent' : 'neutral'}>
+                        {p.active ? 'نشط' : 'موقوف'}
+                      </Badge>
+                    </button>
+                  ) : (
+                    <Badge variant={p.active ? 'accent' : 'neutral'}>
+                      {p.active ? 'نشط' : 'موقوف'}
+                    </Badge>
+                  )}
                 </Td>
               </Tr>
             );
           })}
         </Table>
       )}
+      {isAdmin && <StaffLifecycle team={(profiles ?? []).filter((p) => p.role !== 'client')} />}
       <PeopleAnalyzer
         team={(profiles ?? []).filter((p) => p.role !== 'client' && p.active)}
         isAdmin={isAdmin} meId={me.id} />
     </div>
+  );
+}
+
+/** دورة حياة الموظف (docs/05 B10): قوائم التعيين والمغادرة + سجل العهد.
+ *  القوائم ينشئها النظام تلقائياً عند التفعيل/الإيقاف — هنا المتابعة والإقفال. */
+type ChecklistItem = {
+  key: string; label: string; due_days?: number;
+  done?: boolean; done_by?: string; done_at?: string;
+};
+
+function StaffLifecycle({ team }: { team: Tables<'profiles'>[] }) {
+  const key = ['staff_lifecycle'];
+  const { data } = useQuery({
+    queryKey: key,
+    queryFn: async () => {
+      const s = getSupabase();
+      const [cls, eq] = await Promise.all([
+        s.from('staff_checklists').select('*').order('status').order('created_at', { ascending: false }),
+        s.from('equipment_log').select('*').order('created_at', { ascending: false }),
+      ]);
+      return { checklists: cls.data ?? [], equipment: eq.data ?? [] };
+    },
+  });
+
+  const toggleItem = useAppMutation(
+    async ({ cl, itemKey }: { cl: Tables<'staff_checklists'>; itemKey: string }) => {
+      const s = getSupabase();
+      const { data: u } = await s.auth.getUser();
+      const items = (cl.items as ChecklistItem[]).map((it) =>
+        it.key === itemKey
+          ? (it.done
+            ? { ...it, done: false, done_by: undefined, done_at: undefined }
+            : { ...it, done: true, done_by: u.user?.id, done_at: new Date().toISOString() })
+          : it);
+      const allDone = items.every((it) => it.done);
+      const { error } = await s.from('staff_checklists')
+        .update({ items: items as never, status: allDone ? 'done' : 'open' })
+        .eq('id', cl.id);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [key] }
+  );
+
+  const [eqFor, setEqFor] = useState('');
+  const [eqItem, setEqItem] = useState('');
+  const addEquipment = useAppMutation(
+    async () => {
+      const { error } = await getSupabase().from('equipment_log')
+        .insert({ profile_id: eqFor, item: eqItem.trim() });
+      if (error) throw new Error(error.message);
+      setEqItem('');
+    },
+    { invalidate: [key], successMessage: 'سُجلت العهدة' }
+  );
+  const returnEquipment = useAppMutation(
+    async (id: string) => {
+      const { error } = await getSupabase().from('equipment_log')
+        .update({ returned_at: new Date().toISOString().slice(0, 10) }).eq('id', id);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [key], successMessage: 'أُقفلت العهدة' }
+  );
+
+  const memberName = (id: string) => {
+    const p = team.find((t) => t.id === id);
+    return p?.full_name || p?.email || '—';
+  };
+
+  if (!data) return null;
+  const open = data.checklists.filter((c) => c.status === 'open');
+  const closed = data.checklists.filter((c) => c.status === 'done');
+
+  return (
+    <section className="mt-8">
+      <h2 className="mb-1 flex items-center gap-2 text-base font-bold">
+        تعيين ومغادرة
+        <Hint wide text="ينشئ النظام قائمة تجهيز تلقائياً عند تفعيل عضو جديد (مع ترحيب بريدي بخطة أسبوعه الأول وجلسات متابعة ٣٠/٦٠/٩٠)، وقائمة مغادرة عند إيقافه. هنا تتابعها وتقفل بنودها، وتسجل العهد." />
+      </h2>
+      {open.length === 0 && (
+        <p className="mb-3 text-sm text-gray-medium">لا قوائم مفتوحة — كل التعيينات والمغادرات مكتملة.</p>
+      )}
+      <div className="grid gap-3 lg:grid-cols-2">
+        {open.map((cl) => {
+          const items = cl.items as ChecklistItem[];
+          const done = items.filter((i) => i.done).length;
+          return (
+            <div key={cl.id} className="rounded-sm border border-gray-dark p-3">
+              <p className="mb-2 flex items-center gap-2 text-sm font-bold">
+                {memberName(cl.profile_id)}
+                <Badge variant={cl.kind === 'onboarding' ? 'accent' : 'outline'}>
+                  {cl.kind === 'onboarding' ? 'تعيين' : 'مغادرة'}
+                </Badge>
+                <span className="ms-auto text-xs font-normal text-gray-medium" dir="ltr">
+                  {done}/{items.length}
+                </span>
+              </p>
+              <ul className="space-y-1.5">
+                {items.map((it) => (
+                  <li key={it.key}>
+                    <label className="flex cursor-pointer items-start gap-2 text-sm text-gray-light">
+                      <input type="checkbox" checked={!!it.done}
+                        onChange={() => toggleItem.mutate({ cl, itemKey: it.key })}
+                        className="mt-1 accent-[#E8542F]" />
+                      <span className={it.done ? 'line-through opacity-60' : ''}>
+                        {it.label}
+                        {it.due_days ? (
+                          <span className="ms-1 text-xs text-gray-medium">
+                            (يوم {it.due_days})
+                          </span>
+                        ) : null}
+                      </span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
+      </div>
+      {closed.length > 0 && (
+        <p className="mt-2 text-xs text-gray-medium">
+          مكتملة: {closed.map((c) => `${memberName(c.profile_id)} (${c.kind === 'onboarding' ? 'تعيين' : 'مغادرة'})`).join(' · ')}
+        </p>
+      )}
+
+      <div className="mt-5 rounded-sm border border-gray-dark p-3">
+        <p className="mb-2 text-sm font-bold">سجل العهد</p>
+        <form className="mb-3 flex flex-wrap items-end gap-2"
+          onSubmit={(e) => { e.preventDefault(); if (eqFor && eqItem.trim()) addEquipment.mutate(undefined as never); }}>
+          <Select label="العضو" value={eqFor} onChange={(e) => setEqFor(e.target.value)} className="w-44">
+            <option value="">اختر…</option>
+            {team.filter((t) => t.active).map((t) => (
+              <option key={t.id} value={t.id}>{t.full_name || t.email}</option>
+            ))}
+          </Select>
+          <Input label="العهدة" value={eqItem} onChange={(e) => setEqItem(e.target.value)}
+            placeholder="مثال: MacBook Pro — SN…" className="w-64" />
+          <Button type="submit" size="sm" variant="outline" loading={addEquipment.isPending}
+            disabled={!eqFor || !eqItem.trim()}>
+            تسجيل
+          </Button>
+        </form>
+        {data.equipment.length === 0 ? (
+          <p className="text-xs text-gray-medium">لا عهد مسجلة.</p>
+        ) : (
+          <Table head={['العضو', 'العهدة', 'التسليم', 'الحالة']}>
+            {data.equipment.map((eq) => (
+              <Tr key={eq.id}>
+                <Td className="font-medium">{memberName(eq.profile_id)}</Td>
+                <Td className="text-gray-light">{eq.item}</Td>
+                <Td dir="ltr" className="text-gray-medium">{eq.given_at}</Td>
+                <Td>
+                  {eq.returned_at ? (
+                    <Badge variant="neutral">أُعيدت {eq.returned_at}</Badge>
+                  ) : (
+                    <Button size="xs" variant="ghost" loading={returnEquipment.isPending}
+                      onClick={() => returnEquipment.mutate(eq.id as never)}>
+                      إقفال (أُعيدت)
+                    </Button>
+                  )}
+                </Td>
+              </Tr>
+            ))}
+          </Table>
+        )}
+      </div>
+    </section>
   );
 }
 

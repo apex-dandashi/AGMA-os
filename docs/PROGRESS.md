@@ -20,7 +20,52 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 7 | Portal + onboarding + Drop Forms | ✅ Done (2026-08-09) — magic-link, docs+sign, approvals, invoices, support, assistant, forms engine + auto onboarding |
 | 8 | Content Engine | ✅ Done (2026-08-08) — client-content workflow + AI drafting + portal approval + daily blog engine (RSS collect → auto-draft → review → static SEO/GEO pages) |
 | 9 | Help Centre / RAG + chatbots | ✅ Done (2026-08-09) — KB+RAG core, then Help Center: 14 seeded articles (نصائح تسويقية + دليل النظام), two-tier brain (grounded/general-advice), /help site page, ops help surface |
-| 10 | Employee portal + Analytics + digests | ⬜ |
+| 10 | Employee portal + Analytics + digests | ✅ Done (2026-08-09) — staff lifecycle (auto onboarding/offboarding checklists, welcome emails, 30/60/90 nudges, equipment log, signature generator), client health weekly → scorecard, Analytics dashboard, digest v2 (rocks+issues, WhatsApp-ready) |
+
+## Phase 10 log (2026-08-09) — بوابة الموظف + التحليلات + الملخصات
+
+Owner: «اتفضل (بوابة الموظفين + Analytics + الملخصات)». Blueprint docs/05
+B10 + B11.6/11; docs/09 phase-10 remainder (sparklines, health→scorecard).
+
+- `20260809090000_employee_analytics.sql`:
+  - **Staff lifecycle on profiles** (no parallel HR tables): activating a
+    team member auto-creates an onboarding checklist (role provisioning
+    items from role_profiles + COC + signature + 30/60/90 check-ins with
+    due_days) + welcome inapp/email (role pillars + first-week plan);
+    deactivating creates the offboarding mirror (access revocation,
+    equipment, handover, exit interview) + team notification.
+    staff_checklists/equipment_log RLS: admin manages, member reads own.
+  - **run_daily_jobs_v3** = v2 + staff_checkin_nudges (30/60/90 by
+    created_at + due_days, deduped); cron agma-daily rescheduled.
+  - **client_health** weekly per active client: approval speed (90d),
+    payment punctuality (overdue/billed), engagement (days since last
+    portal trace — falls back to client age so new clients aren't
+    punished), CSAT mapping; avg over available components only; bands
+    75/50. Feeds new auto metric client_health_avg. Team-only RLS,
+    invisible to clients (harness-proved).
+  - **compute_scorecard base redefined** (layering respected: base →
+    v2 extras → v3 sellable — first attempt broke because base guessed
+    at extras' allocation branch; lesson: redefine only your layer).
+    Digest payload now adds rocks_line (quarter counts), top-3 open
+    issues, and plain-text red_list (whatsapp-ready) + *_html variants
+    for the email template.
+  - 2 KB articles (docs-with-ship rule): بوابة الموظف، التحليلات والملخص.
+- Ops UI: **التحليلات** nav page (monthly cash bars, open funnel by stage,
+  client-health table with component breakdown, team load bars);
+  **Sparkline** trend column (13w inline SVG) in scorecard; TeamPanel
+  «تعيين ومغادرة» section (checklist toggles w/ done_by stamping,
+  equipment log add/close) + active-toggle on member rows (was missing —
+  offboarding had no UI trigger); ProfilePanel: branded email-signature
+  generator (rich-clipboard copy, Gmail/Outlook/Apple instructions) +
+  «رحلة انضمامك» read-only checklist.
+- Fixes en route: jsonb `||` precedence in pillars string_agg; ambiguous
+  created_at in health subqueries (qualify columns — same lesson as Drop
+  Forms RLS); types must regen into db package's `database.types.ts`
+  (a stray `types.gen.ts` redirect produced phantom TS2589s).
+- Live-verified in production: compute_scorecard_v3 ran clean; both real
+  clients scored (100/green, engagement component); digest payload shows
+  7 green · 2 red + real rocks line («1 منجزة») + issues line; cron
+  agma-daily now targets run_daily_jobs_v3. RLS section added to harness.
 
 ## Help Center log (2026-08-09) — phase 9 tail: عقل من طبقتين + مركز مساعدة
 

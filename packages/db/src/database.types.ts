@@ -1001,6 +1001,48 @@ export type Database = {
         }
         Relationships: []
       }
+      client_health: {
+        Row: {
+          band: string
+          client_id: string
+          components: Json
+          computed_at: string
+          score: number
+          week_start: string
+        }
+        Insert: {
+          band: string
+          client_id: string
+          components?: Json
+          computed_at?: string
+          score: number
+          week_start: string
+        }
+        Update: {
+          band?: string
+          client_id?: string
+          components?: Json
+          computed_at?: string
+          score?: number
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_health_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_360"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_health_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_sites: {
         Row: {
           active: boolean
@@ -2124,6 +2166,44 @@ export type Database = {
           },
         ]
       }
+      equipment_log: {
+        Row: {
+          created_at: string
+          given_at: string
+          id: string
+          item: string
+          notes: string | null
+          profile_id: string
+          returned_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          given_at?: string
+          id?: string
+          item: string
+          notes?: string | null
+          profile_id: string
+          returned_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          given_at?: string
+          id?: string
+          item?: string
+          notes?: string | null
+          profile_id?: string
+          returned_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipment_log_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       evidence: {
         Row: {
           created_at: string
@@ -2551,6 +2631,7 @@ export type Database = {
           id: string
           is_system: boolean
           status: string
+          system_key: string | null
           title: string
           updated_at: string
         }
@@ -2562,6 +2643,7 @@ export type Database = {
           id?: string
           is_system?: boolean
           status?: string
+          system_key?: string | null
           title: string
           updated_at?: string
         }
@@ -2573,6 +2655,7 @@ export type Database = {
           id?: string
           is_system?: boolean
           status?: string
+          system_key?: string | null
           title?: string
           updated_at?: string
         }
@@ -4854,28 +4937,34 @@ export type Database = {
           created_at: string
           id: string
           pillars: Json
+          provisioning_items: Json
           role_key: string
           title_ar: string
           title_en: string
           updated_at: string
+          welcome_plan_ar: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           pillars?: Json
+          provisioning_items?: Json
           role_key: string
           title_ar: string
           title_en: string
           updated_at?: string
+          welcome_plan_ar?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           pillars?: Json
+          provisioning_items?: Json
           role_key?: string
           title_ar?: string
           title_en?: string
           updated_at?: string
+          welcome_plan_ar?: string | null
         }
         Relationships: []
       }
@@ -5251,6 +5340,44 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_checklists: {
+        Row: {
+          created_at: string
+          id: string
+          items: Json
+          kind: string
+          profile_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          items?: Json
+          kind: string
+          profile_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          items?: Json
+          kind?: string
+          profile_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_checklists_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -6056,6 +6183,7 @@ export type Database = {
         Args: { p_document: string; p_name: string; p_signature: string }
         Returns: undefined
       }
+      compute_client_health: { Args: never; Returns: undefined }
       compute_scorecard: { Args: never; Returns: undefined }
       compute_scorecard_extras: { Args: { v_week: string }; Returns: undefined }
       compute_scorecard_sellable: {
@@ -6166,6 +6294,7 @@ export type Database = {
       set_my_signature: { Args: { p_data: string }; Returns: undefined }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      staff_checkin_nudges: { Args: never; Returns: undefined }
       valid_signature_image: { Args: { p_data: string }; Returns: boolean }
     }
     Enums: {

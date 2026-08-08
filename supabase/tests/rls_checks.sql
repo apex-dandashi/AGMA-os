@@ -381,4 +381,55 @@ begin
   delete from public.form_requests where id = v_req;
 end $$;
 
+-- ---------- بوابة الموظف + صحة العملاء (المرحلة ١٠) --------------------------
+do $$
+declare n int;
+begin
+  -- المحفز أنشأ قوائم تعيين لأعضاء الحزام تلقائياً؛ نزرع صحة عميل للفحص
+  perform set_config('role', 'postgres', true);
+  insert into public.client_health (client_id, week_start, score, band)
+  values ('10000000-0000-0000-0000-0000000000aa', date_trunc('week', now())::date, 88, 'green')
+  on conflict do nothing;
+
+  -- المنفذ: يرى قائمته هو فقط — لا قوائم زملائه
+  perform set_config('request.jwt.claims',
+    '{"sub":"00000000-0000-0000-0000-0000000000e1","role":"authenticated"}', true);
+  perform set_config('role', 'authenticated', true);
+  select count(*) into n from public.staff_checklists;
+  if n <> 1 then raise exception 'executor: own checklist only expected 1 got %', n; end if;
+  select count(*) into n from public.staff_checklists
+    where profile_id <> '00000000-0000-0000-0000-0000000000e1';
+  if n <> 0 then raise exception 'executor: must not see others checklists'; end if;
+  -- المنفذ لا يقفل بنوداً (إدارة القوائم لمدير النظام)
+  begin
+    update public.staff_checklists set status = 'done'
+      where profile_id = '00000000-0000-0000-0000-0000000000e1';
+    if found then raise exception 'executor: checklist update must be denied'; end if;
+  exception when insufficient_privilege then null;
+  end;
+  -- الفريق يرى صحة العملاء
+  select count(*) into n from public.client_health where score = 88;
+  if n <> 1 then raise exception 'executor: client health visible to team, got %', n; end if;
+  -- تسجيل عهدة ليس من صلاحياته
+  begin
+    insert into public.equipment_log (profile_id, item)
+    values ('00000000-0000-0000-0000-0000000000e1', 'حزام: جهاز');
+    raise exception 'executor: equipment insert must be denied';
+  exception when insufficient_privilege then null;
+  end;
+
+  -- العميل: لا صحة عملاء ولا قوائم موظفين إطلاقاً
+  perform set_config('request.jwt.claims',
+    '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated"}', true);
+  select count(*) into n from public.client_health;
+  if n <> 0 then raise exception 'client: client_health must be hidden, got %', n; end if;
+  select count(*) into n from public.staff_checklists;
+  if n <> 0 then raise exception 'client: staff checklists must be hidden, got %', n; end if;
+  select count(*) into n from public.equipment_log;
+  if n <> 0 then raise exception 'client: equipment log must be hidden, got %', n; end if;
+
+  perform set_config('role', 'postgres', true);
+  delete from public.client_health where score = 88;
+end $$;
+
 select 'RLS_CHECKS_PASSED' as result;

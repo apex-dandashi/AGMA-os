@@ -171,6 +171,105 @@ export default function ProfilePanel() {
           غيّرها من هنا
         </Link>
       </Card>
+
+      {me.role !== 'client' && <EmailSignatureCard me={me} />}
+      {me.role !== 'client' && <MyOnboardingCard />}
     </div>
+  );
+}
+
+/** مولّد توقيع البريد الموحد (docs/05 B10 + docs/06 §4): هوية واحدة،
+ *  لا توقيعات عشوائية — HTML جاهز للصق في أي برنامج بريد. */
+function EmailSignatureCard({ me }: {
+  me: { full_name: string | null; job_title: string | null; email: string | null; phone: string | null };
+}) {
+  const toast = useToast();
+  const name = me.full_name ?? '';
+  const title = me.job_title ?? '';
+  const email = me.email ?? '';
+
+  const html = [
+    '<table dir="rtl" cellpadding="0" cellspacing="0" style="font-family:Tahoma,Arial,sans-serif;font-size:13px;color:#1a1a1a">',
+    '<tr><td style="padding:12px 0 12px 16px;border-left:3px solid #E8542F">',
+    `<div style="font-weight:bold;font-size:15px;color:#0B0B0B">${name}</div>`,
+    title ? `<div style="color:#555;padding-top:2px">${title} — AGMA</div>` : '<div style="color:#555;padding-top:2px">AGMA</div>',
+    me.phone ? `<div style="direction:ltr;text-align:right;color:#555;padding-top:6px">${me.phone}</div>` : '',
+    `<div style="direction:ltr;text-align:right;padding-top:2px"><a href="mailto:${email}" style="color:#E8542F;text-decoration:none">${email}</a></div>`,
+    '<div style="direction:ltr;text-align:right;padding-top:2px"><a href="https://agma.com.sa" style="color:#E8542F;text-decoration:none;font-weight:bold">agma.com.sa</a></div>',
+    '</td></tr></table>',
+  ].filter(Boolean).join('');
+
+  async function copyHtml() {
+    try {
+      // نسخ غني: يلصق منسقاً في Gmail/Outlook مباشرة، مع نص بديل
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          'text/html': new Blob([html], { type: 'text/html' }),
+          'text/plain': new Blob([`${name} — ${title} — AGMA — ${email}`], { type: 'text/plain' }),
+        }),
+      ]);
+      toast.success('نُسخ التوقيع — الصقه في إعدادات بريدك');
+    } catch {
+      await navigator.clipboard.writeText(html);
+      toast.success('نُسخ كود HTML — الصقه في محرر التوقيع بوضع HTML');
+    }
+  }
+
+  return (
+    <Card className="space-y-3 p-5">
+      <p className="flex items-center gap-2 text-sm font-bold">
+        توقيع البريد الموحد
+        <Hint wide text="هوية AGMA واحدة في كل بريد يخرج منا. التركيب: Gmail — الإعدادات ← عرض كل الإعدادات ← التوقيع ← الصق. Outlook — الإعدادات ← إنشاء ورد ← التوقيعات ← الصق. Apple Mail — الإعدادات ← التوقيعات ← الصق." />
+      </p>
+      {!name && (
+        <p className="text-xs text-pulse-orange">أكمل اسمك أعلاه أولاً ليكتمل التوقيع.</p>
+      )}
+      <div className="rounded-sm border border-gray-dark bg-white p-3"
+        dangerouslySetInnerHTML={{ __html: html }} />
+      <Button size="sm" variant="outline" onClick={() => void copyHtml()} disabled={!name}>
+        انسخ التوقيع
+      </Button>
+    </Card>
+  );
+}
+
+/** قائمة تجهيزي — يراها العضو الجديد ليعرف أين وصلت رحلته (الإقفال بيد الإدارة). */
+function MyOnboardingCard() {
+  const { data } = useQuery({
+    queryKey: ['my_onboarding'],
+    queryFn: async () => {
+      const { data } = await getSupabase().from('staff_checklists')
+        .select('*').eq('kind', 'onboarding').limit(1);
+      return data?.[0] ?? null;
+    },
+  });
+  if (!data) return null;
+  const items = data.items as { key: string; label: string; done?: boolean; due_days?: number }[];
+  const done = items.filter((i) => i.done).length;
+  return (
+    <Card className="space-y-3 p-5">
+      <p className="flex items-center gap-2 text-sm font-bold">
+        رحلة انضمامك
+        <span className="ms-auto text-xs font-normal text-gray-medium" dir="ltr">
+          {done}/{items.length}
+        </span>
+      </p>
+      <ul className="space-y-1.5 text-sm text-gray-light">
+        {items.map((it) => (
+          <li key={it.key} className="flex items-start gap-2">
+            <span aria-hidden>{it.done ? '✅' : '◻️'}</span>
+            <span className={it.done ? 'opacity-60' : ''}>
+              {it.label}
+              {it.due_days ? <span className="ms-1 text-xs text-gray-medium">(يوم {it.due_days})</span> : null}
+            </span>
+          </li>
+        ))}
+      </ul>
+      {done === items.length ? (
+        <p className="text-xs text-green-500">اكتملت رحلتك — حياك الله رسمياً 🎉</p>
+      ) : (
+        <p className="text-xs text-gray-medium">تُقفل البنود من إدارة النظام في صفحة «الفريق».</p>
+      )}
+    </Card>
   );
 }

@@ -30,6 +30,7 @@ const NAV: { href: string; key: DictKey }[] = [
   { href: '/forms/', key: 'nav.forms' },
   { href: '/finance/', key: 'nav.finance' },
   { href: '/website/', key: 'nav.website' },
+  { href: '/analytics/', key: 'nav.analytics' },
   { href: '/team/', key: 'nav.team' },
   { href: '/chat/', key: 'nav.chat' },
   { href: '/ims/', key: 'nav.ims' },

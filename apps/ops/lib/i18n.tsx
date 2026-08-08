@@ -19,6 +19,7 @@ const DICT = {
   'nav.forms': { ar: 'النماذج', en: 'Forms' },
   'nav.finance': { ar: 'المالية', en: 'Finance' },
   'nav.website': { ar: 'الموقع', en: 'Website' },
+  'nav.analytics': { ar: 'التحليلات', en: 'Analytics' },
   'nav.team': { ar: 'الفريق', en: 'Team' },
   'nav.ims': { ar: 'الحوكمة', en: 'Governance' },
   'nav.settings': { ar: 'الإعدادات', en: 'Settings' },
