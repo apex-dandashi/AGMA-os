@@ -113,10 +113,14 @@ Deno.serve(async (req) => {
   try {
     // ١) تضمين السؤال والبحث الدلالي
     const qEmbedding = await embedder.run(question, { mean_pool: true, normalize: true });
-    const { data: matches } = await supabase.rpc('match_kb_chunks', {
-      p_embedding: JSON.stringify(qEmbedding), p_count: 5, p_audiences: audiences,
+    const { data: matches } = await supabase.rpc('match_kb_hybrid', {
+      p_embedding: JSON.stringify(qEmbedding), p_query: question,
+      p_count: 5, p_audiences: audiences,
     });
-    const strong = (matches ?? []).filter((m: { similarity: number }) => m.similarity > 0.6);
+    // أرضية منخفضة تقطع الضجيج فقط — تضمينات gte-small للعربي تعطي تشابهاً
+    // متواضعاً حتى للمطابقة الحرفية، والحكم النهائي «هل المقاطع تجيب؟»
+    // متروك للنموذج بقواعد الطبقات لا لعتبة جيب التمام.
+    const strong = (matches ?? []).filter((m: { similarity: number }) => m.similarity > 0.45);
 
     // العقل من طبقتين: موثق من المعرفة إن وُجدت؛ وإلا نصيحة تسويق عامة
     // موسومة — الرفض محفوظ فقط لما يخص AGMA تحديداً وليس في المعرفة.
@@ -154,11 +158,17 @@ Deno.serve(async (req) => {
     const citations = grounded
       ? [...new Set(strong.map((m: { title: string }) => m.title))].slice(0, 3) : [];
 
-    await supabase.from('assistant_logs').insert({
+    const { error: logErr } = await supabase.from('assistant_logs').insert({
       surface, session_key: session_key ?? null, client_id: clientId,
       question, answer: refused ? null : cleanAnswer,
       confident: !refused, cited: citedIds,
+      meta: {
+        top_sim: (matches ?? [])[0]?.similarity ?? null,
+        n_strong: strong.length,
+        raw_head: refused ? answer.slice(0, 120) : null,
+      },
     });
+    if (logErr) console.error('assistant-log', logErr.message);
 
     return new Response(JSON.stringify({
       ok: true,

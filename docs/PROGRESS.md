@@ -22,6 +22,35 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 9 | Help Centre / RAG + chatbots | ✅ Done (2026-08-09) — KB+RAG core, then Help Center: 14 seeded articles (نصائح تسويقية + دليل النظام), two-tier brain (grounded/general-advice), /help site page, ops help surface |
 | 10 | Employee portal + Analytics + digests | ✅ Done (2026-08-09) — staff lifecycle (auto onboarding/offboarding checklists, welcome emails, 30/60/90 nudges, equipment log, signature generator), client health weekly → scorecard, Analytics dashboard, digest v2 (rocks+issues, WhatsApp-ready) |
 
+## System docs + hybrid retrieval log (2026-08-09)
+
+Owner rule (2026-08-08): «كل عمليات النظام نسويلها مقالات كي يكون كامل
+متكامل» — plus docs-with-ship going forward.
+
+- `20260809100000_system_docs.sql`: 9 new KB articles → دليل النظام now 18
+  internal guides (added: نظام التشغيل OS، الأمان والنقد، قابلية البيع،
+  المستندات والعقود، الإشعارات، يومي والمهام، الموقع والطبقة العامة،
+  مركز المساعدة نفسه) + first **client-audience** guide «دليلك في بوابة
+  AGMA» feeding the portal assistant. Total KB: 30 articles.
+- **Silent-drop bug found via live tests**: no ops-surface assistant log
+  had EVER landed — assistant_logs.surface check constraint predated the
+  'ops' surface; inserts failed silently (unchecked await). Fixed
+  constraint (+ 'whatsapp'), function now console.errors log failures.
+  `20260809101000` adds assistant_logs.meta (top_sim, n_strong, raw_head
+  on refusals) — retrieval observability that found the next bug:
+- **Hybrid retrieval** (`20260809103000`): meta showed top_sim 0.93 for
+  UNRELATED chunks — gte-small Arabic embeddings are anisotropic (all
+  ~0.9, ranking unreliable): marketing FAQs outranked the literal-match
+  دليل الأمان chunk. Fix: match_kb_hybrid = vector top-5 UNION pg_trgm
+  word_similarity top-5 (text hits scored 0.94+ to win ranking), dedupe,
+  best-of. assistant-ask switched to it.
+- Live-verified: «فحوصات التوقف» → grounded+cited from دليل الأمان;
+  «كم صخرة» → correct «حد أقصى ٥» from OS guide; internal question via
+  public site bot still refused (audience wall holds); original marketing
+  questions now cite their sources too. Test users/logs cleaned (lesson:
+  e2e teardown must delete notifications+staff_checklists first — the
+  phase-10 lifecycle trigger references them).
+
 ## Phase 10 log (2026-08-09) — بوابة الموظف + التحليلات + الملخصات
 
 Owner: «اتفضل (بوابة الموظفين + Analytics + الملخصات)». Blueprint docs/05
