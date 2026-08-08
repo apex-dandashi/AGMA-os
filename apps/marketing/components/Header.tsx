@@ -62,8 +62,18 @@ const Header = () => {
             </Magnetic>
           ))}
           <Magnetic>
-            <Link 
-              href="/contact" 
+            <a
+              href="https://ops.agma.com.sa/portal/demo/"
+              target="_blank"
+              rel="noreferrer"
+              className="text-sm font-medium text-gray-light transition-colors hover:text-pulse-orange"
+            >
+              جرّب البوابة
+            </a>
+          </Magnetic>
+          <Magnetic>
+            <Link
+              href="/contact"
               className="btn-outline flex items-center justify-center text-sm py-2 px-6"
             >
               احجز مكالمة استراتيجية

@@ -74,6 +74,19 @@ stamp/signature + per-user signatures, and «أين أدخل السجل التج
   where to enter client CR/VAT — discoverability fix).
 - Gauntlet green; migration pushed to production.
 
+## Experience AGMA demo log (2026-08-08) — WOW slice 2
+
+- /portal/demo: fully self-contained demo portal — fictional Arabic data
+  entirely in browser state (no auth, no DB call, zero footprint), same
+  three tabs and the same hand-rolled signature pad; approvals decide
+  locally, signing marks the doc signed with a demo evidence line, every
+  interaction teaches what the real portal does («في البوابة الحقيقية
+  يُحفظ سجل أدلة كامل»). Permanent «وضع تجريبي» banner + two CTAs to
+  /contact.
+- Marketing: header «جرّب البوابة» beside the strategy-call CTA + footer
+  «جرّب بوابة العملاء» — the study's 'Experience AGMA instead of Login'.
+- No migration, no new function; gauntlet green; shipped.
+
 ## Phase 7 core log (2026-08-08) — بوابة العميل
 
 - `20260808210000_portal.sql`: document_signatures evidence table (signer,

@@ -97,6 +97,7 @@ const Footer = () => {
             <span className="text-[10px] text-pulse-orange font-bold uppercase tracking-widest font-mono">الثقة والحوكمة</span>
             <div className="flex flex-wrap gap-x-6 gap-y-2">
               <Link href="/tools/website-audit" className="hover:text-snow transition-colors">فحص موقعك مجاناً</Link>
+              <a href="https://ops.agma.com.sa/portal/demo/" target="_blank" rel="noreferrer" className="hover:text-snow transition-colors">جرّب بوابة العملاء</a>
               <Link href="/complaints" className="hover:text-snow transition-colors">الشكاوى والملاحظات</Link>
               <Link href="/feedback" className="hover:text-snow transition-colors">قيّم تجربتك</Link>
               <Link href="/careers" className="hover:text-snow transition-colors">الوظائف</Link>
