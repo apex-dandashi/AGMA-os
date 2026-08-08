@@ -17,7 +17,7 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 6.5a | **OS-core** (docs/10): vision/VTO, seats, primary_aims, rocks, issues+IDS, scorecard+digest, L10 meetings | ✅ Done (2026-08-07) |
 | 6.5b | **Safety+cash** (docs/10): pause checklists, Flag & Hold, huddles, Profit First allocations, Vault/drip, leak detection | ✅ Done (2026-08-07) |
 | 6.5c | **Sellable** (docs/10): TVR scores, service_packages, custom-reason mining, playbook versions+grades, experiments, EMT/independence gauges | ✅ Done (2026-08-07) |
-| 7 | Portal + onboarding + Drop Forms | ⬜ |
+| 7 | Portal + onboarding + Drop Forms | ✅ Core done (2026-08-08) — magic-link login, docs+sign w/ evidence, approvals, invoices+bank info; onboarding/Drop Forms iterate next |
 | 8 | Content Engine | ⬜ |
 | 9 | Help Centre / RAG + chatbots | ⬜ |
 | 10 | Employee portal + Analytics + digests | ⬜ |
@@ -73,6 +73,32 @@ stamp/signature + per-user signatures, and «أين أدخل السجل التج
   أو الرقم الضريبي، ينقر فيفتح «تعديل البيانات» مباشرة (owner couldn't find
   where to enter client CR/VAT — discoverability fix).
 - Gauntlet green; migration pushed to production.
+
+## Phase 7 core log (2026-08-08) — بوابة العميل
+
+- `20260808210000_portal.sql`: document_signatures evidence table (signer,
+  drawn signature image, md5 payload hash, doc version, timestamp — no
+  direct DML for anyone; audit-trailed) + `client_sign_document` RPC
+  (owns-doc + status=sent + name + image guards → insert evidence + doc
+  status signed). Persona-proved: other client blocked, owner signs
+  (hash+version recorded), re-sign blocked, direct table insert
+  permission-denied, team notified on sign. Plus: client reads payments
+  of own invoices; client profiles notified on doc sent.
+- /portal (in ops app, own shell — clients redirected from the team app):
+  magic-link login (shouldCreateUser=false, no password, no MFA for
+  clients — their reach is RLS-bounded and actions go through definer
+  RPCs), tabs: نظرة عامة (pending approvals one-tap اعتماد/ملاحظات +
+  docs awaiting signature + project statuses), المستندات (view/print via
+  the same deterministic renderers + توقيع), الفواتير والدفع (balance per
+  invoice + payments + bank accounts w/ beneficiary line).
+- Signature pad: hand-rolled canvas (pointer events, ~40 lines) — no new
+  dependency; PNG data URI ≤ the DB image guard.
+- Existing Phase-1/2 foresight paid off: client RLS for documents/
+  approvals(decide)/projects/payment_accounts already existed and tested.
+- Gauntlet green; migration in production; shipped.
+- Next portal iterations: onboarding/Drop Forms, CSAT on project close,
+  demo mode («Experience AGMA» — WOW slice 2), deliverable-version
+  approvals with visual annotations.
 
 ## WOW-1 log (2026-08-08) — eighth owner study, approved slice 1
 

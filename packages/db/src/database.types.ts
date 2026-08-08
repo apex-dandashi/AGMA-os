@@ -1426,6 +1426,61 @@ export type Database = {
           },
         ]
       }
+      document_signatures: {
+        Row: {
+          doc_hash: string
+          doc_version: number
+          document_id: string
+          id: string
+          signature_data: string
+          signed_at: string
+          signer: string
+          signer_name: string
+        }
+        Insert: {
+          doc_hash: string
+          doc_version: number
+          document_id: string
+          id?: string
+          signature_data: string
+          signed_at?: string
+          signer: string
+          signer_name: string
+        }
+        Update: {
+          doc_hash?: string
+          doc_version?: number
+          document_id?: string
+          id?: string
+          signature_data?: string
+          signed_at?: string
+          signer?: string
+          signer_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_signatures_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "document_margins"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_signatures_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_signatures_signer_fkey"
+            columns: ["signer"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           client_id: string
@@ -5077,6 +5132,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      client_sign_document: {
+        Args: { p_document: string; p_name: string; p_signature: string }
+        Returns: undefined
+      }
       compute_scorecard: { Args: never; Returns: undefined }
       compute_scorecard_extras: { Args: { v_week: string }; Returns: undefined }
       compute_scorecard_sellable: {
@@ -5085,6 +5144,7 @@ export type Database = {
       }
       compute_scorecard_v2: { Args: never; Returns: undefined }
       compute_scorecard_v3: { Args: never; Returns: undefined }
+      count_cron_jobs: { Args: never; Returns: number }
       create_project_from_playbook: {
         Args: { p_client_id: string; p_name: string; p_playbook_slug: string }
         Returns: string

@@ -99,16 +99,9 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   if (!session) return <LoginForm />;
   if (!profile) return <CenterSpinner />;
   if (profile.role === 'client') {
-    return (
-      <div className="grid min-h-screen place-items-center p-8 text-center">
-        <div>
-          <p className="mb-4">هذا النظام مخصص لفريق AGMA. حسابك حساب عميل.</p>
-          <Button variant="outline" size="sm" onClick={() => getSupabase().auth.signOut()}>
-            تسجيل الخروج
-          </Button>
-        </div>
-      </div>
-    );
+    // حسابات العملاء إلى بوابتهم — المرحلة ٧
+    if (typeof window !== 'undefined') window.location.replace('/portal/');
+    return <CenterSpinner />;
   }
 
   return (
