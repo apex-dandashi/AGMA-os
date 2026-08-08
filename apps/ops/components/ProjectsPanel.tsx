@@ -18,6 +18,7 @@ import {
 import { Download, FolderKanban, Lock, Pencil, ShieldCheck, Timer, Trash2 } from 'lucide-react';
 import { exportCsv } from '../lib/csv';
 import ChecklistRunModal from './ChecklistRunModal';
+import DeliverablesBlock from './DeliverablesBlock';
 import { AttachmentsButton } from './AttachmentsBlock';
 import { TaskCommentsButton } from './TaskComments';
 import { METHOD_PHASES, type Enums, type Tables } from '@agma/db';
@@ -337,6 +338,7 @@ function ProjectDetail({ project, clientName, onBack }:
               allTasks={data.tasks} members={data.members}
               checklistByTemplate={data.checklistByTemplate} detailKey={detailKey} projectId={project.id} />
           )}
+          <DeliverablesBlock projectId={project.id} clientId={project.client_id} />
         </div>
       )}
     </div>

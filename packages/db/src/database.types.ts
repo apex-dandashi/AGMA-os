@@ -1307,6 +1307,184 @@ export type Database = {
           },
         ]
       }
+      deliverable_comments: {
+        Row: {
+          author: string
+          body: string
+          created_at: string
+          id: string
+          pin_x: number | null
+          pin_y: number | null
+          version_id: string
+        }
+        Insert: {
+          author?: string
+          body: string
+          created_at?: string
+          id?: string
+          pin_x?: number | null
+          pin_y?: number | null
+          version_id: string
+        }
+        Update: {
+          author?: string
+          body?: string
+          created_at?: string
+          id?: string
+          pin_x?: number | null
+          pin_y?: number | null
+          version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deliverable_comments_author_fkey"
+            columns: ["author"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deliverable_comments_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "deliverable_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deliverable_versions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          decided_at: string | null
+          decided_by: string | null
+          decision: string | null
+          decision_note: string | null
+          deliverable_id: string
+          file_path: string
+          id: string
+          note: string | null
+          version_number: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          decision?: string | null
+          decision_note?: string | null
+          deliverable_id: string
+          file_path: string
+          id?: string
+          note?: string | null
+          version_number: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          decision?: string | null
+          decision_note?: string | null
+          deliverable_id?: string
+          file_path?: string
+          id?: string
+          note?: string | null
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deliverable_versions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deliverable_versions_decided_by_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deliverable_versions_deliverable_id_fkey"
+            columns: ["deliverable_id"]
+            isOneToOne: false
+            referencedRelation: "deliverables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deliverables: {
+        Row: {
+          client_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          project_id: string
+          status: Database["public"]["Enums"]["deliverable_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          project_id: string
+          status?: Database["public"]["Enums"]["deliverable_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          project_id?: string
+          status?: Database["public"]["Enums"]["deliverable_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deliverables_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_360"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deliverables_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deliverables_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deliverables_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_costs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deliverables_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_costs: {
         Row: {
           costs: Json
@@ -5132,6 +5310,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      client_decide_deliverable: {
+        Args: { p_decision: string; p_note?: string; p_version: string }
+        Returns: undefined
+      }
       client_sign_document: {
         Args: { p_document: string; p_name: string; p_signature: string }
         Returns: undefined
@@ -5262,6 +5444,11 @@ export type Database = {
         | "required"
         | "review_required"
         | "not_applicable"
+      deliverable_status:
+        | "draft"
+        | "pending_client"
+        | "changes_requested"
+        | "approved"
       document_status:
         | "draft"
         | "sent"
@@ -5554,6 +5741,12 @@ export const Constants = {
         "required",
         "review_required",
         "not_applicable",
+      ],
+      deliverable_status: [
+        "draft",
+        "pending_client",
+        "changes_requested",
+        "approved",
       ],
       document_status: ["draft", "sent", "signed", "active", "expired", "void"],
       document_type: [

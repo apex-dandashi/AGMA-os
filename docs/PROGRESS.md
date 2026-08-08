@@ -74,6 +74,28 @@ stamp/signature + per-user signatures, and «أين أدخل السجل التج
   where to enter client CR/VAT — discoverability fix).
 - Gauntlet green; migration pushed to production.
 
+## Deliverable approvals + visual annotations log (2026-08-08)
+
+- `20260808220000_deliverables.sql`: deliverables (draft/pending_client/
+  changes_requested/approved) → numbered versions → pin comments
+  (pin_x/pin_y 0-1 ratios, null = general); private 'deliverables' bucket
+  (10MB, images only) with client-folder-path storage RLS; RPC
+  `client_decide_deliverable` (owns + pending + latest version only +
+  mandatory note on changes) + send/decide notifications both ways.
+  Persona-proved end-to-end: hidden before send → visible after → client
+  pin comment lands → old-version decision blocked → note-less changes
+  blocked → approve flips status → stranger sees zero → both
+  notifications fired.
+- Ops (project detail → «المخرجات والاعتمادات»): create deliverable,
+  upload image versions (client-path, auto-numbered), «اعرضه على العميل»,
+  shared PinViewer shows client pins numbered on the image + decision
+  note surfaced inline.
+- Portal («المخرجات» tab): latest version image, crosshair click-to-pin
+  with instant comment, اعتماد / أطلب تعديلات (note required), version
+  history line V1 · V2 ✓ / ↻.
+- The wa-style «عدّل الشعار اللي فوق يمين» era is over: the pin is the
+  coordinate. Gauntlet green; migration in production; shipped.
+
 ## Experience AGMA demo log (2026-08-08) — WOW slice 2
 
 - /portal/demo: fully self-contained demo portal — fictional Arabic data

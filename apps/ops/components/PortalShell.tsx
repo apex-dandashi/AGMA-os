@@ -16,6 +16,7 @@ import {
   type ContractPayload, type InvoicePayload, type QuotePayload,
 } from '@agma/legal-templates';
 import { getSupabase } from '../lib/supabase';
+import { DLV_STATUS, PinViewer } from './DeliverablesBlock';
 
 /**
  * بوابة العميل (المرحلة ٧): دخول برابط سحري بلا كلمة مرور ولا MFA —
@@ -222,6 +223,7 @@ function Portal({ profile }: { profile: Tables<'profiles'> }) {
       <main className="mx-auto max-w-4xl px-4 py-6">
         <Tabs active={tab} onChange={setTab} tabs={[
           { key: 'home', label: 'نظرة عامة' },
+          { key: 'dlv', label: 'المخرجات' },
           { key: 'docs', label: 'المستندات' },
           { key: 'pay', label: 'الفواتير والدفع' },
         ]} />
@@ -282,6 +284,8 @@ function Portal({ profile }: { profile: Tables<'profiles'> }) {
               )}
             </>
           )}
+
+          {tab === 'dlv' && <ClientDeliverables refetchAll={refetch} />}
 
           {tab === 'docs' && (
             data.docs.length === 0 ? (
@@ -361,6 +365,142 @@ function Portal({ profile }: { profile: Tables<'profiles'> }) {
 
       <SignModal doc={signing} onClose={() => setSigning(null)}
         onDone={() => { setSigning(null); refetch(); }} />
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------- deliverables */
+
+/** مخرجات العميل: صورة أحدث إصدار، اضغط أي نقطة لتعليق مثبت، ثم قرارك. */
+function ClientDeliverables({ refetchAll }: { refetchAll: () => void }) {
+  const toast = useToast();
+  const key = ['portal-dlv'];
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: key,
+    queryFn: async () => {
+      const s = getSupabase();
+      const [dlvs, versions, comments] = await Promise.all([
+        s.from('deliverables').select('*').order('created_at', { ascending: false }),
+        s.from('deliverable_versions').select('*').order('version_number'),
+        s.from('deliverable_comments').select('*').order('created_at'),
+      ]);
+      return {
+        dlvs: dlvs.data ?? [], versions: versions.data ?? [],
+        comments: comments.data ?? [],
+      };
+    },
+  });
+  const [pin, setPin] = useState<{ versionId: string; x: number; y: number } | null>(null);
+  const [pinText, setPinText] = useState('');
+  const [changing, setChanging] = useState<{ versionId: string; note: string } | null>(null);
+
+  async function addPin() {
+    if (!pin) return;
+    const { data: session } = await getSupabase().auth.getSession();
+    const { error } = await getSupabase().from('deliverable_comments').insert({
+      version_id: pin.versionId, body: pinText.trim(),
+      pin_x: pin.x, pin_y: pin.y,
+      author: session.session!.user.id,
+    });
+    if (error) toast.error(error.message);
+    else {
+      toast.success('ثُبّت تعليقك على النقطة — سيراه الفريق بمكانه بالضبط');
+      setPin(null); setPinText(''); refetch();
+    }
+  }
+
+  async function decide(versionId: string, decision: 'approved' | 'changes', note?: string) {
+    const { error } = await getSupabase().rpc('client_decide_deliverable', {
+      p_version: versionId, p_decision: decision, p_note: note ?? undefined,
+    });
+    if (error) toast.error(error.message);
+    else {
+      toast.success(decision === 'approved'
+        ? 'اعتمدت المخرج — شكراً لكم، الفريق أُشعر'
+        : 'أُرسلت ملاحظاتك — سيصلك الإصدار المحدث قريباً');
+      setChanging(null); refetch(); refetchAll();
+    }
+  }
+
+  if (isLoading || !data) return <Card className="p-4"><Spinner className="h-5 w-5" /></Card>;
+  if (data.dlvs.length === 0) {
+    return <Card className="p-4 text-sm text-gray-light">لا مخرجات معروضة عليكم حالياً.</Card>;
+  }
+
+  return (
+    <div className="space-y-4">
+      {data.dlvs.map((d) => {
+        const vers = data.versions.filter((v) => v.deliverable_id === d.id);
+        const latest = vers[vers.length - 1];
+        if (!latest) return null;
+        const comments = data.comments.filter((c) => c.version_id === latest.id);
+        const st = DLV_STATUS[d.status];
+        const pending = d.status === 'pending_client';
+        return (
+          <Card key={d.id} className="p-4">
+            <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
+              <span className="font-bold">{d.title}</span>
+              <Badge variant="outline">الإصدار {latest.version_number}</Badge>
+              <Badge variant={st.variant}>{st.label}</Badge>
+            </div>
+            {pending && (
+              <p className="mb-2 text-xs text-pulse-orange">
+                اضغط على أي نقطة من التصميم لتثبيت تعليق عليها بالضبط.
+              </p>
+            )}
+            <PinViewer path={latest.file_path} comments={comments}
+              onPin={pending ? (x, y) => setPin({ versionId: latest.id, x, y }) : undefined} />
+            {pin?.versionId === latest.id && (
+              <div className="mt-2 flex flex-wrap items-end gap-2 rounded-sm border border-pulse-orange/50 p-2">
+                <Input label="تعليقك على هذه النقطة" className="min-w-64" value={pinText}
+                  onChange={(e) => setPinText(e.target.value)} />
+                <Button size="xs" disabled={pinText.trim().length < 3} onClick={addPin}>
+                  ثبّت التعليق
+                </Button>
+                <Button variant="ghost" size="xs" onClick={() => setPin(null)}>إلغاء</Button>
+              </div>
+            )}
+            {comments.length > 0 && (
+              <ul className="mt-2 space-y-1 text-xs text-gray-light">
+                {comments.map((c, i) => (
+                  <li key={c.id}>
+                    {c.pin_x != null && <b className="text-pulse-orange">{i + 1}. </b>}
+                    {c.body}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {pending && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button size="sm" onClick={() => decide(latest.id, 'approved')}>
+                  <CheckCircle2 className="h-4 w-4" aria-hidden /> اعتماد المخرج
+                </Button>
+                <Button variant="outline" size="sm"
+                  onClick={() => setChanging({ versionId: latest.id, note: '' })}>
+                  أطلب تعديلات
+                </Button>
+              </div>
+            )}
+            {changing?.versionId === latest.id && (
+              <div className="mt-2 flex flex-wrap items-end gap-2 rounded-sm border border-gray-dark p-2">
+                <Input label="ما التعديلات المطلوبة؟ *" className="min-w-72" value={changing.note}
+                  onChange={(e) => setChanging({ versionId: latest.id, note: e.target.value })} />
+                <Button size="xs" disabled={changing.note.trim().length < 5}
+                  onClick={() => decide(latest.id, 'changes', changing.note.trim())}>
+                  إرسال الملاحظات
+                </Button>
+              </div>
+            )}
+            {vers.length > 1 && (
+              <p className="mt-2 text-xs text-gray-medium">
+                سجل الإصدارات: {vers.map((v) =>
+                  `V${v.version_number}${v.decision === 'approved' ? ' ✓' : v.decision === 'changes' ? ' ↻' : ''}`
+                ).join(' · ')}
+              </p>
+            )}
+          </Card>
+        );
+      })}
     </div>
   );
 }
