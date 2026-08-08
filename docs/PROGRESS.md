@@ -74,6 +74,24 @@ stamp/signature + per-user signatures, and «أين أدخل السجل التج
   where to enter client CR/VAT — discoverability fix).
 - Gauntlet green; migration pushed to production.
 
+## Innovation round log (2026-08-08)
+
+Owner on the experiments modal (raw `on_time_tasks_pct` visible): «كيف نطور
+الابتكار». Innovation loop (hypothesis → measure → entrench) existed since
+6.5c; its entry point was hostile:
+
+- «المؤشر المتأثر» is now a Select of the 16 scorecard metrics by Arabic
+  name (fed from scorecard_metrics) — no more raw keys.
+- Hypothesis placeholder teaches the formula: «إذا فعلنا [التغيير] فسيتحسن
+  [المؤشر] من [كذا] إلى [كذا] خلال [المدة]».
+- EXPERIMENT_IDEAS bank: 6 one-click starters sized to the agency (auto
+  follow-up on open quotes → approval_lag_h; package-first pitch →
+  package_revenue_pct; AI-automate a delivery step → on_time_tasks_pct;
+  50% upfront gate → overdue_ar; delegate one service fully →
+  delivery_by_team_pct; new lead channel → new_leads). Click fills the
+  form; user edits and launches.
+- No migration; gauntlet green; shipped.
+
 ## Dropdowns round log (2026-08-08)
 
 Owner: «دروب مينيو في كل الأماكن الملائمة + الدول والمدن ومفاتيح الهواتف،

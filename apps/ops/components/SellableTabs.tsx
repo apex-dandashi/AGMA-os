@@ -280,6 +280,28 @@ const EXP_STATUS: Record<Enums<'experiment_status'>, { label: string; accent: bo
   lost: { label: 'خسرت', accent: false },
 };
 
+/** بنك أفكار التجارب — نقاط انطلاق مجربة لوكالة بحجمنا، لا قوالب ملزمة. */
+const EXPERIMENT_IDEAS: { title: string; hypothesis: string; metric: string; weeks: string }[] = [
+  { title: 'متابعة آلية للعروض المفتوحة',
+    hypothesis: 'إذا أرسلنا تذكيراً آلياً بعد ٣ أيام من كل عرض مفتوح، سترتفع نسبة الإغلاق وينخفض تأخر الاعتمادات ٣٠٪ خلال شهر.',
+    metric: 'approval_lag_h', weeks: '4' },
+  { title: 'عرض باقة بدل التسعير المخصص',
+    hypothesis: 'إذا قدمنا باقة جاهزة في أول اجتماع بدل عرض مخصص، سترتفع نسبة إيراد الباقات إلى ٥٠٪ خلال ٦ أسابيع.',
+    metric: 'package_revenue_pct', weeks: '6' },
+  { title: 'أتمتة خطوة تسليم متكررة بالذكاء الاصطناعي',
+    hypothesis: 'إذا أتمتنا [الخطوة] في دليل اللعب، سيرتفع الإنجاز في الموعد إلى ٩٠٪ خلال شهر دون زيادة ساعات.',
+    metric: 'on_time_tasks_pct', weeks: '4' },
+  { title: 'الدفعة المقدمة ٥٠٪ شرطاً للبدء',
+    hypothesis: 'إذا لم نبدأ أي مشروع قبل تحصيل الدفعة الأولى، ستنخفض الذمم المتأخرة ٤٠٪ خلال ٨ أسابيع.',
+    metric: 'overdue_ar', weeks: '8' },
+  { title: 'تفويض التسليم لغير الشركاء في خدمة واحدة',
+    hypothesis: 'إذا سلّم الفريق خدمة [س] كاملة بدون تدخل الشركاء، سترتفع نسبة التسليم بغير الشركاء مع بقاء NPS ثابتاً خلال ٦ أسابيع.',
+    metric: 'delivery_by_team_pct', weeks: '6' },
+  { title: 'قناة توليد عملاء جديدة',
+    hypothesis: 'إذا جربنا [القناة] بميزانية محدودة، سنحصل على ٥ محتملين مؤهلين خلال ٤ أسابيع بتكلفة أقل من القنوات الحالية.',
+    metric: 'new_leads', weeks: '4' },
+];
+
 function ExperimentsSection({ experiments, playbooks, canManage, invalidate }: {
   experiments: Tables<'experiments'>[];
   playbooks: Tables<'playbooks'>[];
@@ -289,6 +311,17 @@ function ExperimentsSection({ experiments, playbooks, canManage, invalidate }: {
   const [showNew, setShowNew] = useState(false);
   const [deciding, setDeciding] = useState<Tables<'experiments'> | null>(null);
   const [form, setForm] = useState({ title: '', hypothesis: '', metric_key: '', playbook_id: '', duration_weeks: '' });
+
+  // مؤشرات اللوحة بأسمائها العربية — لا مفاتيح برمجية على المستخدم
+  const { data: metrics } = useQuery({
+    queryKey: ['scorecard-metric-names'],
+    queryFn: async () => {
+      const { data, error } = await getSupabase()
+        .from('scorecard_metrics').select('key, name_ar').order('sort');
+      if (error) throw new Error(error.message);
+      return data;
+    },
+  });
   const [decision, setDecision] = useState({ status: 'won' as 'won' | 'lost', note: '', result: '' });
 
   const create = useAppMutation(
@@ -371,13 +404,36 @@ function ExperimentsSection({ experiments, playbooks, canManage, invalidate }: {
 
       <Modal open={showNew} onClose={() => setShowNew(false)} title="تجربة جديدة">
         <div className="space-y-3">
+          {/* بنك أفكار — يشعل التجربة بنقرة ثم تعدلها */}
+          {!form.title && (
+            <div>
+              <p className="mb-1.5 text-xs text-gray-medium">أفكار جاهزة للتجربة — انقر واحدة وعدّلها:</p>
+              <div className="flex flex-wrap gap-1.5">
+                {EXPERIMENT_IDEAS.map((idea) => (
+                  <button key={idea.title} type="button"
+                    onClick={() => setForm((f) => ({ ...f, title: idea.title,
+                      hypothesis: idea.hypothesis, metric_key: idea.metric,
+                      duration_weeks: idea.weeks }))}
+                    className="rounded-full border border-gray-dark px-2.5 py-1 text-xs text-gray-light transition-colors hover:border-pulse-orange hover:text-pulse-orange">
+                    {idea.title}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <Input label="العنوان" value={form.title}
             onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} />
           <Textarea label="الفرضية (ماذا سيتحسن وكم؟)" rows={2} value={form.hypothesis}
+            placeholder="إذا فعلنا [التغيير] فسيتحسن [المؤشر] من [كذا] إلى [كذا] خلال [المدة]"
             onChange={(e) => setForm((f) => ({ ...f, hypothesis: e.target.value }))} />
           <div className="grid grid-cols-2 gap-2">
-            <Input label="المؤشر المتأثر" value={form.metric_key} placeholder="on_time_tasks_pct"
-              onChange={(e) => setForm((f) => ({ ...f, metric_key: e.target.value }))} />
+            <Select label="المؤشر المتأثر (من لوحة المؤشرات)" value={form.metric_key}
+              onChange={(e) => setForm((f) => ({ ...f, metric_key: e.target.value }))}>
+              <option value="">— بلا مؤشر (لا يُنصح) —</option>
+              {(metrics ?? []).map((m) => (
+                <option key={m.key} value={m.key}>{m.name_ar}</option>
+              ))}
+            </Select>
             <Input label="المدة (أسابيع)" type="number" dir="ltr" value={form.duration_weeks}
               onChange={(e) => setForm((f) => ({ ...f, duration_weeks: e.target.value }))} />
           </div>
