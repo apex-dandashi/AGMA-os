@@ -17,6 +17,8 @@ import MfaGate from './MfaGate';
 import ActivitiesBell, { activitiesKey } from './ActivitiesBell';
 import NotificationsInbox, { inboxKey } from './NotificationsInbox';
 
+const MOBILE_PRIMARY = ['/my-day/', '/', '/projects/', '/chat/'];
+
 const NAV: { href: string; key: DictKey }[] = [
   { href: '/os/', key: 'nav.os' },
   { href: '/my-day/', key: 'nav.myday' },
@@ -155,6 +157,7 @@ function Chrome({ profile, children }: { profile: Tables<'profiles'>; children: 
   const pathname = usePathname();
   const { t, locale, toggle } = useLocale();
   const [searchOpen, setSearchOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   useRealtimeSync();
 
   useEffect(() => {
@@ -237,11 +240,54 @@ function Chrome({ profile, children }: { profile: Tables<'profiles'>; children: 
       </header>
       <main id="main" className="p-4 md:p-6">{children}</main>
       {/* Mobile bottom navigation */}
-      {/* شريط جوال ينزلق أفقياً — ١٤ قسماً لا تنحشر (طلب المالك 2026-08-08) */}
+      {/* شريط جوال: ٤ أقسام رئيسية + «المزيد» — لا سحب أفقي في منطقة إيماءات
+          iOS السفلية (كانت تخطفه لتبديل التطبيقات، ملاحظة المالك 2026-08-08) */}
+      {moreOpen && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-end bg-void/70 backdrop-blur-sm md:hidden"
+          onClick={() => setMoreOpen(false)}>
+          <div className="rounded-t-xl border-t border-gray-dark bg-pure-ink p-4 pb-8"
+            onClick={(e) => e.stopPropagation()}>
+            <p className="mb-3 text-sm font-bold text-gray-light">كل الأقسام</p>
+            <div className="grid grid-cols-3 gap-2">
+              {NAV.map((i) => (
+                <Link key={i.href} href={i.href} onClick={() => setMoreOpen(false)}
+                  className={`rounded-sm border px-2 py-3 text-center text-sm transition-colors ${
+                    pathname === i.href
+                      ? 'border-pulse-orange/60 bg-pulse-orange/15 font-bold text-pulse-orange'
+                      : 'border-gray-dark text-gray-light'
+                  }`}>
+                  {t(i.key)}
+                </Link>
+              ))}
+              <Link href="/profile/" onClick={() => setMoreOpen(false)}
+                className="rounded-sm border border-gray-dark px-2 py-3 text-center text-sm text-gray-light">
+                ملفي الشخصي
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
       <nav aria-label="mobile"
-        className="fixed inset-x-0 bottom-0 z-40 flex snap-x gap-1 overflow-x-auto border-t border-gray-dark bg-pure-ink/95 px-2 backdrop-blur [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 flex border-t border-gray-dark bg-pure-ink/95 backdrop-blur md:hidden"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-        {NAV.map((i) => navLink(i, true))}
+        {MOBILE_PRIMARY.map((href) => {
+          const item = NAV.find((n) => n.href === href)!;
+          return (
+            <Link key={href} href={href}
+              aria-current={pathname === href ? 'page' : undefined}
+              className={`flex-1 py-3 text-center text-xs font-medium transition-colors ${
+                pathname === href ? 'text-pulse-orange' : 'text-gray-light'
+              }`}>
+              {t(item.key)}
+            </Link>
+          );
+        })}
+        <button type="button" onClick={() => setMoreOpen(true)}
+          className={`flex-1 py-3 text-center text-xs font-medium ${
+            moreOpen || !MOBILE_PRIMARY.includes(pathname) ? 'text-pulse-orange' : 'text-gray-light'
+          }`}>
+          المزيد ⋯
+        </button>
       </nav>
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
