@@ -211,8 +211,11 @@ function Portal({ profile }: { profile: Tables<'profiles'> }) {
     <div dir="rtl" className="min-h-screen">
       <header className="border-b border-gray-dark px-4 py-3">
         <div className="mx-auto flex max-w-4xl items-center gap-3">
-          <span className="text-lg font-black text-pulse-orange">AGMA</span>
-          <span className="text-sm text-gray-light">بوابة {data.company}</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="AGMA" className="h-7 w-auto" />
+          <span className="border-s border-gray-dark ps-3 text-sm text-gray-light">
+            بوابة {data.company}
+          </span>
           <Button variant="ghost" size="xs" className="ms-auto"
             onClick={() => getSupabase().auth.signOut()}>
             <LogOut className="h-3.5 w-3.5" aria-hidden /> خروج

@@ -28,28 +28,32 @@ function DemoAdArtwork() {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/demo/ad-bg.webp" alt="تصميم إعلان الوحدات"
         className="block w-full select-none" draggable={false} />
-      <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-[6%] text-start">
-        <div>
-          <p className="text-[2.6cqw] font-bold tracking-wide text-white/80"
-            style={{ textShadow: '0 1px 8px rgba(0,0,0,.6)' }}>
-            مشروع الأفق ريزيدنس
+      {/* طبقتا تظليل تضمنان قراءة النص فوق أي منطقة من الصورة */}
+      <div className="pointer-events-none absolute inset-0"
+        style={{ background: 'linear-gradient(to top, rgba(15,8,4,.88) 0%, rgba(15,8,4,.45) 26%, transparent 45%)' }} />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[18%]"
+        style={{ background: 'linear-gradient(to bottom, rgba(15,8,4,.55), transparent)' }} />
+      <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-[7%] text-start">
+        {/* الترويسة: شارة المشروع */}
+        <div className="flex items-center gap-[2%]">
+          <span className="grid h-[6cqw] w-[6cqw] place-items-center rounded-full bg-pulse-orange text-[3cqw] font-black text-void">أ</span>
+          <p className="text-[2.8cqw] font-bold tracking-wide text-white/90">
+            الأفق ريزيدنس
           </p>
         </div>
-        <div>
-          <p className="text-[7cqw] font-black leading-tight text-white"
-            style={{ textShadow: '0 2px 16px rgba(0,0,0,.7)' }}>
+        {/* الكتلة السفلية: عنوان ← وصف ← فعل ← تواصل، بإيقاع مسافات واحد */}
+        <div className="max-w-[80%] space-y-[2.5%]">
+          <p className="text-[7.5cqw] font-black leading-[1.15] text-white">
             وحدات فاخرة
+            <span className="block text-[4.2cqw] font-bold leading-snug text-[#ffb49a]">
+              بإطلالة على الواجهة البحرية
+            </span>
           </p>
-          <p className="mt-1 text-[4cqw] font-bold text-pulse-orange"
-            style={{ textShadow: '0 1px 10px rgba(0,0,0,.8)' }}>
-            بإطلالة على الواجهة البحرية
-          </p>
-          <span className="mt-[3%] inline-block rounded-full bg-pulse-orange px-[5%] py-[1.8%] text-[2.8cqw] font-black text-void shadow-lg">
+          <span className="inline-block rounded-full bg-pulse-orange px-[6%] py-[2%] text-[3cqw] font-black text-void shadow-[0_4px_20px_rgba(232,84,47,.45)]">
             سجّل اهتمامك
           </span>
-          <p className="mt-[3%] text-[2cqw] text-white/60" dir="ltr"
-            style={{ textShadow: '0 1px 6px rgba(0,0,0,.6)' }}>
-            alofuq.sa · 920000000
+          <p className="text-[2.2cqw] font-medium tracking-wider text-white/55" dir="ltr">
+            ALOFUQ.SA&nbsp;&nbsp;·&nbsp;&nbsp;920 000 000
           </p>
         </div>
       </div>
@@ -113,9 +117,12 @@ function DemoInner() {
 
       <header className="border-b border-gray-dark px-4 py-3">
         <div className="mx-auto flex max-w-5xl items-center gap-3">
-          <span className="text-lg font-black text-pulse-orange">AGMA</span>
-          <span className="text-sm text-gray-light">بوابة {DEMO_COMPANY}</span>
-          <span className="ms-auto text-sm text-gray-medium">مساء الخير، خالد 👋</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="AGMA" className="h-7 w-auto" />
+          <span className="border-s border-gray-dark ps-3 text-sm text-gray-light">
+            بوابة {DEMO_COMPANY}
+          </span>
+          <span className="ms-auto text-sm text-gray-medium">مساء الخير، خالد</span>
         </div>
       </header>
 
