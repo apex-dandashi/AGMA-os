@@ -14,7 +14,8 @@ export function Tabs({
   onChange: (key: string) => void;
 }) {
   return (
-    <div role="tablist" className="flex gap-1 border-b border-gray-dark">
+    <div role="tablist"
+      className="flex gap-1 overflow-x-auto border-b border-gray-dark [scrollbar-width:none]">
       {tabs.map((t) => (
         <button
           key={t.key}
@@ -22,7 +23,7 @@ export function Tabs({
           aria-selected={active === t.key}
           onClick={() => onChange(t.key)}
           className={cn(
-            '-mb-px border-b-2 px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-pulse-orange/60 focus:outline-none',
+            '-mb-px shrink-0 whitespace-nowrap border-b-2 px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-pulse-orange/60 focus:outline-none',
             active === t.key
               ? 'border-pulse-orange font-bold text-pulse-orange'
               : 'border-transparent text-gray-light hover:text-snow'

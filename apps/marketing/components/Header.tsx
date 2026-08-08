@@ -110,8 +110,17 @@ const Header = () => {
                 {link.name}
               </Link>
             ))}
-            <Link 
-              href="/contact" 
+            <a
+              href="https://ops.agma.com.sa/portal/demo/"
+              target="_blank"
+              rel="noreferrer"
+              className="text-lg text-gray-light hover:text-pulse-orange"
+              onClick={() => setIsOpen(false)}
+            >
+              جرّب البوابة
+            </a>
+            <Link
+              href="/contact"
               className="btn-primary text-center"
               onClick={() => setIsOpen(false)}
             >
