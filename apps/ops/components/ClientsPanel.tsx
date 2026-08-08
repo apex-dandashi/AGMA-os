@@ -229,7 +229,17 @@ function CollectionsHoldBadge({ clientId }: { clientId: string }) {
 
 /** بيانات العميل — every field the record supports, editable in place. */
 function ClientProfileCard({ client }: { client: Client }) {
+  const router = useRouter();
   const [editing, setEditing] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const removeClient = useAppMutation(
+    async () => {
+      const { error } = await getSupabase()
+        .rpc('delete_client_if_unlinked', { p_client: client.id });
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [keys.clients], successMessage: 'حُذف العميل وبقاياه — العملية في سجل التدقيق' }
+  );
   const [form, setForm] = useState({
     sector: client.sector ?? '',
     decision_maker: client.decision_maker ?? '',
@@ -332,7 +342,7 @@ function ClientProfileCard({ client }: { client: Client }) {
           {Object.entries(CLIENT_STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </Select>
       </div>
-      <div className="mt-3 flex gap-2">
+      <div className="mt-3 flex flex-wrap items-center gap-2">
         <Button size="sm" loading={save.isPending}
           onClick={async () => {
             await save.mutateAsync(undefined as never);
@@ -341,6 +351,20 @@ function ClientProfileCard({ client }: { client: Client }) {
           حفظ
         </Button>
         <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>إلغاء</Button>
+        <span className="ms-auto">
+          <Button variant="ghost" size="xs" className="text-gray-medium"
+            onClick={() => setConfirmingDelete(true)}>
+            حذف العميل (أُدخل بالغلط)
+          </Button>
+        </span>
+        <ConfirmDialog open={confirmingDelete} onClose={() => setConfirmingDelete(false)}
+          title="حذف العميل" danger
+          message={`سيُحذف «${client.company}» مع جهات اتصاله ومسوداته ونطاقاته — فقط إذا لم يرتبط بمستند معتمد أو مشروع أو مال أو سجل امتثال، وإلا سترفض القاعدة وتشرح البديل. العملية تُسجَّل في سجل التدقيق.`}
+          confirmLabel="حذف نهائي"
+          onConfirm={async () => {
+            await removeClient.mutateAsync(undefined as never);
+            router.replace('/clients/');
+          }} />
       </div>
     </Card>
   );
@@ -352,6 +376,14 @@ function ClientDetail({ client }: { client: Client }) {
   const [showScopeBuilder, setShowScopeBuilder] = useState(false);
   const [quoteScope, setQuoteScope] = useState<Scope | null>(null);
   const toast = useToast();
+
+  const removeScope = useAppMutation(
+    async (scope: Scope) => {
+      const { error } = await getSupabase().from('scopes').delete().eq('id', scope.id);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [keys.clientDetail(client.id)], successMessage: 'حُذف النطاق' }
+  );
 
   const sendScope = useAppMutation(
     async (scope: Scope) => {
@@ -404,14 +436,20 @@ function ClientDetail({ client }: { client: Client }) {
                   {quoteScope?.id === s.id ? 'إغلاق' : 'عرض سعر من النطاق'}
                 </Button>
                 {s.status === 'draft' && (
-                  <Button
-                    variant="outline"
-                    size="xs"
-                    loading={sendScope.isPending}
-                    onClick={() => sendScope.mutate(s)}
-                  >
-                    إرسال للاعتماد
-                  </Button>
+                  <>
+                    <Button
+                      variant="outline"
+                      size="xs"
+                      loading={sendScope.isPending}
+                      onClick={() => sendScope.mutate(s)}
+                    >
+                      إرسال للاعتماد
+                    </Button>
+                    <Button variant="ghost" size="xs" loading={removeScope.isPending}
+                      onClick={() => removeScope.mutate(s)}>
+                      حذف
+                    </Button>
+                  </>
                 )}
               </span>
             </Card>

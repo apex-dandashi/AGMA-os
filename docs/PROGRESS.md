@@ -74,6 +74,26 @@ stamp/signature + per-user signatures, and «أين أدخل السجل التج
   where to enter client CR/VAT — discoverability fix).
 - Gauntlet green; migration pushed to production.
 
+## Cleanup round log (2026-08-08) — mistake-entry deletion + cert decision
+
+Owner: target ISO 27001 first then 9001 (recorded in
+ims_frameworks.certification_priority + docs/15 ✔), and «كيف نمسح عميلاً
+دخل بالغلط / المسودات / الخ — لكل اليوزرات».
+
+- `20260808150000_safe_cleanup.sql`: `delete_client_if_unlinked` RPC —
+  blocks with Arabic reasons on finalized docs / projects / retainers /
+  wallets / portal login / messages / compliance records (verified: invoice
+  client rejected with «مرتبط بـ1 مستند معتمد»), otherwise cleans draft
+  docs + scopes + nullifies lead/notification/issue links and deletes
+  (cascade removes contacts/interactions; verified clean client fully gone).
+- UI for every manager, not god-mode: «حذف العميل (أُدخل بالغلط)» in the
+  client edit card (RPC surfaces the Arabic block reason as a toast);
+  «حذف المسودة» on every draft document row (drafts are pre-numbering —
+  no sequence gap, dialog says so); lead hard-delete inside the lead modal
+  (with «الخاسرة علِّمها خسارة» guidance — cascades activities);
+  draft-scope حذف in the client scopes list.
+- Gauntlet green; migration pushed to production; shipped both branches.
+
 ## IMS Phase 1 log (2026-08-08) — docs/15, fifth owner study
 
 Study: «AGMA Integrated Management System» (ISO 9001/27001/27701/22301/20000/

@@ -252,13 +252,18 @@ export default function DocumentsPanel() {
                       تفعيل
                     </Button>
                   )}
-                  {godMode && (
+                  {doc.status === 'draft' ? (
+                    <Button variant="ghost" size="xs"
+                      onClick={() => setDeleting(doc)}>
+                      حذف المسودة
+                    </Button>
+                  ) : godMode ? (
                     <Button variant="ghost" size="xs"
                       className="text-pulse-orange"
                       onClick={() => setDeleting(doc)}>
                       حذف (الوضع الحر)
                     </Button>
-                  )}
+                  ) : null}
                   {doc.status !== 'draft' && (
                     <Button variant="ghost" size="xs" loading={newVersion.isPending}
                       onClick={() => newVersion.mutate(doc)}>
@@ -296,9 +301,11 @@ export default function DocumentsPanel() {
       <ConfirmDialog
         open={!!deleting}
         onClose={() => setDeleting(null)}
-        title="حذف نهائي (الوضع الحر)"
+        title={deleting?.status === 'draft' ? 'حذف المسودة' : 'حذف نهائي (الوضع الحر)'}
         danger
-        message={`سيُحذف «${deleting?.number ?? TYPE_LABELS[deleting?.type ?? 'quote']}» نهائياً من القاعدة${deleting?.number ? ' وسيترك فجوة في التسلسل الرقمي' : ''}. العملية تُسجَّل في سجل التدقيق باسمك. متأكد؟`}
+        message={deleting?.status === 'draft'
+          ? `ستُحذف مسودة «${TYPE_LABELS[deleting.type]}» نهائياً — لم تُرقَّم بعد فلا أثر على التسلسل. العملية تُسجَّل في سجل التدقيق.`
+          : `سيُحذف «${deleting?.number ?? TYPE_LABELS[deleting?.type ?? 'quote']}» نهائياً من القاعدة${deleting?.number ? ' وسيترك فجوة في التسلسل الرقمي' : ''}. العملية تُسجَّل في سجل التدقيق باسمك. متأكد؟`}
         confirmLabel="حذف نهائي"
         onConfirm={async () => {
           if (deleting) await hardDelete.mutateAsync(deleting);

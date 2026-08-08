@@ -1343,6 +1343,7 @@ export type Database = {
         Row: {
           applicability_note: string | null
           certifiable: boolean
+          certification_priority: number | null
           created_at: string
           effective_from: string | null
           id: string
@@ -1357,6 +1358,7 @@ export type Database = {
         Insert: {
           applicability_note?: string | null
           certifiable?: boolean
+          certification_priority?: number | null
           created_at?: string
           effective_from?: string | null
           id?: string
@@ -1371,6 +1373,7 @@ export type Database = {
         Update: {
           applicability_note?: string | null
           certifiable?: boolean
+          certification_priority?: number | null
           created_at?: string
           effective_from?: string | null
           id?: string
@@ -4522,6 +4525,10 @@ export type Database = {
         Returns: string
       }
       current_client_id: { Args: never; Returns: string }
+      delete_client_if_unlinked: {
+        Args: { p_client: string }
+        Returns: undefined
+      }
       dispatch_notifications: { Args: never; Returns: undefined }
       enqueue_notification: {
         Args: {

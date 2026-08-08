@@ -470,6 +470,16 @@ function EditLeadModal({ lead, onClose }: { lead: Lead | null; onClose: () => vo
   const [tags, setTags] = useState('');
   const [nextTitle, setNextTitle] = useState('');
   const [nextDue, setNextDue] = useState('');
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+
+  const remove = useAppMutation(
+    async () => {
+      if (!lead) return;
+      const { error } = await getSupabase().from('leads').delete().eq('id', lead.id);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [keys.leads], successMessage: 'حُذف المحتمل — العملية في سجل التدقيق' }
+  );
 
   // Sync form when a lead is opened.
   const [last, setLast] = useState<string | null>(null);
@@ -573,7 +583,19 @@ function EditLeadModal({ lead, onClose }: { lead: Lead | null; onClose: () => vo
           }}>
           حفظ التعديلات
         </Button>
+        <Button variant="ghost" size="xs" className="w-full text-gray-medium"
+          onClick={() => setConfirmingDelete(true)}>
+          حذف المحتمل نهائياً (أُدخل بالغلط)
+        </Button>
       </div>
+      <ConfirmDialog open={confirmingDelete} onClose={() => setConfirmingDelete(false)}
+        title="حذف العميل المحتمل" danger
+        message={`سيُحذف «${lead?.name ?? ''}» ومتابعاته نهائياً — إن كانت صفقة خاسرة فالأصح تعليمها «خسارة» بسببها لتبقى في الإحصاءات. الحذف للمُدخل بالخطأ فقط.`}
+        confirmLabel="حذف نهائي"
+        onConfirm={async () => {
+          await remove.mutateAsync(undefined as never);
+          onClose();
+        }} />
     </Modal>
   );
 }
