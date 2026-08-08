@@ -20,6 +20,7 @@ import type { Tables } from '@agma/db';
 import { getSupabase } from '../lib/supabase';
 import { useAppMutation, useGodMode } from '../lib/queries';
 import { readImageAsDataUri } from '../lib/images';
+import { SAUDI_CITIES } from '../lib/geo';
 import { useProfile } from './AppShell';
 
 /**
@@ -100,13 +101,13 @@ function OrgTab() {
   });
   const [form, setForm] = useState<Record<string, string> | null>(null);
 
-  const FIELDS: { k: string; label: string; ltr?: boolean; wide?: boolean }[] = [
+  const FIELDS: { k: string; label: string; ltr?: boolean; wide?: boolean; list?: string }[] = [
     { k: 'legal_name', label: 'الاسم القانوني (كما في السجل التجاري)', wide: true },
     { k: 'brand', label: 'الاسم التجاري' },
     { k: 'cr_number', label: 'رقم السجل التجاري', ltr: true },
     { k: 'unified_number', label: 'الرقم الموحد للمنشأة', ltr: true },
     { k: 'vat_number', label: 'الرقم الضريبي (من الشهادة الضريبية)', ltr: true },
-    { k: 'city', label: 'المدينة' },
+    { k: 'city', label: 'المدينة', list: 'dl-org-cities' },
     { k: 'national_address', label: 'العنوان الوطني', wide: true },
     { k: 'website', label: 'الموقع', ltr: true },
     { k: 'phone', label: 'الجوال', ltr: true },
@@ -142,10 +143,13 @@ function OrgTab() {
         تدخل تلقائياً في ديباجة كل عقد جديد من «المستندات». العقود المحفوظة سابقاً
         لا تتغير (نصها مجمّد). الرقم الضريبي من الشهادة الضريبية حصراً.
       </p>
+      <datalist id="dl-org-cities">
+        {SAUDI_CITIES.map((c) => <option key={c} value={c} />)}
+      </datalist>
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        {FIELDS.map(({ k, label, ltr, wide }) => (
+        {FIELDS.map(({ k, label, ltr, wide, list }) => (
           <div key={k} className={wide ? 'sm:col-span-2' : undefined}>
-            <Input label={label} dir={ltr ? 'ltr' : undefined} value={f[k] ?? ''}
+            <Input label={label} dir={ltr ? 'ltr' : undefined} value={f[k] ?? ''} list={list}
               onChange={(e) => setForm({ ...f, [k]: e.target.value })} />
           </div>
         ))}

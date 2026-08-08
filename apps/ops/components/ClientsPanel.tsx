@@ -22,6 +22,7 @@ import {
   interactionInputSchema,
 } from '@agma/db/schemas';
 import { getSupabase } from '../lib/supabase';
+import { BUDGET_TIERS, DIAL_CODES, SAUDI_CITIES, SECTORS } from '../lib/geo';
 import { keys, useAppMutation, useCatalog, useClientDetail, useClients } from '../lib/queries';
 import { Download, FileSpreadsheet, Pencil, Trash2, Users } from 'lucide-react';
 import { exportCsv } from '../lib/csv';
@@ -320,18 +321,30 @@ function ClientProfileCard({ client }: { client: Client }) {
     );
   }
 
-  const field = (label: string, key: keyof typeof form, ltr = false, mode?: 'url' | 'numeric') => (
+  const field = (label: string, key: keyof typeof form, ltr = false,
+    mode?: 'url' | 'numeric', list?: string) => (
     <Input label={label} value={form[key] as string} dir={ltr ? 'ltr' : undefined}
-      inputMode={mode} onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))} />
+      inputMode={mode} list={list}
+      onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))} />
   );
   return (
     <Card className="p-4">
+      {/* قوائم منسدلة مع بقاء الكتابة الحرة ممكنة */}
+      <datalist id="dl-sectors">
+        {SECTORS.map((s) => <option key={s} value={s} />)}
+      </datalist>
+      <datalist id="dl-cities">
+        {SAUDI_CITIES.map((c) => <option key={c} value={c} />)}
+      </datalist>
+      <datalist id="dl-tiers">
+        {BUDGET_TIERS.map((t) => <option key={t} value={t} />)}
+      </datalist>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {field('القطاع', 'sector')}
+        {field('القطاع', 'sector', false, undefined, 'dl-sectors')}
         {field('صاحب القرار', 'decision_maker')}
-        {field('فئة الميزانية', 'budget_tier')}
+        {field('فئة الميزانية', 'budget_tier', false, undefined, 'dl-tiers')}
         {field('الموقع الإلكتروني', 'website', true, 'url')}
-        {field('المدينة', 'city')}
+        {field('المدينة', 'city', false, undefined, 'dl-cities')}
         {field('السجل التجاري', 'cr_number', true, 'numeric')}
         {field('الرقم الضريبي (VAT)', 'vat_number', true, 'numeric')}
         {field('الحد الائتماني SAR (فارغ = بلا حد)', 'credit_limit', true, 'numeric')}
@@ -505,9 +518,17 @@ function ContactsBlock({
   isFirst: boolean;
 }) {
   const [name, setName] = useState('');
+  const [dial, setDial] = useState('+966');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [err, setErr] = useState<string | undefined>();
+
+  // رقم محلي ٠٥xx… يُركب مع المفتاح المختار؛ الرقم المكتوب بمفتاحه (+…) يبقى
+  const fullPhone = () => {
+    const p = phone.trim();
+    if (!p) return '';
+    return p.startsWith('+') || p.startsWith('00') ? p : dial + p.replace(/^0+/, '');
+  };
 
   const add = useAppMutation(
     async (input: { name: string; phone?: string; email?: string }) => {
@@ -525,7 +546,7 @@ function ContactsBlock({
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    const parsed = contactInputSchema.safeParse({ name, phone, email });
+    const parsed = contactInputSchema.safeParse({ name, phone: fullPhone(), email });
     if (!parsed.success) {
       setErr(parsed.error.issues[0]?.message);
       return;
@@ -546,6 +567,12 @@ function ContactsBlock({
       <h3 className="mb-2 font-bold text-gray-light">جهات الاتصال</h3>
       <form onSubmit={submit} className="mb-2 flex flex-wrap gap-2">
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="الاسم" error={err} />
+        <Select value={dial} aria-label="مفتاح الدولة" dir="ltr" className="w-40"
+          onChange={(e) => setDial(e.target.value)}>
+          {DIAL_CODES.map((d) => (
+            <option key={d.code} value={d.code}>{d.country} {d.code}</option>
+          ))}
+        </Select>
         <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="الهاتف"
           dir="ltr" inputMode="tel" className="w-36" />
         <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="البريد"

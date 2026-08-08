@@ -74,6 +74,22 @@ stamp/signature + per-user signatures, and «أين أدخل السجل التج
   where to enter client CR/VAT — discoverability fix).
 - Gauntlet green; migration pushed to production.
 
+## Dropdowns round log (2026-08-08)
+
+Owner: «دروب مينيو في كل الأماكن الملائمة + الدول والمدن ومفاتيح الهواتف،
+واستثنِ إسرائيل لأسباب قانونية».
+
+- `apps/ops/lib/geo.ts` — shared lists: 25 Saudi cities, 17 sectors,
+  4 budget tiers, 29 dialing codes. Israel deliberately absent from
+  countries and dial codes (KSA legal requirement — noted in the file
+  header so it never gets "helpfully" added later).
+- Client profile: القطاع/المدينة/فئة الميزانية are datalist dropdowns
+  (pick from list or type freely). Org settings: city datalist.
+- Contacts: dial-code select (السعودية +966 default) beside the phone
+  field — local numbers get composed (+966 5xxxxxxxx, leading 0 stripped),
+  numbers typed with their own +key kept as-is.
+- No migration; gauntlet green; shipped both branches.
+
 ## Cleanup round log (2026-08-08) — mistake-entry deletion + cert decision
 
 Owner: target ISO 27001 first then 9001 (recorded in
