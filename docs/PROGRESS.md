@@ -62,8 +62,26 @@ Owner: «ابي محرك لتنزيل المقالات اليومية في مو�
   + blog section, e2e passed. Production: migration pushed, both functions
   deployed, live collect verified.
 
-Owner actions pending: ANTHROPIC_API_KEY (auto-draft + on-demand generation),
+Owner actions pending: ONE of OPENROUTER_API_KEY (free models) or
+ANTHROPIC_API_KEY (best Arabic quality) — see 8c below; plus
 HOSTINGER_DEPLOY_HOOK_MAIN (daily static rebake).
+
+## Phase 8c log (2026-08-08) — OpenRouter free-models support
+
+Owner: «how about we use open router for free ai models api».
+
+- `_shared/llm.ts` unified provider layer: ANTHROPIC_API_KEY → Claude
+  (structured outputs guaranteed, server-side fallback) else
+  OPENROUTER_API_KEY → OpenAI-compatible chat completions, model from
+  OPENROUTER_MODEL (default `openrouter/free` auto-router). Free-model JSON
+  hardening: json_object response_format + fence/prefix stripping + one
+  repair round-trip. 429 surfaces as Arabic «حد المجاني اليومي» toast.
+- generate-copy / generate-article / content-collect rewired to the layer;
+  503 setup message now names both key options. All three redeployed.
+- Privacy note (PDPL): free OpenRouter endpoints may use inputs for
+  training. Blog drafting inputs are public RSS — fine. generate-copy sends
+  client company/sector/brief — flagged to owner; recommendation: free key
+  for blog, paid/Anthropic for client content, or enable OpenRouter ZDR.
 
 ## Phase 8 log (2026-08-08) — Content Engine core
 

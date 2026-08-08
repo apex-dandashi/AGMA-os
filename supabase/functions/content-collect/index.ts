@@ -10,6 +10,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { XMLParser } from 'npm:fast-xml-parser@4';
 import { draftArticle, type Signal } from '../_shared/article.ts';
+import { llmConfigured } from '../_shared/llm.ts';
 
 type FeedItem = { title?: unknown; link?: unknown; description?: unknown; pubDate?: unknown };
 
@@ -75,10 +76,9 @@ Deno.serve(async (_req) => {
   // تقليم: أبقِ آخر ٥٠٠ إشارة غير مستخدمة
   await supabase.rpc('prune_content_signals').then(() => null, () => null);
 
-  // مسودة اليوم الآلية — مرة واحدة يومياً وفقط إن كان المفتاح موجوداً
+  // مسودة اليوم الآلية — مرة واحدة يومياً وفقط إن كان مزود التوليد مهيأً
   let drafted: string | null = null;
-  const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
-  if (apiKey) {
+  if (llmConfigured()) {
     const today = new Date(); today.setUTCHours(0, 0, 0, 0);
     const { count } = await supabase.from('articles')
       .select('id', { count: 'exact', head: true })
@@ -90,7 +90,7 @@ Deno.serve(async (_req) => {
         .order('collected_at', { ascending: false }).limit(8);
       if (fresh && fresh.length >= 3) {
         try {
-          const draft = await draftArticle(apiKey, fresh as Signal[]);
+          const draft = await draftArticle(fresh as Signal[]);
           const { data: art, error } = await supabase.from('articles').insert({
             slug: draft.slug, title: draft.title, excerpt: draft.excerpt,
             body_md: draft.body_md, tags: draft.tags,

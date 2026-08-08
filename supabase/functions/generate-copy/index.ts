@@ -4,11 +4,12 @@
 // عقيدة ثابتة: كل توليد يعيد ضبط المراجعة البشرية (human_reviewed_by = null)
 // فلا يصل العميل نص لم تمر عليه عين بشرية — البوابة في القاعدة تفرضها.
 //
-// السر المطلوب (أسرار الدوال، لا يُلصق في أي شات): ANTHROPIC_API_KEY
+// المزود عبر طبقة llm.ts الموحدة: OPENROUTER_API_KEY (مجاني) أو
+// ANTHROPIC_API_KEY — في أسرار الدوال، لا يُلصق في أي شات.
 // داخلية بحتة: JWT فريق (verify_jwt الافتراضي) + فحص دور في الكود.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3';
-import Anthropic from 'npm:@anthropic-ai/sdk';
+import { LLM_SETUP_MSG, completeText, llmConfigured } from '../_shared/llm.ts';
 
 const schema = z.object({
   content_item_id: z.string().uuid(),
@@ -58,11 +59,9 @@ Deno.serve(async (req) => {
   }
   const { content_item_id, directions } = parsed.data;
 
-  const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
-  if (!apiKey) {
+  if (!llmConfigured()) {
     return new Response(JSON.stringify({
-      error: 'not_configured',
-      message: 'توليد النصوص غير مهيأ بعد — أضف ANTHROPIC_API_KEY في أسرار الدوال ليعمل الزر فوراً',
+      error: 'not_configured', message: LLM_SETUP_MSG,
     }), { status: 503, headers });
   }
 
@@ -92,29 +91,7 @@ Deno.serve(async (req) => {
   ].filter(Boolean).join('\n\n');
 
   try {
-    const anthropic = new Anthropic({ apiKey });
-    // fallback خادمي: لو رفضت مصنفات الأمان الطلب يُعاد آلياً على نموذج بديل
-    const msg = await anthropic.beta.messages.create({
-      model: 'claude-opus-5',
-      max_tokens: 8000,
-      betas: ['server-side-fallback-2026-07-01'],
-      fallbacks: 'default',
-      system,
-      messages: [{ role: 'user', content: prompt }],
-    } as Parameters<typeof anthropic.beta.messages.create>[0]);
-
-    if (msg.stop_reason === 'refusal') {
-      return new Response(JSON.stringify({
-        error: 'refused',
-        message: 'تعذر توليد هذا المحتوى — عدّل الموجز وحاول مجدداً',
-      }), { status: 422, headers });
-    }
-    const text = msg.content
-      .filter((b): b is { type: 'text'; text: string } => b.type === 'text')
-      .map((b) => b.text).join('\n').trim();
-    if (!text) {
-      return new Response(JSON.stringify({ error: 'empty' }), { status: 502, headers });
-    }
+    const text = await completeText(system, prompt, 8000);
 
     // الكتابة + إعادة ضبط المراجعة البشرية (العقيدة الثابتة)
     const { error: upErr } = await supabase.from('content_items').update({
@@ -128,7 +105,17 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({ ok: true, body: text }), { status: 200, headers });
   } catch (e) {
-    console.error('generate-copy', (e as Error).message);
+    const m = (e as Error).message;
+    if (m === 'refused') {
+      return new Response(JSON.stringify({ error: 'refused',
+        message: 'تعذر توليد هذا المحتوى — عدّل الموجز وحاول مجدداً' }), { status: 422, headers });
+    }
+    if (m === 'rate_limited') {
+      return new Response(JSON.stringify({ error: 'rate_limited',
+        message: 'وصلنا حد النماذج المجانية اليومي — حاول لاحقاً أو أضف رصيداً/مفتاح Anthropic' }),
+        { status: 429, headers });
+    }
+    console.error('generate-copy', m);
     return new Response(JSON.stringify({ error: 'server' }), { status: 500, headers });
   }
 });

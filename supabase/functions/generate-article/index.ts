@@ -4,6 +4,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3';
 import { draftArticle, type Signal } from '../_shared/article.ts';
+import { LLM_SETUP_MSG, llmConfigured } from '../_shared/llm.ts';
 
 const schema = z.object({
   signal_ids: z.array(z.string().uuid()).max(12).optional(),
@@ -47,11 +48,9 @@ Deno.serve(async (req) => {
   }
   const { signal_ids, topic } = parsed.data;
 
-  const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
-  if (!apiKey) {
+  if (!llmConfigured()) {
     return new Response(JSON.stringify({
-      error: 'not_configured',
-      message: 'توليد المقالات غير مهيأ بعد — أضف ANTHROPIC_API_KEY في أسرار الدوال ليعمل فوراً',
+      error: 'not_configured', message: LLM_SETUP_MSG,
     }), { status: 503, headers });
   }
 
@@ -63,7 +62,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const draft = await draftArticle(apiKey, signals, topic);
+    const draft = await draftArticle(signals, topic);
     let slug = draft.slug;
     let insert = await supabase.from('articles').insert({
       slug, title: draft.title, excerpt: draft.excerpt, body_md: draft.body_md,
@@ -95,6 +94,11 @@ Deno.serve(async (req) => {
     if (m === 'refused') {
       return new Response(JSON.stringify({ error: 'refused',
         message: 'تعذر توليد هذا الموضوع — جرّب صياغة أخرى' }), { status: 422, headers });
+    }
+    if (m === 'rate_limited') {
+      return new Response(JSON.stringify({ error: 'rate_limited',
+        message: 'وصلنا حد النماذج المجانية اليومي — حاول لاحقاً أو أضف رصيداً/مفتاح Anthropic' }),
+        { status: 429, headers });
     }
     console.error('generate-article', m);
     return new Response(JSON.stringify({ error: 'server' }), { status: 500, headers });

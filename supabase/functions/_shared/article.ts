@@ -1,9 +1,10 @@
 // صياغة مقال المدونة — منطق مشترك بين content-collect (اليومي الآلي)
-// وgenerate-article (عند الطلب من الفريق).
+// وgenerate-article (عند الطلب من الفريق). المزود عبر طبقة llm.ts الموحدة
+// (OpenRouter مجاني أو Anthropic).
 //
 // قواعد الجودة (SEO/GEO): عربية سعودية معاصرة، استشهاد بالمصادر المزودة فقط،
 // لا اختلاق أرقام، بنية عناوين نظيفة، وخلاصة قابلة للاستشهاد من محركات الذكاء.
-import Anthropic from 'npm:@anthropic-ai/sdk';
+import { completeJSON } from './llm.ts';
 
 export type Signal = { title: string; url: string; summary?: string | null };
 
@@ -33,12 +34,9 @@ const SCHEMA = {
 } as const;
 
 export async function draftArticle(
-  apiKey: string,
   signals: Signal[],
   topic?: string,
 ): Promise<ArticleDraft> {
-  const anthropic = new Anthropic({ apiKey });
-
   const system = [
     'أنت كاتب المدونة الرسمية لوكالة AGMA (وكالة تسويق سعودية AI-native في الرياض،',
     'موقعها agma.com.sa). تكتب مقالات عربية سعودية معاصرة لجمهور أصحاب الأعمال',
@@ -63,23 +61,8 @@ export async function draftArticle(
     signals.length ? `\nإشارات اليوم (مصادرك الوحيدة المسموحة):\n${srcList}` : '',
   ].join('\n');
 
-  const msg = await anthropic.beta.messages.create({
-    model: 'claude-opus-5',
-    max_tokens: 16000,
-    betas: ['server-side-fallback-2026-07-01'],
-    fallbacks: 'default',
-    system,
-    output_config: {
-      format: { type: 'json_schema', schema: SCHEMA },
-    },
-    messages: [{ role: 'user', content: prompt }],
-  } as Parameters<typeof anthropic.beta.messages.create>[0]);
-
-  if (msg.stop_reason === 'refusal') throw new Error('refused');
-  const text = msg.content
-    .filter((b): b is { type: 'text'; text: string } => b.type === 'text')
-    .map((b) => b.text).join('');
-  const draft = JSON.parse(text) as ArticleDraft;
+  const draft = await completeJSON<ArticleDraft>(
+    system, prompt, SCHEMA as unknown as Record<string, unknown>);
   // تعقيم الرابط الثابت مهما أعاد النموذج
   draft.slug = draft.slug.toLowerCase().replace(/[^a-z0-9-]+/g, '-')
     .replace(/^-+|-+$/g, '').slice(0, 80) || `article-${Date.now()}`;
