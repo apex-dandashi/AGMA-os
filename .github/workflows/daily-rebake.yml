@@ -1,34 +1,42 @@
-# الخبز اليومي للمدونة: المقالات المنشورة أمس تتحول صفحات HTML ثابتة
-# (سيو كامل) بإعادة نشر Hostinger مرة يومياً.
-#
-# يتطلب سراً واحداً من المالك: HOSTINGER_DEPLOY_HOOK_MAIN — رابط الـ webhook
-# من hPanel ← Git ← موقع agma.com.sa (نفس الرابط الذي يستقبل دفعات GitHub).
-# اختياري: HOSTINGER_DEPLOY_HOOK_STAGING للنسخة التجريبية.
+# الخبز اليومي للمدونة: يلقط المقالات المنشورة → يحدّث اللقطة داخل المستودع →
+# يدفعها → دفعة GitHub تشغّل نشر Hostinger تلقائياً (تكامل GitHub App).
+# لا يحتاج أي أسرار — بيئة بناء Hostinger لا تصل للشبكة فاللقطة هي المصدر.
 name: Daily blog rebake
 
 on:
   schedule:
-    - cron: '0 3 * * *' # 03:00 UTC = 06:00 KSA — بعد جمع الإشارات وقبل الدوام
+    - cron: '0 3 * * *' # 03:00 UTC = 06:00 KSA
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   rebake:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Hostinger redeploy (main)
-        env:
-          HOOK: ${{ secrets.HOSTINGER_DEPLOY_HOOK_MAIN }}
+      - uses: actions/checkout@v4
+        with:
+          ref: staging
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Snapshot published articles
+        run: node scripts/snapshot-articles.mjs
+
+      - name: Commit and push (staging → main) if changed
         run: |
-          if [ -z "$HOOK" ]; then
-            echo "::warning::HOSTINGER_DEPLOY_HOOK_MAIN غير مضبوط — أضفه في GitHub Secrets ليعمل الخبز اليومي"
+          if git diff --quiet apps/marketing/content/articles-snapshot.json; then
+            echo "لا مقالات جديدة — لا حاجة لإعادة البناء"
             exit 0
           fi
-          curl -fsS -X POST "$HOOK" && echo "main rebake triggered"
-
-      - name: Trigger Hostinger redeploy (staging, optional)
-        env:
-          HOOK: ${{ secrets.HOSTINGER_DEPLOY_HOOK_STAGING }}
-        run: |
-          if [ -n "$HOOK" ]; then
-            curl -fsS -X POST "$HOOK" && echo "staging rebake triggered"
-          fi
+          git config user.name "agma-bake-bot"
+          git config user.email "noreply@agma.com.sa"
+          git add apps/marketing/content/articles-snapshot.json
+          git commit -m "chore(bake): تحديث لقطة المقالات اليومية"
+          git push origin staging
+          git push origin staging:main
+          echo "دُفعت اللقطة — Hostinger سيخبز الصفحات الثابتة الآن"
