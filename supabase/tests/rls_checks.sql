@@ -237,7 +237,8 @@ begin
   -- anon: يرى المنشور فقط
   perform set_config('request.jwt.claims', '{"role":"anon"}', true);
   perform set_config('role', 'anon', true);
-  select count(*) into n from public.articles;
+  -- نحصر بمقالات الحزام (البذرة الافتتاحية منشورة أيضاً)
+  select count(*) into n from public.articles where slug like 'rls-%';
   if n <> 1 then raise exception 'anon: articles expected 1 published got %', n; end if;
 
   -- العميل: لا يرى الإشارات ولا مسودات المدونة
@@ -248,6 +249,56 @@ begin
   if n <> 0 then raise exception 'client: signals must be invisible, got %', n; end if;
   select count(*) into n from public.articles where status <> 'published';
   if n <> 0 then raise exception 'client: article drafts must be invisible, got %', n; end if;
+end $$;
+
+-- ---------- team chat + profile self-edit (المرحلة ٨ج) -----------------------
+do $$
+declare n int;
+begin
+  -- الاستراتيجي يرسل: عامة + خاصة للمنفذ
+  perform set_config('request.jwt.claims',
+    '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}', true);
+  perform set_config('role', 'authenticated', true);
+  insert into public.team_chat (sender, recipient, body) values
+    ('00000000-0000-0000-0000-0000000000a1', null, 'رسالة عامة (حزام)'),
+    ('00000000-0000-0000-0000-0000000000a1',
+     '00000000-0000-0000-0000-0000000000e1', 'خاصة للمنفذ (حزام)');
+
+  -- انتحال مرسل: مرفوض
+  begin
+    insert into public.team_chat (sender, recipient, body) values
+      ('00000000-0000-0000-0000-0000000000e1', null, 'انتحال');
+    raise exception 'chat: sender spoofing must be rejected';
+  exception when insufficient_privilege or check_violation then null;
+  end;
+
+  -- المنفذ يرى العامة وخاصته (٢)
+  perform set_config('request.jwt.claims',
+    '{"sub":"00000000-0000-0000-0000-0000000000e1","role":"authenticated"}', true);
+  select count(*) into n from public.team_chat where body like '%حزام%';
+  if n <> 2 then raise exception 'executor: chat expected 2 got %', n; end if;
+
+  -- العميل معزول كلياً
+  perform set_config('request.jwt.claims',
+    '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated"}', true);
+  select count(*) into n from public.team_chat;
+  if n <> 0 then raise exception 'client: chat must be invisible, got %', n; end if;
+
+  -- ترقية ذاتية: مرفوضة
+  perform set_config('request.jwt.claims',
+    '{"sub":"00000000-0000-0000-0000-0000000000e1","role":"authenticated"}', true);
+  begin
+    update public.profiles set role = 'admin'
+      where id = '00000000-0000-0000-0000-0000000000e1';
+    raise exception 'profiles: self escalation must be rejected';
+  exception when raise_exception then
+    if sqlerrm not like '%مدير النظام%' then raise; end if;
+  end;
+
+  -- تنظيف (كمرسل يملك رسائله)
+  perform set_config('request.jwt.claims',
+    '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}', true);
+  delete from public.team_chat where body like '%حزام%';
 end $$;
 
 select 'RLS_CHECKS_PASSED' as result;

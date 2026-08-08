@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/reac
 import type { Session } from '@supabase/supabase-js';
 import { Button, Input, Modal, Spinner, ToastProvider } from '@agma/ui';
 import type { Tables } from '@agma/db';
+import { UserRound } from 'lucide-react';
 import { getSupabase } from '../lib/supabase';
 import { installErrorReporting } from '../lib/errorReporting';
 import { LocaleProvider, useLocale, type DictKey } from '../lib/i18n';
@@ -27,6 +28,7 @@ const NAV: { href: string; key: DictKey }[] = [
   { href: '/finance/', key: 'nav.finance' },
   { href: '/website/', key: 'nav.website' },
   { href: '/team/', key: 'nav.team' },
+  { href: '/chat/', key: 'nav.chat' },
   { href: '/ims/', key: 'nav.ims' },
   { href: '/settings/', key: 'nav.settings' },
 ];
@@ -214,9 +216,15 @@ function Chrome({ profile, children }: { profile: Tables<'profiles'>; children: 
           >
             {locale === 'ar' ? 'EN' : 'ع'}
           </button>
-          <span className="hidden text-sm text-gray-medium lg:inline">
+          <Link href="/profile/" aria-label="ملفي الشخصي"
+            className="hidden items-center gap-1.5 rounded-sm text-sm text-gray-medium hover:text-snow focus-visible:ring-2 focus-visible:ring-pulse-orange/60 focus:outline-none lg:flex">
+            <UserRound className="h-4 w-4" aria-hidden />
             {profile.full_name || profile.email}
-          </span>
+          </Link>
+          <Link href="/profile/" aria-label="ملفي الشخصي"
+            className="rounded-sm text-gray-medium hover:text-snow lg:hidden">
+            <UserRound className="h-4 w-4" aria-hidden />
+          </Link>
           <button
             onClick={() => getSupabase().auth.signOut()}
             className="rounded-sm text-sm text-gray-medium hover:text-snow focus-visible:ring-2 focus-visible:ring-pulse-orange/60 focus:outline-none"

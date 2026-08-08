@@ -66,6 +66,30 @@ Owner actions pending: ONE of OPENROUTER_API_KEY (free models) or
 ANTHROPIC_API_KEY (best Arabic quality) — see 8c below; plus
 HOSTINGER_DEPLOY_HOOK_MAIN (daily static rebake).
 
+## Phase 8d log (2026-08-08) — Personal profile + team chat
+
+Owner: «وين قسم البروفايل الشخصي وتعديلاته بالسستم والشات العام وبين
+الحسابات (بين الموظفين)» — L4: a «وين؟» about something missing = build it.
+
+- `20260809030000_profile_chat.sql`: profiles + job_title/phone/avatar_path
+  with self-update policy guarded by trigger (role/active/client_id/email
+  changes rejected for non-admins — self-escalation persona-proven blocked);
+  public `avatars` bucket (2MB, own-folder RLS); `team_chat` table —
+  recipient null = #general, else DM; RLS: team-only, DM visible to its two
+  parties only, sender must be self, sender deletes own; DB trigger blocks
+  client recipients; realtime publication added.
+- Permanent harness section: sender spoofing rejected · executor sees
+  general+his DM (2) · client sees zero · self-escalation rejected.
+- /profile (ProfilePanel): avatar upload with camera badge, name/job
+  title blur-save, phone with L2 dial layout, personal-signature and
+  password cards linking to their homes. Header now shows a person icon +
+  name linking to /profile (mobile: icon).
+- /chat (ChatPanel): sidebar #عام + teammates with avatars; bubbles
+  (mine orange-tinted), sender names in general, hover-delete own,
+  realtime via supabase channel; nav «الدردشة» added.
+- Gauntlet green (typecheck, build, harness, e2e); migration pushed to
+  production.
+
 ## Phase 8c log (2026-08-08) — OpenRouter free-models support
 
 Owner: «how about we use open router for free ai models api».

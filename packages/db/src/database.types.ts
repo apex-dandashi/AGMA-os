@@ -3966,6 +3966,7 @@ export type Database = {
       profiles: {
         Row: {
           active: boolean
+          avatar_path: string | null
           capacity_hours_week: number
           client_id: string | null
           cost_rate_hourly: number | null
@@ -3982,6 +3983,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          avatar_path?: string | null
           capacity_hours_week?: number
           client_id?: string | null
           cost_rate_hourly?: number | null
@@ -3998,6 +4000,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          avatar_path?: string | null
           capacity_hours_week?: number
           client_id?: string | null
           cost_rate_hourly?: number | null
@@ -5134,6 +5137,45 @@ export type Database = {
             columns: ["template_id"]
             isOneToOne: false
             referencedRelation: "task_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_chat: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          recipient: string | null
+          sender: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          recipient?: string | null
+          sender?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          recipient?: string | null
+          sender?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_chat_recipient_fkey"
+            columns: ["recipient"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_chat_sender_fkey"
+            columns: ["sender"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
