@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import type { Tables } from '@agma/db';
 import { getSupabase } from '../lib/supabase';
+import ArticleEditor from './ArticleEditor';
 import { useAppMutation } from '../lib/queries';
 
 /**
@@ -48,6 +49,7 @@ export default function BlogAdmin() {
   });
 
   const [openId, setOpenId] = useState<string | null>(null);
+  const [editorId, setEditorId] = useState<string | null>(null);
   const [confirmDel, setConfirmDel] = useState<Tables<'articles'> | null>(null);
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [topic, setTopic] = useState('');
@@ -73,6 +75,19 @@ export default function BlogAdmin() {
       setConfirmDel(null);
     },
     { invalidate: [key], successMessage: 'حُذفت المسودة' }
+  );
+
+  const createManual = useAppMutation(
+    async () => {
+      const { data: row, error } = await getSupabase().from('articles').insert({
+        slug: `draft-${Date.now().toString(36)}`,
+        title: 'مسودة جديدة — عدّل العنوان',
+        status: 'draft', ai_generated: false,
+      }).select('id').single();
+      if (error) throw new Error(error.message);
+      setEditorId(row.id);
+    },
+    { invalidate: [key], successMessage: 'فُتح المحرر — اكتب على راحتك' }
   );
 
   const generate = useAppMutation(
@@ -127,6 +142,12 @@ export default function BlogAdmin() {
   );
 
   if (isLoading || !data) return <SkeletonList rows={4} />;
+
+  const editing = editorId ? data.articles.find((a) => a.id === editorId) : null;
+  if (editing) {
+    return <ArticleEditor article={editing} invalidateKey={key}
+      onBack={() => setEditorId(null)} />;
+  }
 
   return (
     <div className="space-y-4">
@@ -209,6 +230,10 @@ export default function BlogAdmin() {
             onClick={() => generate.mutate(undefined as never)}>
             <Sparkles className="h-3.5 w-3.5" aria-hidden /> ولّد مقالاً (٣٠–٦٠ ثانية)
           </Button>
+          <Button size="sm" variant="outline" loading={createManual.isPending}
+            onClick={() => createManual.mutate(undefined as never)}>
+            + اكتب مقالاً بنفسك
+          </Button>
         </div>
       </Card>
 
@@ -236,8 +261,11 @@ export default function BlogAdmin() {
                 </Badge>
               )}
               <span className="ms-auto flex gap-1.5">
+                <Button variant="outline" size="xs" onClick={() => setEditorId(a.id)}>
+                  المحرر الكامل
+                </Button>
                 <Button variant="ghost" size="xs" onClick={() => setOpenId(open ? null : a.id)}>
-                  {open ? 'إغلاق' : 'افتح وحرر'}
+                  {open ? 'إغلاق' : 'تحرير سريع'}
                 </Button>
                 <Button variant="ghost" size="xs" onClick={() => setConfirmDel(a)}>
                   <Trash2 className="h-3 w-3" aria-hidden />
@@ -320,6 +348,9 @@ export default function BlogAdmin() {
                 className="ms-auto flex items-center gap-1 text-xs text-pulse-orange hover:underline">
                 <ExternalLink className="h-3 w-3" aria-hidden /> افتحه في الموقع
               </a>
+              <Button variant="ghost" size="xs" onClick={() => setEditorId(a.id)}>
+                حرره
+              </Button>
               <Button variant="ghost" size="xs"
                 onClick={() => patch.mutate({ id: a.id, values: { status: 'archived' },
                   msg: 'أُرشف — اختفى من الموقع' })}>
