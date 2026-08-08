@@ -88,6 +88,12 @@ L10. **After adding any public-facing feature, update privacy policy + terms**
 L11. **Every lead-capturing form requires a phone number** (with dial select
     per L2, +966 default) — enforced in the edge-function schema too, so no
     future form can capture a lead without it. Phone is the sales channel.
+L12. **No closed service lists** (owner, 2026-08-09): the catalog always
+    includes the supporting/production services (photography, video, editing,
+    voice-over, ad design — category production-support), and EVERY service-
+    selection screen must offer a free-text "خدمات أخرى" adder. Custom entries
+    flow into the SOW draft and quote items (priced manually) — a service we
+    didn't foresee must never be unrepresentable.
 
 ## Conventions
 - TypeScript strict everywhere; Zod validation at every boundary (forms, edge functions, webhooks).

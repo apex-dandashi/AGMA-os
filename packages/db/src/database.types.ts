@@ -480,6 +480,7 @@ export type Database = {
           confident: boolean
           created_at: string
           id: string
+          meta: Json
           question: string
           session_key: string | null
           surface: string
@@ -491,6 +492,7 @@ export type Database = {
           confident?: boolean
           created_at?: string
           id?: string
+          meta?: Json
           question: string
           session_key?: string | null
           surface: string
@@ -502,6 +504,7 @@ export type Database = {
           confident?: boolean
           created_at?: string
           id?: string
+          meta?: Json
           question?: string
           session_key?: string | null
           surface?: string
@@ -4973,6 +4976,7 @@ export type Database = {
           client_id: string
           created_at: string
           custom_premium_pct: number
+          extra_services: string[]
           id: string
           package_id: string | null
           responsibilities: string | null
@@ -4986,6 +4990,7 @@ export type Database = {
           client_id: string
           created_at?: string
           custom_premium_pct?: number
+          extra_services?: string[]
           id?: string
           package_id?: string | null
           responsibilities?: string | null
@@ -4999,6 +5004,7 @@ export type Database = {
           client_id?: string
           created_at?: string
           custom_premium_pct?: number
+          extra_services?: string[]
           id?: string
           package_id?: string | null
           responsibilities?: string | null
@@ -6235,6 +6241,21 @@ export type Database = {
           p_audiences?: Database["public"]["Enums"]["kb_audience"][]
           p_count?: number
           p_embedding: string
+        }
+        Returns: {
+          category: string
+          content: string
+          kb_id: string
+          similarity: number
+          title: string
+        }[]
+      }
+      match_kb_hybrid: {
+        Args: {
+          p_audiences?: Database["public"]["Enums"]["kb_audience"][]
+          p_count?: number
+          p_embedding: string
+          p_query: string
         }
         Returns: {
           category: string

@@ -80,10 +80,13 @@ export const interactionInputSchema = z.object({
 });
 
 export const scopeInputSchema = z.object({
-  service_ids: z.array(z.string().uuid()).min(1, 'اختر خدمة واحدة على الأقل'),
+  service_ids: z.array(z.string().uuid()),
+  // L12: أي شاشة خدمات تتيح إضافة حرة — خدمات خارج الكتالوج تُكتب نصاً
+  extra_services: z.array(z.string().trim().min(2, 'اسم الخدمة قصير').max(120)).max(20).default([]),
   timeline: z.string().trim().max(200).optional().or(z.literal('').transform(() => undefined)),
   responsibilities: z.string().trim().max(2000).optional().or(z.literal('').transform(() => undefined)),
-});
+}).refine((v) => v.service_ids.length + v.extra_services.length > 0,
+  { message: 'اختر خدمة واحدة على الأقل', path: ['service_ids'] });
 
 export const quoteItemSchema = z.object({
   title: z.string().trim().min(2, 'اسم الخدمة مطلوب').max(200),

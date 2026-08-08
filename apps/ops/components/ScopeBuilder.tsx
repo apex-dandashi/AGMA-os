@@ -27,6 +27,9 @@ export default function ScopeBuilder({ clientId, onDone }:
   });
   const [packageId, setPackageId] = useState<string | null>(null);
   const [picked, setPicked] = useState<Set<string>>(new Set());
+  // L12: خدمات حرة خارج الكتالوج (تصوير موقعي، مونتاج ريلز…) — لا قائمة مغلقة
+  const [extras, setExtras] = useState<string[]>([]);
+  const [extraDraft, setExtraDraft] = useState('');
   const [timeline, setTimeline] = useState('');
   const [responsibilities, setResponsibilities] = useState('');
   const [whyCustom, setWhyCustom] = useState('');
@@ -39,6 +42,7 @@ export default function ScopeBuilder({ clientId, onDone }:
     async () => {
       const parsed = scopeInputSchema.safeParse({
         service_ids: [...picked],
+        extra_services: extras,
         timeline,
         responsibilities,
       });
@@ -49,6 +53,7 @@ export default function ScopeBuilder({ clientId, onDone }:
       const { error } = await getSupabase().from('scopes').insert({
         client_id: clientId,
         service_ids: parsed.data.service_ids,
+        extra_services: parsed.data.extra_services,
         timeline: parsed.data.timeline ?? null,
         responsibilities: parsed.data.responsibilities ?? null,
         package_id: packageId,
@@ -72,14 +77,15 @@ export default function ScopeBuilder({ clientId, onDone }:
   const sowPreview = useMemo(() => {
     if (!catalog) return '';
     const chosen = catalog.services.filter((s) => picked.has(s.id));
-    if (chosen.length === 0) return '';
+    const names = [...chosen.map((s) => s.name_ar), ...extras];
+    if (names.length === 0) return '';
     return [
       'مسودة نطاق العمل',
       '',
       selectedPackage ? `${selectedPackage.name_ar} — ${selectedPackage.tagline_ar ?? ''}` : '',
       selectedPackage ? '' : 'نطاق مخصص',
       'الخدمات المتفق عليها:',
-      ...chosen.map((s, i) => `${i + 1}. ${s.name_ar}`),
+      ...names.map((n, i) => `${i + 1}. ${n}`),
       '',
       timeline ? `الإطار الزمني: ${timeline}` : '',
       responsibilities ? `المسؤوليات: ${responsibilities}` : '',
@@ -95,7 +101,14 @@ export default function ScopeBuilder({ clientId, onDone }:
     ]
       .filter((l) => l !== '')
       .join('\n');
-  }, [catalog, picked, timeline, responsibilities, selectedPackage]);
+  }, [catalog, picked, extras, timeline, responsibilities, selectedPackage]);
+
+  function addExtra() {
+    const v = extraDraft.trim();
+    if (v.length < 2 || extras.includes(v) || extras.length >= 20) return;
+    setExtras((prev) => [...prev, v]);
+    setExtraDraft('');
+  }
 
   function toggle(id: string) {
     setPicked((prev) => {
@@ -176,6 +189,34 @@ export default function ScopeBuilder({ clientId, onDone }:
               </div>
             </div>
           ))}
+          {/* L12: لا قائمة مغلقة — أي خدمة خارج الكتالوج تُضاف نصاً حراً */}
+          <div>
+            <p className="mb-1 text-sm font-bold text-pulse-orange">خدمات أخرى (حرة)</p>
+            {extras.length > 0 && (
+              <div className="mb-1.5 flex flex-wrap gap-1.5" role="group" aria-label="خدمات حرة">
+                {extras.map((x) => (
+                  <button key={x} type="button" title="إزالة"
+                    onClick={() => setExtras((prev) => prev.filter((e) => e !== x))}
+                    className="inline-flex items-center gap-1 rounded-full border border-pulse-orange bg-pulse-orange/15 px-2.5 py-1 text-xs text-pulse-orange focus-visible:ring-2 focus-visible:ring-pulse-orange/60 focus:outline-none">
+                    {x} <span aria-hidden>×</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className="flex gap-2">
+              <Input value={extraDraft} aria-label="خدمة خارج الكتالوج"
+                placeholder="مثال: تصوير موقعي ليوم كامل، مونتاج ١٠ ريلز…"
+                onChange={(e) => setExtraDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') { e.preventDefault(); addExtra(); }
+                }} />
+              <Button type="button" size="sm" variant="outline"
+                disabled={extraDraft.trim().length < 2}
+                onClick={addExtra}>
+                أضف
+              </Button>
+            </div>
+          </div>
           <Input
             label="الإطار الزمني"
             value={timeline}
@@ -217,15 +258,15 @@ export default function ScopeBuilder({ clientId, onDone }:
           <Button
             size="sm"
             loading={save.isPending}
-            disabled={picked.size === 0 || customBlocked}
+            disabled={picked.size + extras.length === 0 || customBlocked}
             onClick={async () => {
               await save.mutateAsync(undefined as never);
               onDone();
             }}
           >
-            حفظ كمسودة ({picked.size} خدمة)
+            حفظ كمسودة ({picked.size + extras.length} خدمة)
           </Button>
-          {customBlocked && picked.size > 0 && (
+          {customBlocked && picked.size + extras.length > 0 && (
             <p className="text-xs text-gray-medium">النطاق المخصص يتطلب سبباً قبل الحفظ.</p>
           )}
           {err && <p role="alert" className="text-xs text-pulse-orange">{err}</p>}

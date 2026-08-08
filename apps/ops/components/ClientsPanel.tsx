@@ -441,7 +441,9 @@ function ClientDetail({ client }: { client: Client }) {
               <Badge variant={s.status === 'approved' ? 'accent' : 'neutral'}>
                 {SCOPE_STATUS[s.status]}
               </Badge>
-              <span className="text-gray-light">{s.service_ids.length} خدمة</span>
+              <span className="text-gray-light">
+                {s.service_ids.length + (s.extra_services?.length ?? 0)} خدمة
+              </span>
               {s.timeline && <span className="text-gray-medium">{s.timeline}</span>}
               <span className="ms-auto flex gap-1.5">
                 <Button variant="ghost" size="xs"
@@ -479,13 +481,19 @@ function ClientDetail({ client }: { client: Client }) {
               initial={{
                 clientId: client.id,
                 scopeId: quoteScope.id,
-                items: (catalog?.services ?? [])
-                  .filter((sv) => quoteScope.service_ids.includes(sv.id))
-                  .map((sv) => ({
-                    title: sv.name_ar,
-                    description: '',
-                    amount: Number(sv.default_price ?? 0),
+                items: [
+                  ...(catalog?.services ?? [])
+                    .filter((sv) => quoteScope.service_ids.includes(sv.id))
+                    .map((sv) => ({
+                      title: sv.name_ar,
+                      description: '',
+                      amount: Number(sv.default_price ?? 0),
+                    })),
+                  // الخدمات الحرة (L12) تدخل عرض السعر كسطور تُسعّر يدوياً
+                  ...(quoteScope.extra_services ?? []).map((x) => ({
+                    title: x, description: '', amount: 0,
                   })),
+                ],
               }}
             />
           </div>

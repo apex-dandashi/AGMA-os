@@ -22,6 +22,22 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 9 | Help Centre / RAG + chatbots | ✅ Done (2026-08-09) — KB+RAG core, then Help Center: 14 seeded articles (نصائح تسويقية + دليل النظام), two-tier brain (grounded/general-advice), /help site page, ops help surface |
 | 10 | Employee portal + Analytics + digests | ✅ Done (2026-08-09) — staff lifecycle (auto onboarding/offboarding checklists, welcome emails, 30/60/90 nudges, equipment log, signature generator), client health weekly → scorecard, Analytics dashboard, digest v2 (rocks+issues, WhatsApp-ready) |
 
+## L12 round log (2026-08-09) — production services + free service adder
+
+Owner (screenshot of ScopeBuilder): «يجب دائما اضافة خدمات اخرى — اضف
+قاعدة ان لدينا دائما خدمات فرعية مثل تصوير مونتاج تصميم الخ». New law
+L12 in CLAUDE.md: no closed service lists, ever.
+
+- `20260809110000_production_services.sql`: 9th category «الإنتاج
+  والخدمات المساندة» + 5 services (تصوير فوتوغرافي، تصوير وإنتاج فيديو،
+  مونتاج وما بعد الإنتاج، تعليق صوتي، تصميم إعلانات) — catalog now 37;
+  scopes.extra_services text[] for free-text services.
+- ScopeBuilder: «خدمات أخرى (حرة)» adder (chips, Enter-to-add, dedupe,
+  cap 20) — extras flow into the SOW preview numbering, the saved scope,
+  and quote-from-scope items (amount 0, priced manually). Count and
+  save-guard include extras. scopeInputSchema: total ≥ 1 across both.
+- Gauntlet green (types regen, build, RLS, e2e); migration in prod.
+
 ## System docs + hybrid retrieval log (2026-08-09)
 
 Owner rule (2026-08-08): «كل عمليات النظام نسويلها مقالات كي يكون كامل
