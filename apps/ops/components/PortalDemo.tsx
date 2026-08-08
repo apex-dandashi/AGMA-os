@@ -1,26 +1,42 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import {
   Badge, Button, Card, Input, Modal, Tabs, ToastProvider, useToast,
 } from '@agma/ui';
 import {
-  CheckCircle2, FileText, Landmark, PenLine, Sparkles, TestTubeDiagonal,
+  Activity, BarChart3, CheckCircle2, FileText, FolderKanban, Landmark,
+  MapPin, PenLine, Sparkles, TestTubeDiagonal, TrendingUp,
 } from 'lucide-react';
 
 /**
- * Experience AGMA (WOW شريحة ٢): نسخة تجريبية كاملة من بوابة العميل —
- * بيانات افتراضية بالكامل داخل المتصفح: لا حساب، لا قاعدة بيانات، لا أثر.
- * كل تفاعل يعمل محلياً ليعيش الزائر التجربة الحقيقية قبل التعاقد.
+ * Experience AGMA 2.0 — «سستم يبهر»: بوابة كاملة تتنفس ببيانات افتراضية
+ * غنية، كلها داخل المتصفح (لا حساب، لا قاعدة، لا أثر). الميزة القاتلة —
+ * التعليق بالدبابيس على تصميم فعلي — تعمل هنا بالكامل على تصميم SVG مضمّن.
  */
 
-type DemoDoc = {
-  id: string; type: string; number: string; status: 'sent' | 'signed' | 'active';
-  total?: number; paid?: number;
-  signedBy?: string; signedAt?: string;
-};
+const DEMO_COMPANY = 'شركة الأفق للتطوير العقاري';
 
-const DEMO_COMPANY = 'شركة الأفق للتطوير العقاري (بيانات تجريبية)';
+/* تصميم إنستغرام تجريبي — SVG مضمّن يجعل تجربة الدبابيس حقيقية */
+const DEMO_DESIGN = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2B211B"/><stop offset="1" stop-color="#5a2d1a"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#bg)"/>
+  <circle cx="520" cy="80" r="140" fill="#E8542F" opacity="0.25"/>
+  <circle cx="80" cy="540" r="100" fill="#E8542F" opacity="0.15"/>
+  <text x="300" y="200" text-anchor="middle" font-family="sans-serif" font-size="26" fill="#F6E3DC">مشروع الأفق ريزيدنس</text>
+  <text x="300" y="290" text-anchor="middle" font-family="sans-serif" font-size="52" font-weight="900" fill="#ffffff">وحدات فاخرة</text>
+  <text x="300" y="350" text-anchor="middle" font-family="sans-serif" font-size="34" font-weight="700" fill="#E8542F">بإطلالة على الواجهة البحرية</text>
+  <rect x="180" y="420" width="240" height="64" rx="32" fill="#E8542F"/>
+  <text x="300" y="462" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="700" fill="#1a1a1a">سجّل اهتمامك</text>
+  <text x="300" y="560" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#8A7F76">alofuq.sa · 920000000</text>
+</svg>`)}`;
+
+type Pin = { x: number; y: number; body: string };
 
 export default function PortalDemo() {
   return (
@@ -33,37 +49,40 @@ export default function PortalDemo() {
 function DemoInner() {
   const toast = useToast();
   const [tab, setTab] = useState('home');
-  const [approvals, setApprovals] = useState([
-    { id: 'a1', label: 'نطاق عمل: حملة إطلاق المشروع السكني الجديد', status: 'pending' as string },
+  const [approval, setApproval] = useState<'pending' | 'approved' | 'rejected'>('pending');
+  const [contractSigned, setContractSigned] = useState(false);
+  const [signerName, setSignerName] = useState('');
+  const [signing, setSigning] = useState(false);
+  const [dlvStatus, setDlvStatus] = useState<'pending' | 'approved' | 'changes'>('pending');
+  const [pins, setPins] = useState<Pin[]>([
+    { x: 0.5, y: 0.77, body: 'اجعلوا زر التسجيل أكبر قليلاً' },
   ]);
-  const [docs, setDocs] = useState<DemoDoc[]>([
-    { id: 'd1', type: 'اتفاقية خدمات', number: 'CT-00023', status: 'sent' },
-    { id: 'd2', type: 'عرض سعر', number: 'Q-00071', status: 'signed',
-      signedBy: 'م. خالد الحربي', signedAt: '2026-08-02' },
-    { id: 'd3', type: 'فاتورة', number: 'INV-00058', status: 'active',
-      total: 18400, paid: 9200 },
-  ]);
-  const [signing, setSigning] = useState<DemoDoc | null>(null);
+  const [draftPin, setDraftPin] = useState<{ x: number; y: number } | null>(null);
+  const [pinText, setPinText] = useState('');
+  const [changeNote, setChangeNote] = useState<string | null>(null);
 
-  const pendingSign = docs.filter((d) => d.status === 'sent');
-  const invoices = docs.filter((d) => d.type === 'فاتورة');
+  const doneActions = (approval !== 'pending') && contractSigned && dlvStatus !== 'pending';
+  const pendingCount = [approval === 'pending', !contractSigned, dlvStatus === 'pending']
+    .filter(Boolean).length;
 
-  function decide(id: string, ok: boolean) {
-    setApprovals((a) => a.map((x) => x.id === id
-      ? { ...x, status: ok ? 'approved' : 'rejected' } : x));
-    toast.success(ok ? 'تم الاعتماد — هكذا بنقرة واحدة' : 'سُجلت ملاحظاتك لفريق AGMA');
-  }
+  const timeline = useMemo(() => [
+    ...(dlvStatus === 'approved' ? [{ t: 'الآن', e: 'اعتمدتَ تصميم «إعلان الوحدات» V3 ✓' }] : []),
+    ...(contractSigned ? [{ t: 'الآن', e: `وقّع ${signerName || 'ممثلكم'} اتفاقية الخدمات إلكترونياً` }] : []),
+    { t: 'قبل ساعتين', e: 'رفع فريق AGMA الإصدار الثالث من تصميم الإعلان' },
+    { t: 'قبل ٥ ساعات', e: 'اكتمل فحص جودة صفحة الهبوط (١٢/١٢ ✓)' },
+    { t: 'أمس', e: 'حملة سناب شات حققت ٤٢ تسجيل اهتمام جديداً' },
+    { t: 'أمس', e: 'قُيدت دفعتكم — شكراً لكم (SAR 9,200)' },
+    { t: 'قبل يومين', e: 'نُشر مقال «دليل التملك في الواجهة البحرية»' },
+    { t: 'قبل ٣ أيام', e: 'اجتماع المتابعة الأسبوعي — الملخص في الملفات' },
+  ], [dlvStatus, contractSigned, signerName]);
 
   return (
     <div dir="rtl" className="min-h-screen">
-      {/* لافتة الوضع التجريبي — دائمة وواضحة */}
       <div className="border-b border-pulse-orange/40 bg-pulse-orange/10 px-4 py-2">
-        <div className="mx-auto flex max-w-4xl flex-wrap items-center gap-2 text-xs">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-2 text-xs">
           <TestTubeDiagonal className="h-4 w-4 text-pulse-orange" aria-hidden />
           <b>وضع تجريبي</b>
-          <span className="text-gray-light">
-            — كل البيانات افتراضية ولا يُحفظ شيء. هذه هي البوابة نفسها التي يحصل عليها عملاء AGMA.
-          </span>
+          <span className="text-gray-light">— بيانات افتراضية، لا يُحفظ شيء. هذه البوابة نفسها لعملاء AGMA.</span>
           <a href="https://agma.com.sa/contact" target="_blank" rel="noreferrer"
             className="ms-auto rounded-md bg-pulse-orange px-3 py-1 font-bold text-void hover:opacity-90">
             اجعلها بوابتك — احجز مكالمة
@@ -72,107 +91,314 @@ function DemoInner() {
       </div>
 
       <header className="border-b border-gray-dark px-4 py-3">
-        <div className="mx-auto flex max-w-4xl items-center gap-3">
+        <div className="mx-auto flex max-w-5xl items-center gap-3">
           <span className="text-lg font-black text-pulse-orange">AGMA</span>
           <span className="text-sm text-gray-light">بوابة {DEMO_COMPANY}</span>
+          <span className="ms-auto text-sm text-gray-medium">مساء الخير، خالد 👋</span>
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-4 py-6">
+      <main className="mx-auto max-w-5xl px-4 py-6">
+        {/* لوحة الإحصاءات — أول ما يبهر */}
+        <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {[
+            { label: 'تقدم المشروع', value: '68%', icon: TrendingUp },
+            { label: 'مهام مكتملة', value: '34 / 50', icon: CheckCircle2 },
+            { label: 'بانتظار قرارك', value: String(pendingCount), icon: Sparkles,
+              alarm: pendingCount > 0 },
+            { label: 'عائد الحملات', value: '3.4x', icon: BarChart3 },
+          ].map((c) => (
+            <Card key={c.label} className={`p-4 ${c.alarm ? 'border-pulse-orange/60' : ''}`}>
+              <c.icon className="mb-2 h-4 w-4 text-pulse-orange" aria-hidden />
+              <p className={`text-2xl font-black ${c.alarm ? 'text-pulse-orange' : ''}`}>{c.value}</p>
+              <p className="text-xs text-gray-medium">{c.label}</p>
+            </Card>
+          ))}
+        </div>
+
         <Tabs active={tab} onChange={setTab} tabs={[
           { key: 'home', label: 'نظرة عامة' },
+          { key: 'dlv', label: 'المخرجات' },
+          { key: 'project', label: 'المشروع' },
           { key: 'docs', label: 'المستندات' },
-          { key: 'pay', label: 'الفواتير والدفع' },
+          { key: 'reports', label: 'التقارير' },
+          { key: 'pay', label: 'الفواتير' },
         ]} />
 
         <div className="mt-5 space-y-4">
           {tab === 'home' && (
             <>
-              <Card className="border-pulse-orange/50 p-4">
+              <Card className={`p-4 ${doneActions ? '' : 'border-pulse-orange/50'}`}>
                 <p className="mb-3 flex items-center gap-2 font-bold">
                   <Sparkles className="h-4 w-4 text-pulse-orange" aria-hidden />
-                  بانتظار قرارك — جرّبها
+                  بانتظار قرارك — جرّب بنفسك
                 </p>
-                {approvals.map((a) => (
-                  <div key={a.id} className="mb-2 flex flex-wrap items-center gap-2 rounded-sm border border-gray-dark p-3 text-sm">
-                    <span>{a.label}</span>
-                    {a.status === 'pending' ? (
-                      <span className="ms-auto flex gap-2">
-                        <Button size="xs" onClick={() => decide(a.id, true)}>اعتماد</Button>
-                        <Button variant="ghost" size="xs" onClick={() => decide(a.id, false)}>
-                          لدي ملاحظات
-                        </Button>
-                      </span>
-                    ) : (
-                      <Badge variant={a.status === 'approved' ? 'accent' : 'outline'} className="ms-auto">
-                        {a.status === 'approved' ? 'معتمد ✓' : 'ملاحظات مسجلة'}
-                      </Badge>
-                    )}
-                  </div>
-                ))}
-                {pendingSign.map((d) => (
-                  <div key={d.id} className="mb-2 flex flex-wrap items-center gap-2 rounded-sm border border-gray-dark p-3 text-sm">
-                    <FileText className="h-4 w-4 text-pulse-orange" aria-hidden />
-                    <span>{d.type} {d.number} بانتظار توقيعك الإلكتروني</span>
-                    <Button size="xs" className="ms-auto" onClick={() => setSigning(d)}>
+                {approval === 'pending' && (
+                  <ActionRow label="اعتماد نطاق عمل: حملة إطلاق «الأفق ريزيدنس»">
+                    <Button size="xs" onClick={() => { setApproval('approved'); toast.success('اعتمدتَ النطاق بنقرة — الفريق ينطلق فوراً'); }}>اعتماد</Button>
+                    <Button variant="ghost" size="xs" onClick={() => { setApproval('rejected'); toast.success('سُجلت ملاحظاتك'); }}>لدي ملاحظات</Button>
+                  </ActionRow>
+                )}
+                {!contractSigned && (
+                  <ActionRow label="اتفاقية الخدمات CT-00023 بانتظار توقيعك الإلكتروني">
+                    <Button size="xs" onClick={() => setSigning(true)}>
                       <PenLine className="h-3.5 w-3.5" aria-hidden /> وقّع الآن
                     </Button>
-                  </div>
-                ))}
-                {pendingSign.length === 0 && approvals.every((a) => a.status !== 'pending') && (
+                  </ActionRow>
+                )}
+                {dlvStatus === 'pending' && (
+                  <ActionRow label="تصميم «إعلان الوحدات» V3 بانتظار اعتمادك — علّق على أي نقطة منه">
+                    <Button size="xs" onClick={() => setTab('dlv')}>افتحه</Button>
+                  </ActionRow>
+                )}
+                {doneActions && (
                   <p className="text-sm text-gray-light">
-                    أنجزت كل شيء — هكذا تبدو الراحة مع AGMA.
+                    أنجزت كل شيء ✓ — هكذا تبدو الراحة مع AGMA: قرارات بنقرة، وكل شيء موثق.
                   </p>
                 )}
               </Card>
+
               <Card className="p-4">
-                <p className="mb-2 font-bold">مشاريعك</p>
-                <div className="flex items-center gap-2 text-sm">
-                  <span>إطلاق الهوية والمنصة الرقمية</span>
-                  <Badge variant="accent">قيد التنفيذ</Badge>
-                </div>
-                <div className="mt-1.5 flex items-center gap-2 text-sm">
-                  <span>حملة الأداء — الربع الثالث</span>
-                  <Badge variant="outline">التخطيط</Badge>
-                </div>
+                <p className="mb-3 flex items-center gap-2 font-bold">
+                  <Activity className="h-4 w-4 text-pulse-orange" aria-hidden />
+                  ماذا يحدث في حسابك الآن
+                </p>
+                <ul className="space-y-2">
+                  {timeline.map((x, i) => (
+                    <li key={i} className="flex items-start gap-3 text-sm">
+                      <span className="w-20 shrink-0 text-xs text-gray-medium">{x.t}</span>
+                      <span className="text-gray-light">{x.e}</span>
+                    </li>
+                  ))}
+                </ul>
               </Card>
             </>
           )}
 
-          {tab === 'docs' && docs.map((d) => (
-            <Card key={d.id} className="flex flex-wrap items-center gap-2 p-3 text-sm">
-              <Badge>{d.type}</Badge>
-              <b dir="ltr">{d.number}</b>
-              <Badge variant={d.status === 'sent' ? 'neutral' : 'accent'}>
-                {{ sent: 'بانتظارك', signed: 'موقَّع', active: 'نشط' }[d.status]}
-              </Badge>
-              {d.signedBy && (
-                <span className="text-xs text-gray-medium">
-                  وقّعه {d.signedBy} · <span dir="ltr">{d.signedAt}</span> · سجل الأدلة محفوظ
-                </span>
+          {tab === 'dlv' && (
+            <Card className="p-4">
+              <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
+                <span className="font-bold">إعلان الوحدات — سوشال ميديا</span>
+                <Badge variant="outline">الإصدار 3</Badge>
+                <Badge variant={dlvStatus === 'approved' ? 'accent' : dlvStatus === 'changes' ? 'outline' : 'neutral'}>
+                  {{ pending: 'بانتظار اعتمادك', approved: 'معتمد ✓', changes: 'طلبت تعديلات' }[dlvStatus]}
+                </Badge>
+                <span className="ms-auto text-xs text-gray-medium">V1 ↻ · V2 ↻ · V3</span>
+              </div>
+              {dlvStatus === 'pending' && (
+                <p className="mb-2 text-xs text-pulse-orange">
+                  اضغط على أي نقطة من التصميم لتثبيت تعليق عليها بالضبط — جرّبها.
+                </p>
               )}
-              <span className="ms-auto flex gap-2">
-                <Button variant="ghost" size="xs"
-                  onClick={() => toast.success('في البوابة الحقيقية يُفتح المستند كاملاً للطباعة بهوية AGMA')}>
-                  معاينة / طباعة
-                </Button>
-                {d.status === 'sent' && (
-                  <Button size="xs" onClick={() => setSigning(d)}>وقّع</Button>
+              <div className="relative inline-block max-w-full">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={DEMO_DESIGN} alt="تصميم إعلان الوحدات"
+                  className="w-full max-w-[480px] rounded-sm"
+                  style={dlvStatus === 'pending' ? { cursor: 'crosshair' } : undefined}
+                  onClick={(e) => {
+                    if (dlvStatus !== 'pending') return;
+                    const r = e.currentTarget.getBoundingClientRect();
+                    setDraftPin({ x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height });
+                    setPinText('');
+                  }} />
+                {pins.map((p, i) => (
+                  <span key={i}
+                    className="absolute grid h-6 w-6 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-pulse-orange text-xs font-black text-void shadow"
+                    style={{ left: `${p.x * 100}%`, top: `${p.y * 100}%` }} title={p.body}>
+                    {i + 1}
+                  </span>
+                ))}
+                {draftPin && (
+                  <span className="absolute grid h-6 w-6 -translate-x-1/2 -translate-y-1/2 animate-pulse place-items-center rounded-full border-2 border-pulse-orange bg-void text-xs text-pulse-orange"
+                    style={{ left: `${draftPin.x * 100}%`, top: `${draftPin.y * 100}%` }}>+</span>
                 )}
-              </span>
+              </div>
+              {draftPin && (
+                <div className="mt-2 flex flex-wrap items-end gap-2 rounded-sm border border-pulse-orange/50 p-2">
+                  <Input label="تعليقك على هذه النقطة" className="min-w-64" value={pinText}
+                    onChange={(e) => setPinText(e.target.value)} />
+                  <Button size="xs" disabled={pinText.trim().length < 3}
+                    onClick={() => {
+                      setPins((p) => [...p, { ...draftPin, body: pinText.trim() }]);
+                      setDraftPin(null);
+                      toast.success('ثُبّت تعليقك — سيراه المصمم بمكانه بالضبط');
+                    }}>
+                    ثبّت التعليق
+                  </Button>
+                  <Button variant="ghost" size="xs" onClick={() => setDraftPin(null)}>إلغاء</Button>
+                </div>
+              )}
+              <ul className="mt-3 space-y-1 text-xs text-gray-light">
+                {pins.map((p, i) => (
+                  <li key={i} className="flex items-start gap-1.5">
+                    <MapPin className="mt-0.5 h-3 w-3 shrink-0 text-pulse-orange" aria-hidden />
+                    <span><b className="text-pulse-orange">{i + 1}.</b> {p.body}</span>
+                  </li>
+                ))}
+              </ul>
+              {dlvStatus === 'pending' && (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Button size="sm" onClick={() => { setDlvStatus('approved'); toast.success('اعتمدت التصميم — الفريق أُشعر وسننشره بالجدول'); }}>
+                    <CheckCircle2 className="h-4 w-4" aria-hidden /> اعتماد التصميم
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setChangeNote('')}>
+                    أطلب تعديلات
+                  </Button>
+                </div>
+              )}
+              {changeNote !== null && dlvStatus === 'pending' && (
+                <div className="mt-2 flex flex-wrap items-end gap-2 rounded-sm border border-gray-dark p-2">
+                  <Input label="ما التعديلات المطلوبة؟" className="min-w-72" value={changeNote}
+                    onChange={(e) => setChangeNote(e.target.value)} />
+                  <Button size="xs" disabled={(changeNote ?? '').trim().length < 5}
+                    onClick={() => { setDlvStatus('changes'); setChangeNote(null); toast.success('أُرسلت ملاحظاتك — سيصلك V4 قريباً'); }}>
+                    إرسال
+                  </Button>
+                </div>
+              )}
             </Card>
-          ))}
+          )}
+
+          {tab === 'project' && (
+            <>
+              <Card className="p-4">
+                <p className="mb-3 flex items-center gap-2 font-bold">
+                  <FolderKanban className="h-4 w-4 text-pulse-orange" aria-hidden />
+                  إطلاق الهوية والمنصة الرقمية
+                  <Badge variant="accent" className="ms-2">قيد التنفيذ · 68%</Badge>
+                </p>
+                <div className="space-y-3">
+                  {[
+                    { s: 'التحليل والاستراتيجية', p: 100 },
+                    { s: 'الهوية البصرية', p: 100 },
+                    { s: 'الموقع وصفحات الهبوط', p: 80 },
+                    { s: 'الحملات والإطلاق', p: 35 },
+                    { s: 'القياس والتحسين', p: 0 },
+                  ].map((st) => (
+                    <div key={st.s}>
+                      <div className="mb-1 flex items-center justify-between text-sm">
+                        <span className={st.p === 100 ? 'text-gray-light' : 'font-bold'}>
+                          {st.p === 100 ? '✓ ' : ''}{st.s}
+                        </span>
+                        <span dir="ltr" className="text-xs text-gray-medium">{st.p}%</span>
+                      </div>
+                      <div className="h-1.5 overflow-hidden rounded-full bg-gray-dark">
+                        <div className="h-full rounded-full bg-pulse-orange transition-all"
+                          style={{ width: `${st.p}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+              <Card className="p-4">
+                <p className="mb-2 text-sm font-bold">أحدث المهام</p>
+                {[
+                  { t: 'صفحة هبوط «سجّل اهتمامك»', s: 'مكتملة ✓' },
+                  { t: 'إعداد التتبع والتحويلات', s: 'مكتملة ✓' },
+                  { t: 'تصاميم حملة الإطلاق (٦ إعلانات)', s: 'قيد العمل' },
+                  { t: 'جدولة محتوى الشهر الأول', s: 'قيد العمل' },
+                ].map((x) => (
+                  <div key={x.t} className="mb-1.5 flex items-center gap-2 text-sm">
+                    <span className="text-gray-light">{x.t}</span>
+                    <Badge variant={x.s.includes('✓') ? 'accent' : 'neutral'} className="ms-auto">{x.s}</Badge>
+                  </div>
+                ))}
+              </Card>
+            </>
+          )}
+
+          {tab === 'docs' && (
+            <>
+              {[
+                { n: 'CT-00023', t: 'اتفاقية خدمات', st: contractSigned ? 'موقَّع ✓' : 'بانتظار توقيعك', act: !contractSigned },
+                { n: 'Q-00071', t: 'عرض سعر', st: 'موقَّع ✓' },
+                { n: 'SOW-011', t: 'بيان نطاق عمل', st: approval === 'approved' ? 'معتمد ✓' : 'مرسل' },
+                { n: 'NDA-004', t: 'اتفاقية سرية', st: 'نشط' },
+              ].map((d) => (
+                <Card key={d.n} className="flex flex-wrap items-center gap-2 p-3 text-sm">
+                  <Badge>{d.t}</Badge>
+                  <b dir="ltr">{d.n}</b>
+                  <Badge variant={d.st.includes('✓') || d.st === 'نشط' ? 'accent' : 'neutral'}>{d.st}</Badge>
+                  {contractSigned && d.n === 'CT-00023' && (
+                    <span className="text-xs text-gray-medium">
+                      وقّعه {signerName} · اليوم · سجل الأدلة محفوظ (الوقت + بصمة المحتوى)
+                    </span>
+                  )}
+                  <span className="ms-auto flex gap-2">
+                    <Button variant="ghost" size="xs"
+                      onClick={() => toast.success('في البوابة الحقيقية يُفتح المستند كاملاً بهوية AGMA وختمها للطباعة')}>
+                      معاينة
+                    </Button>
+                    {d.act && <Button size="xs" onClick={() => setSigning(true)}>وقّع</Button>}
+                  </span>
+                </Card>
+              ))}
+            </>
+          )}
+
+          {tab === 'reports' && (
+            <>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {[
+                  { l: 'زيارات هذا الشهر', v: '12,481', d: '+18%' },
+                  { l: 'تسجيلات اهتمام', v: '392', d: '+22%' },
+                  { l: 'تكلفة التسجيل', v: 'SAR 41', d: '-13%' },
+                  { l: 'عائد الإنفاق', v: '3.4x', d: '+0.6' },
+                ].map((k) => (
+                  <Card key={k.l} className="p-4">
+                    <p className="text-xl font-black">{k.v}</p>
+                    <p className="text-xs text-gray-medium">{k.l}</p>
+                    <p className="mt-1 text-xs font-bold text-pulse-orange" dir="ltr">{k.d}</p>
+                  </Card>
+                ))}
+              </div>
+              <Card className="p-4">
+                <p className="mb-3 text-sm font-bold">تسجيلات الاهتمام أسبوعياً</p>
+                <div className="flex h-36 items-end gap-2">
+                  {[34, 51, 42, 68, 79, 74, 92, 88].map((v, i) => (
+                    <div key={i} className="flex-1 rounded-t-sm bg-pulse-orange/80 transition-all hover:bg-pulse-orange"
+                      style={{ height: `${v}%` }} title={`الأسبوع ${i + 1}: ${v}`} />
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-gray-medium">
+                  الأسابيع الثمانية الأخيرة — من التتبع الفعلي لا من تقديرات المنصات.
+                </p>
+              </Card>
+              <Card className="p-4">
+                <p className="mb-2 text-sm font-bold">قمع التحويل</p>
+                {[
+                  { s: 'زيارة الصفحة', v: 12481, p: 100 },
+                  { s: 'بدء التسجيل', v: 1310, p: 44 },
+                  { s: 'تسجيل مكتمل', v: 392, p: 22 },
+                  { s: 'موعد معاينة', v: 87, p: 9 },
+                ].map((f) => (
+                  <div key={f.s} className="mb-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-gray-light">{f.s}</span>
+                      <span dir="ltr" className="text-gray-medium">{f.v.toLocaleString('en-US')}</span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-gray-dark">
+                      <div className="h-full rounded-full bg-pulse-orange" style={{ width: `${f.p}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </Card>
+            </>
+          )}
 
           {tab === 'pay' && (
             <>
-              {invoices.map((d) => {
-                const balance = (d.total ?? 0) - (d.paid ?? 0);
+              {[
+                { n: 'INV-00058', total: 18400, paid: 9200 },
+                { n: 'INV-00051', total: 12000, paid: 12000 },
+              ].map((inv) => {
+                const bal = inv.total - inv.paid;
                 return (
-                  <Card key={d.id} className="flex flex-wrap items-center gap-2 p-3 text-sm">
-                    <b dir="ltr">{d.number}</b>
-                    <span dir="ltr" className="font-bold">SAR {(d.total ?? 0).toLocaleString('en-US')}</span>
-                    <Badge variant={balance <= 0 ? 'accent' : 'outline'}>
-                      {balance <= 0 ? 'مسددة — شكراً لك' : `متبقٍ SAR ${balance.toLocaleString('en-US')}`}
+                  <Card key={inv.n} className="flex flex-wrap items-center gap-2 p-3 text-sm">
+                    <b dir="ltr">{inv.n}</b>
+                    <span dir="ltr" className="font-bold">SAR {inv.total.toLocaleString('en-US')}</span>
+                    <Badge variant={bal <= 0 ? 'accent' : 'outline'}>
+                      {bal <= 0 ? 'مسددة — شكراً لك' : `متبقٍ SAR ${bal.toLocaleString('en-US')}`}
                     </Badge>
                   </Card>
                 );
@@ -204,20 +430,29 @@ function DemoInner() {
         </p>
       </main>
 
-      <DemoSignModal doc={signing} onClose={() => setSigning(null)}
+      <DemoSignModal open={signing} onClose={() => setSigning(false)}
         onSigned={(name) => {
-          setDocs((ds) => ds.map((x) => x.id === signing?.id
-            ? { ...x, status: 'signed', signedBy: name,
-                signedAt: new Date().toISOString().slice(0, 10) } : x));
-          setSigning(null);
-          toast.success('تم التوقيع تجريبياً — في البوابة الحقيقية يُحفظ سجل أدلة كامل (الوقت وبصمة المحتوى)');
+          setContractSigned(true);
+          setSignerName(name);
+          setSigning(false);
+          toast.success('تم التوقيع تجريبياً — في البوابة الحقيقية يُحفظ سجل أدلة كامل');
         }} />
     </div>
   );
 }
 
-function DemoSignModal({ doc, onClose, onSigned }: {
-  doc: DemoDoc | null;
+function ActionRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="mb-2 flex flex-wrap items-center gap-2 rounded-sm border border-gray-dark p-3 text-sm">
+      <FileText className="h-4 w-4 shrink-0 text-pulse-orange" aria-hidden />
+      <span>{label}</span>
+      <span className="ms-auto flex gap-2">{children}</span>
+    </div>
+  );
+}
+
+function DemoSignModal({ open, onClose, onSigned }: {
+  open: boolean;
   onClose: () => void;
   onSigned: (name: string) => void;
 }) {
@@ -232,10 +467,10 @@ function DemoSignModal({ doc, onClose, onSigned }: {
   }
 
   return (
-    <Modal open={!!doc} onClose={onClose} title={`توقيع ${doc?.number ?? ''} (تجريبي)`}>
+    <Modal open={open} onClose={onClose} title="توقيع CT-00023 (تجريبي)">
       <div className="space-y-3">
         <p className="text-xs text-gray-medium">
-          هذه هي تجربة التوقيع نفسها في البوابة الحقيقية — هناك يُحفظ توقيعك مع
+          هذه تجربة التوقيع نفسها في البوابة الحقيقية — هناك يُحفظ توقيعك مع
           الوقت وبصمة محتوى المستند في سجل أدلة غير قابل للتعديل.
         </p>
         <Input label="الاسم الكامل للموقّع" value={name}

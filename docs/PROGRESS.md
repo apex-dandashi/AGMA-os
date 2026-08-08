@@ -74,6 +74,28 @@ stamp/signature + per-user signatures, and «أين أدخل السجل التج
   where to enter client CR/VAT — discoverability fix).
 - Gauntlet green; migration pushed to production.
 
+## Demo 2.0 log (2026-08-08)
+
+Owner: «الديمو ضعيف أبيه كامل — أبي الزبون يجرب سستم يبهره». Full rewrite
+of PortalDemo:
+
+- Personal greeting + 4-stat dashboard strip (project 68%, tasks 34/50,
+  pending decisions live counter, ROAS 3.4x) above 6 tabs.
+- المخرجات: the killer feature finally IN the demo — an inline-SVG
+  Instagram-ad design (real-estate campaign, no external asset) with
+  fully working click-to-pin annotations (draft pin pulse → comment →
+  numbered pin lands), approve / request-changes with note, V1↻V2↻V3
+  history line.
+- المشروع: AGMA-Method stage progress bars (100/100/80/35/0) + latest
+  tasks with statuses.
+- التقارير: KPI cards with deltas, weekly bar chart (CSS bars), 4-step
+  conversion funnel — «من التتبع الفعلي لا من تقديرات المنصات».
+- نظرة عامة: pending-actions hub (approve scope, sign contract, open
+  design) + live activity timeline that UPDATES as the visitor acts
+  (their signature and approval appear at the top as «الآن»).
+- Signing keeps the real canvas pad; everything still 100% browser-local.
+- Gauntlet green; shipped.
+
 ## L11 phone-required log (2026-08-08)
 
 Owner: «اطلب دائماً رقم جوال للعملاء المحتملين» — codified as law L11 in
