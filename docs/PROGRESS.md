@@ -22,6 +22,29 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 9 | Help Centre / RAG + chatbots | ✅ Done (2026-08-09) — KB+RAG core, then Help Center: 14 seeded articles (نصائح تسويقية + دليل النظام), two-tier brain (grounded/general-advice), /help site page, ops help surface |
 | 10 | Employee portal + Analytics + digests | ✅ Done (2026-08-09) — staff lifecycle (auto onboarding/offboarding checklists, welcome emails, 30/60/90 nudges, equipment log, signature generator), client health weekly → scorecard, Analytics dashboard, digest v2 (rocks+issues, WhatsApp-ready) |
 
+## Accounting log (2026-08-09) — الدفتر السعودي الكامل
+
+- `20260809130000_accounting.sql`: chart_of_accounts (Saudi mini CoA,
+  4-digit codes, 5 kinds) · journal_entries/lines with **deferred
+  constraint trigger** enforcing debit=credit per entry at commit ·
+  auto-posting triggers: numbered invoice → Dr AR/Cr revenue+output-VAT,
+  credit note reverses, payment → Dr bank/Cr AR, expense → Dr mapped
+  expense account (category→code fn)/Cr bank · idempotent via unique
+  (source, source_id) · trial_balance(p_to) + vat_return(from,to) as
+  definer fns guarded by is_accounting() (admin/cfo/accountant/auditor)
+  · history backfill loop (prod: clean no-op — zero transactions yet).
+- **invoice_tax_gate v2**: the old gate blocked ANY VAT invoice for a
+  client without a VAT number — the actual root of the owner's B2C
+  complaint. Simplified (taxKind) invoices now pass; standard B2B still
+  hard-requires the client VAT number (proved both directions).
+- FinancePanel «المحاسبة» tab: VAT-return card (quarter default), trial
+  balance with balance badge, manual balanced-only journal form (posted
+  entries immutable — corrections by reversal), recent entries with
+  lines. Non-accounting roles see a polite empty state.
+- Proofs: expense→5300 JE, unbalanced entry rejected (SET CONSTRAINTS
+  IMMEDIATE), balanced manual passes, VAT return 150 for accountant and
+  0 for outsiders (role guard), enum 'paid' backfill bug caught by reset.
+
 ## Finance pack 1 log (2026-08-09) — B2C invoices + FX + procurement
 
 Owner module round, part 1 of: SOPs/Policies · full accounting · B2C

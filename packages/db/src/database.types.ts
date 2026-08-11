@@ -871,6 +871,41 @@ export type Database = {
           },
         ]
       }
+      chart_of_accounts: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          kind: string
+          name_ar: string
+          parent_code: string | null
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          kind: string
+          name_ar: string
+          parent_code?: string | null
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          kind?: string
+          name_ar?: string
+          parent_code?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chart_of_accounts_parent_code_fkey"
+            columns: ["parent_code"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
       chat_reads: {
         Row: {
           last_read_at: string
@@ -3026,6 +3061,83 @@ export type Database = {
             columns: ["raised_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journal_entries: {
+        Row: {
+          created_at: string
+          entry_date: string
+          id: string
+          memo: string
+          posted_by: string | null
+          source: string
+          source_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          entry_date?: string
+          id?: string
+          memo: string
+          posted_by?: string | null
+          source?: string
+          source_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          entry_date?: string
+          id?: string
+          memo?: string
+          posted_by?: string | null
+          source?: string
+          source_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_entries_posted_by_fkey"
+            columns: ["posted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journal_lines: {
+        Row: {
+          account_code: string
+          credit: number
+          debit: number
+          entry_id: string
+          id: string
+        }
+        Insert: {
+          account_code: string
+          credit?: number
+          debit?: number
+          entry_id: string
+          id?: string
+        }
+        Update: {
+          account_code?: string
+          credit?: number
+          debit?: number
+          entry_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_lines_account_code_fkey"
+            columns: ["account_code"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "journal_lines_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
             referencedColumns: ["id"]
           },
         ]
@@ -6328,8 +6440,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      expense_account: { Args: { p_category: string }; Returns: string }
       generate_allocation: { Args: never; Returns: undefined }
       god_mode_active: { Args: never; Returns: boolean }
+      is_accounting: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       is_biller: { Args: never; Returns: boolean }
       is_finance_lead: { Args: never; Returns: boolean }
@@ -6417,7 +6531,26 @@ export type Database = {
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       staff_checkin_nudges: { Args: never; Returns: undefined }
+      trial_balance: {
+        Args: { p_to?: string }
+        Returns: {
+          balance: number
+          code: string
+          credits: number
+          debits: number
+          kind: string
+          name_ar: string
+        }[]
+      }
       valid_signature_image: { Args: { p_data: string }; Returns: boolean }
+      vat_return: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          input_vat: number
+          net_due: number
+          output_vat: number
+        }[]
+      }
     }
     Enums: {
       activity_kind: "call" | "meeting" | "task" | "deadline" | "followup"

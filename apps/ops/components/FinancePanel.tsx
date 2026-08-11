@@ -76,6 +76,7 @@ export default function FinancePanel() {
           { key: 'wallets', label: 'محافظ الإعلانات' },
           { key: 'revenue', label: 'الإيراد' },
           { key: 'allocations', label: 'توزيع الدخل' },
+          { key: 'accounting', label: 'المحاسبة' },
         ]}
       />
       <div className="mt-4">
@@ -86,6 +87,7 @@ export default function FinancePanel() {
         {tab === 'wallets' && <WalletsTab />}
         {tab === 'revenue' && <RevenueTab />}
         {tab === 'allocations' && <AllocationsTab />}
+        {tab === 'accounting' && <AccountingTab />}
       </div>
     </div>
   );
@@ -1490,6 +1492,226 @@ function FxConverter({ rates, canEdit, invalidateKey }: {
           }} />
       )}
       <Hint text="الدولار مربوط رسمياً بـ ٣٫٧٥ ريال. المشتريات بعملة أجنبية تُقيّم بالمكافئ الريالي تلقائياً (حد الألف والمصروف المسجل). تعديل الأسعار للمدير المالي." />
+    </Card>
+  );
+}
+
+/* -------------------------------------------------------------- accounting */
+/** المحاسبة (L 2026-08-09): دفتر قيود مزدوجة يترحل تلقائياً من كل حركة —
+ *  ميزان مراجعة، إقرار ضريبة، وقيود يدوية متوازنة للمحاسب. */
+const ACC_KIND_AR: Record<string, string> = {
+  asset: 'أصول', liability: 'التزامات', equity: 'حقوق ملكية',
+  revenue: 'إيرادات', expense: 'مصروفات',
+};
+
+function AccountingTab() {
+  const key = ['accounting'];
+  const today = new Date().toISOString().slice(0, 10);
+  const qStart = (() => {
+    const d = new Date();
+    d.setMonth(Math.floor(d.getMonth() / 3) * 3, 1);
+    return d.toISOString().slice(0, 10);
+  })();
+  const [vatFrom, setVatFrom] = useState(qStart);
+  const [vatTo, setVatTo] = useState(today);
+
+  const { data, isLoading } = useQuery({
+    queryKey: [...key, vatFrom, vatTo],
+    queryFn: async () => {
+      const s = getSupabase();
+      const [tb, vat, entries, accounts] = await Promise.all([
+        s.rpc('trial_balance', { p_to: today }),
+        s.rpc('vat_return', { p_from: vatFrom, p_to: vatTo }),
+        s.from('journal_entries').select('*, journal_lines(*)')
+          .order('created_at', { ascending: false }).limit(15),
+        s.from('chart_of_accounts').select('*').eq('active', true).order('code'),
+      ]);
+      return {
+        tb: tb.data ?? [], vat: vat.data?.[0] ?? null,
+        entries: entries.data ?? [], accounts: accounts.data ?? [],
+      };
+    },
+  });
+
+  if (isLoading || !data) return <SkeletonList rows={6} />;
+  if (data.accounts.length === 0) {
+    return (
+      <EmptyState icon={<Scale className="h-8 w-8" aria-hidden />} title="الدفتر لأهل الاختصاص"
+        hint="المحاسبة يراها: مدير النظام، المدير المالي، المحاسب، والمدقق." />
+    );
+  }
+
+  const totDebit = data.tb.reduce((s, r) => s + Number(r.debits), 0);
+  const totCredit = data.tb.reduce((s, r) => s + Number(r.credits), 0);
+
+  return (
+    <div className="space-y-6">
+      <Card className="p-4">
+        <h3 className="mb-2 flex items-center gap-2 text-sm font-bold">
+          إقرار ضريبة القيمة المضافة
+          <Hint text="مخرجات (ضريبة فواتيرك المرقمة) − مدخلات (ضريبة مشترياتك القابلة للخصم) = الصافي المستحق لهيئة الزكاة والضريبة والجمارك. الافتراضي: الربع الحالي." />
+        </h3>
+        <div className="flex flex-wrap items-end gap-3 text-sm">
+          <Input label="من" type="date" dir="ltr" value={vatFrom}
+            onChange={(e) => setVatFrom(e.target.value)} className="w-40" />
+          <Input label="إلى" type="date" dir="ltr" value={vatTo}
+            onChange={(e) => setVatTo(e.target.value)} className="w-40" />
+          {data.vat && (
+            <div className="flex flex-wrap gap-4 pb-1">
+              <span>المخرجات: <b dir="ltr">SAR {fmt(Number(data.vat.output_vat))}</b></span>
+              <span>المدخلات: <b dir="ltr">SAR {fmt(Number(data.vat.input_vat))}</b></span>
+              <span className="text-pulse-orange">
+                الصافي المستحق: <b dir="ltr">SAR {fmt(Number(data.vat.net_due))}</b>
+              </span>
+            </div>
+          )}
+        </div>
+      </Card>
+
+      <section>
+        <h3 className="mb-2 flex items-center gap-2 text-sm font-bold">
+          ميزان المراجعة (حتى اليوم)
+          <Hint text="أرصدة كل الحسابات المتحركة — مجموع المدين يساوي الدائن دائماً، والقاعدة نفسها ترفض أي قيد أعرج." />
+          <Badge variant={Math.abs(totDebit - totCredit) < 0.01 ? 'accent' : 'outline'}>
+            {Math.abs(totDebit - totCredit) < 0.01 ? 'موزون ✓' : 'فرق!'}
+          </Badge>
+        </h3>
+        {data.tb.length === 0 ? (
+          <p className="text-sm text-gray-medium">لا حركات بعد — القيود تتولد تلقائياً مع أول فاتورة أو دفعة أو مصروف.</p>
+        ) : (
+          <Table head={['الحساب', 'النوع', 'مدين', 'دائن', 'الرصيد']}>
+            {data.tb.map((r) => (
+              <Tr key={r.code}>
+                <Td className="font-medium"><span dir="ltr">{r.code}</span> · {r.name_ar}</Td>
+                <Td className="text-gray-light">{ACC_KIND_AR[r.kind] ?? r.kind}</Td>
+                <Td dir="ltr">{fmt(Number(r.debits))}</Td>
+                <Td dir="ltr">{fmt(Number(r.credits))}</Td>
+                <Td dir="ltr" className={Number(r.balance) < 0 ? 'text-gray-light' : ''}>
+                  {fmt(Number(r.balance))}
+                </Td>
+              </Tr>
+            ))}
+            <Tr>
+              <Td className="font-bold">الإجمالي</Td><Td />
+              <Td dir="ltr" className="font-bold">{fmt(totDebit)}</Td>
+              <Td dir="ltr" className="font-bold">{fmt(totCredit)}</Td>
+              <Td />
+            </Tr>
+          </Table>
+        )}
+      </section>
+
+      <ManualJournalForm accounts={data.accounts} invalidateKey={key} />
+
+      <section>
+        <h3 className="mb-2 text-sm font-bold">آخر القيود</h3>
+        <div className="space-y-2">
+          {data.entries.map((e) => (
+            <Card key={e.id} className="p-3 text-sm">
+              <div className="flex flex-wrap items-center gap-2">
+                <span dir="ltr" className="text-gray-medium">{e.entry_date}</span>
+                <b>{e.memo}</b>
+                <Badge variant="outline">{
+                  { manual: 'يدوي', invoice: 'فاتورة', credit_note: 'إشعار دائن',
+                    payment: 'دفعة', expense: 'مصروف' }[e.source] ?? e.source
+                }</Badge>
+              </div>
+              <div className="mt-1.5 space-y-0.5 text-xs text-gray-light">
+                {(e.journal_lines as Tables<'journal_lines'>[]).map((l) => (
+                  <div key={l.id} className="flex gap-3">
+                    <span className="w-64">{data.accounts.find((a) => a.code === l.account_code)?.name_ar ?? l.account_code}</span>
+                    <span dir="ltr" className="w-24 text-start">{Number(l.debit) > 0 ? fmt(Number(l.debit)) : ''}</span>
+                    <span dir="ltr" className="w-24 text-start text-gray-medium">{Number(l.credit) > 0 ? fmt(Number(l.credit)) : ''}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function ManualJournalForm({ accounts, invalidateKey }: {
+  accounts: Tables<'chart_of_accounts'>[];
+  invalidateKey: string[];
+}) {
+  const [memo, setMemo] = useState('');
+  const [lines, setLines] = useState([
+    { account_code: '5900', debit: 0, credit: 0 },
+    { account_code: '1110', debit: 0, credit: 0 },
+  ]);
+  const totD = lines.reduce((s, l) => s + Number(l.debit || 0), 0);
+  const totC = lines.reduce((s, l) => s + Number(l.credit || 0), 0);
+  const balanced = totD > 0 && Math.abs(totD - totC) < 0.005;
+
+  const post = useAppMutation(
+    async () => {
+      const s = getSupabase();
+      const { data: u } = await s.auth.getUser();
+      const { data: je, error } = await s.from('journal_entries')
+        .insert({ memo: memo.trim(), source: 'manual', posted_by: u.user!.id })
+        .select('id').single();
+      if (error) throw new Error(error.message);
+      const { error: lerr } = await s.from('journal_lines').insert(
+        lines.filter((l) => l.debit > 0 || l.credit > 0)
+          .map((l) => ({ entry_id: je.id, ...l })) as never);
+      if (lerr) throw new Error(lerr.message);
+      setMemo('');
+      setLines([{ account_code: '5900', debit: 0, credit: 0 }, { account_code: '1110', debit: 0, credit: 0 }]);
+    },
+    { invalidate: [invalidateKey], successMessage: 'رُحّل القيد' }
+  );
+
+  const leaf = accounts.filter((a) => a.parent_code);
+
+  return (
+    <Card className="p-4">
+      <h3 className="mb-2 flex items-center gap-2 text-sm font-bold">
+        قيد يدوي
+        <Hint text="للتسويات والإهلاك والرواتب المستحقة… القيد لا يُحفظ إلا متوازناً، والمرحّل لا يُعدل — التصحيح بقيد عكسي." />
+      </h3>
+      <div className="space-y-2">
+        <Input label="البيان" value={memo} onChange={(e) => setMemo(e.target.value)}
+          placeholder="مثال: إهلاك أجهزة الربع الثالث" />
+        {lines.map((l, i) => (
+          <div key={i} className="flex flex-wrap gap-2">
+            <Select value={l.account_code} aria-label={`حساب السطر ${i + 1}`}
+              onChange={(e) => setLines(lines.map((x, j) => j === i ? { ...x, account_code: e.target.value } : x))}
+              className="min-w-56 flex-1">
+              {leaf.map((a) => (
+                <option key={a.code} value={a.code}>{a.code} · {a.name_ar}</option>
+              ))}
+            </Select>
+            <Input type="number" dir="ltr" placeholder="مدين" aria-label={`مدين ${i + 1}`}
+              value={l.debit || ''} className="w-28"
+              onChange={(e) => setLines(lines.map((x, j) => j === i
+                ? { ...x, debit: Number(e.target.value), credit: 0 } : x))} />
+            <Input type="number" dir="ltr" placeholder="دائن" aria-label={`دائن ${i + 1}`}
+              value={l.credit || ''} className="w-28"
+              onChange={(e) => setLines(lines.map((x, j) => j === i
+                ? { ...x, credit: Number(e.target.value), debit: 0 } : x))} />
+          </div>
+        ))}
+        <div className="flex flex-wrap items-center gap-3">
+          <Button variant="ghost" size="xs"
+            onClick={() => setLines([...lines, { account_code: '5900', debit: 0, credit: 0 }])}>
+            + سطر
+          </Button>
+          <span className={`text-xs ${balanced ? 'text-green-500' : 'text-gray-medium'}`} dir="ltr">
+            مدين {fmt(totD)} / دائن {fmt(totC)}
+          </span>
+          <Button size="sm" loading={post.isPending}
+            disabled={!balanced || memo.trim().length < 2}
+            onClick={() => post.mutate(undefined as never)}>
+            ترحيل القيد
+          </Button>
+          {!balanced && totD + totC > 0 && (
+            <span className="text-xs text-pulse-orange">القيد غير متوازن</span>
+          )}
+        </div>
+      </div>
     </Card>
   );
 }
