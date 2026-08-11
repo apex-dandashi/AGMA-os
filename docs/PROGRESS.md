@@ -22,6 +22,32 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 9 | Help Centre / RAG + chatbots | ✅ Done (2026-08-09) — KB+RAG core, then Help Center: 14 seeded articles (نصائح تسويقية + دليل النظام), two-tier brain (grounded/general-advice), /help site page, ops help surface |
 | 10 | Employee portal + Analytics + digests | ✅ Done (2026-08-09) — staff lifecycle (auto onboarding/offboarding checklists, welcome emails, 30/60/90 nudges, equipment log, signature generator), client health weekly → scorecard, Analytics dashboard, digest v2 (rocks+issues, WhatsApp-ready) |
 
+## Finance pack 1 log (2026-08-09) — B2C invoices + FX + procurement
+
+Owner module round, part 1 of: SOPs/Policies · full accounting · B2C
+invoices · non-admin staff · procurement (2-quote rule >1000 SAR) ·
+USD→SAR converter · meetings AI.
+
+- **ZATCA invoice kinds**: found ALL invoices were captioned «فاتورة
+  ضريبية مبسطة» even for VAT-registered clients. InvoicePayload +=
+  taxKind standard|simplified + recipientVatNumber; renderer shows the
+  client VAT number (sidebar) on standard and switches the QR caption;
+  auto-default from client.vat_number at all 3 creation paths; draft
+  toggle «ضريبية B2B / مبسطة B2C» (standard requires client VAT number).
+- `20260809120000_finance_pack.sql`: **fx_rates** (SAR/USD 3.75 peg/
+  EUR/AED; team reads, admin+cfo update) + **purchases** with
+  purchase_guard trigger: approving >1000 SAR-equivalent requires ≥2
+  comparison quotes OR documented exception; approval/rejection RLS'd
+  to admin+cfo; requester edits own pending only; «تم الشراء» auto-
+  creates the expense at the SAR equivalent (proved: $300 → SAR 1125).
+- FinancePanel: «المشتريات» tab (request form with live >1000 warning,
+  quotes/exception editor, approve/reject/purchased actions) +
+  FxConverter card (live conversion, finance-editable rates).
+- KB article شحن مع الميزة. RLS section: executor can't approve or
+  touch fx; client sees nothing. Lesson re-learned twice this round:
+  regen database.types.ts right after every migration; and a failing
+  statement inside a DO block rolls back its fixtures (again).
+
 ## L12 round log (2026-08-09) — production services + free service adder
 
 Owner (screenshot of ScopeBuilder): «يجب دائما اضافة خدمات اخرى — اضف

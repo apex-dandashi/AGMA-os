@@ -30,6 +30,12 @@ export interface InvoicePayload {
   /** ISO issue timestamp — when present on a numbered invoice, the ZATCA
    *  Phase-1 TLV QR renders (mandatory on Saudi tax invoices). */
   issuedAtIso?: string;
+  /** ZATCA: 'standard' = فاتورة ضريبية B2B (تتطلب الرقم الضريبي للعميل)؛
+   *  'simplified' = فاتورة ضريبية مبسطة B2C (بلا رقم ضريبي للعميل).
+   *  غيابه = simplified (توافق مع الفواتير القديمة). */
+  taxKind?: 'standard' | 'simplified';
+  /** الرقم الضريبي للعميل — إلزامي العرض على الفاتورة القياسية. */
+  recipientVatNumber?: string;
 }
 
 export function computeInvoiceTotal(items: QuoteItem[]): number {
@@ -152,6 +158,11 @@ export function renderInvoice(payload: InvoicePayload): string {
       <h5>موجَّهة إلى</h5>
       <div class="kv"><b>${esc(payload.recipientName)}</b>
         ${payload.recipientCompany ? `<label>${esc(payload.recipientCompany)}</label>` : ''}</div>
+      ${
+        payload.taxKind === 'standard' && payload.recipientVatNumber
+          ? `<div class="kv"><label>الرقم الضريبي للعميل</label><b dir="ltr">${esc(payload.recipientVatNumber)}</b></div>`
+          : ''
+      }
       <div class="kv"><label>المشروع</label><b>${esc(payload.projectName)}</b></div>
       ${
         payload.relatedNumber
@@ -188,7 +199,7 @@ export function renderInvoice(payload: InvoicePayload): string {
       ${payload.renewalNote ? `<div class="renewal">${esc(payload.renewalNote)}</div>` : ''}
       ${zatcaQr ? `<div style="display:flex;align-items:center;gap:5mm;margin-top:8mm">
         <div style="width:26mm;height:26mm">${zatcaQr}</div>
-        <p style="font-size:9.5px;color:${c.muted}">فاتورة ضريبية مبسطة — رمز الاستجابة وفق متطلبات
+        <p style="font-size:9.5px;color:${c.muted}">${payload.taxKind === 'standard' ? 'فاتورة ضريبية' : 'فاتورة ضريبية مبسطة'} — رمز الاستجابة وفق متطلبات
         هيئة الزكاة والضريبة والجمارك (المرحلة الأولى)، الرقم الضريبي ${toArabicDigits(COMPANY.taxNumber)}.</p>
       </div>` : ''}
       <p class="closing">«${COMPANY.closingLine}»</p>

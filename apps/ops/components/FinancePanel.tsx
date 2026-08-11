@@ -72,6 +72,7 @@ export default function FinancePanel() {
           { key: 'invoices', label: 'الفواتير' },
           { key: 'retainers', label: 'الاشتراكات' },
           { key: 'expenses', label: 'المصروفات' },
+          { key: 'purchases', label: 'المشتريات' },
           { key: 'wallets', label: 'محافظ الإعلانات' },
           { key: 'revenue', label: 'الإيراد' },
           { key: 'allocations', label: 'توزيع الدخل' },
@@ -81,6 +82,7 @@ export default function FinancePanel() {
         {tab === 'invoices' && <InvoicesTab />}
         {tab === 'retainers' && <RetainersTab />}
         {tab === 'expenses' && <ExpensesTab />}
+        {tab === 'purchases' && <PurchasesTab />}
         {tab === 'wallets' && <WalletsTab />}
         {tab === 'revenue' && <RevenueTab />}
         {tab === 'allocations' && <AllocationsTab />}
@@ -202,6 +204,28 @@ function InvoicesTab() {
     }
   );
 
+  // تبديل نوع الفاتورة الضريبية على المسودة (L: القياسية تتطلب رقم العميل الضريبي)
+  const switchTaxKind = useAppMutation(
+    async (doc: Doc) => {
+      const p = doc.payload as unknown as InvoicePayload;
+      if (p.taxKind === 'standard') {
+        await getSupabase().from('documents').update({
+          payload: { ...p, taxKind: 'simplified', recipientVatNumber: undefined } as never,
+        }).eq('id', doc.id);
+        return;
+      }
+      const vat = (clients ?? []).find((c) => c.id === doc.client_id)?.vat_number;
+      if (!vat) {
+        throw new Error('الفاتورة القياسية B2B تتطلب الرقم الضريبي للعميل — أضفه في ملف العميل أولاً');
+      }
+      const { error } = await getSupabase().from('documents').update({
+        payload: { ...p, taxKind: 'standard', recipientVatNumber: vat } as never,
+      }).eq('id', doc.id);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [keys.documents], successMessage: 'تبدّل نوع الفاتورة' }
+  );
+
   function openPrint(doc: Doc) {
     const payload = {
       ...(doc.payload as unknown as InvoicePayload),
@@ -277,6 +301,19 @@ function InvoicesTab() {
                   <Button variant="ghost" size="xs" onClick={() => openPrint(doc)}>
                     معاينة / طباعة
                   </Button>
+                  {doc.status === 'draft' && doc.type === 'invoice' && (() => {
+                    const p = doc.payload as unknown as InvoicePayload;
+                    const isStd = p.taxKind === 'standard';
+                    return (
+                      <Button variant="ghost" size="xs"
+                        title={isStd
+                          ? 'فاتورة ضريبية B2B تحمل الرقم الضريبي للعميل — بدّل لمبسطة B2C'
+                          : 'فاتورة ضريبية مبسطة B2C بلا رقم ضريبي للعميل — بدّل لقياسية B2B (تتطلب رقم العميل الضريبي)'}
+                        onClick={() => switchTaxKind.mutate(doc)}>
+                        {isStd ? 'ضريبية B2B' : 'مبسطة B2C'}
+                      </Button>
+                    );
+                  })()}
                   {doc.status === 'draft' && (
                     <Button size="xs" onClick={() => setFinalizing(doc)}>اعتماد وترقيم</Button>
                   )}
@@ -377,6 +414,8 @@ function NewInvoiceModal({ open, onClose }: { open: boolean; onClose: () => void
       const quote = eligibleQuotes.find((q) => q.id === quoteId);
       if (!quote) throw new Error('اختر عرض سعر');
       const qp = quote.payload as unknown as QuotePayload;
+      // ZATCA: عميل له رقم ضريبي ← فاتورة قياسية B2B تحمل رقمه؛ وإلا مبسطة B2C
+      const clientVat = (clients ?? []).find((c) => c.id === quote.client_id)?.vat_number ?? null;
       const payload: InvoicePayload = {
         kind: 'invoice',
         number: null,
@@ -390,6 +429,8 @@ function NewInvoiceModal({ open, onClose }: { open: boolean; onClose: () => void
         vatEnabled: qp.vatEnabled ?? false,
         vatAmount: qp.vatAmount,
         paymentAccount: qp.paymentAccount,
+        taxKind: clientVat ? 'standard' : 'simplified',
+        recipientVatNumber: clientVat ?? undefined,
       };
       const { error } = await getSupabase().from('documents').insert({
         type: 'invoice',
@@ -555,6 +596,8 @@ function RetainersTab() {
           bankName: account.bank_name,
           beneficiaryName: account.beneficiary_name,
         },
+        taxKind: client?.vat_number ? 'standard' : 'simplified',
+        recipientVatNumber: client?.vat_number ?? undefined,
       };
       const { error } = await supabase.from('documents').insert({
         type: 'invoice',
@@ -1224,5 +1267,229 @@ function SpendModal({ wallet, onClose, invalidate }:
         </Button>
       </div>
     </Modal>
+  );
+}
+
+/* -------------------------------------------------------------- purchases */
+/** المشتريات (L 2026-08-09): فوق ١٠٠٠ ريال بالمكافئ ← عرضا سعر أو استثناء
+ *  موثق — القاعدة يفرضها محفز القاعدة، والاعتماد للمدير/المالي فقط (RLS). */
+const PURCHASE_STATUS_AR: Record<string, { label: string; variant: 'neutral' | 'accent' | 'outline' }> = {
+  pending: { label: 'بانتظار الاعتماد', variant: 'outline' },
+  approved: { label: 'معتمد', variant: 'accent' },
+  rejected: { label: 'مرفوض', variant: 'neutral' },
+  purchased: { label: 'تم الشراء', variant: 'neutral' },
+};
+
+type PurchaseQuote = { vendor: string; amount: number; note?: string };
+
+function PurchasesTab() {
+  const key = ['purchases'];
+  const { data, isLoading } = useQuery({
+    queryKey: key,
+    queryFn: async () => {
+      const s = getSupabase();
+      const [purchases, rates, me] = await Promise.all([
+        s.from('purchases').select('*').order('created_at', { ascending: false }),
+        s.from('fx_rates').select('*'),
+        s.auth.getUser().then(async ({ data: u }) => u.user
+          ? (await s.from('profiles').select('id, role').eq('id', u.user.id).single()).data
+          : null),
+      ]);
+      return { purchases: purchases.data ?? [], rates: rates.data ?? [], me };
+    },
+  });
+
+  const [title, setTitle] = useState('');
+  const [vendor, setVendor] = useState('');
+  const [amount, setAmount] = useState('');
+  const [currency, setCurrency] = useState('SAR');
+  const [openId, setOpenId] = useState<string | null>(null);
+
+  const createReq = useAppMutation(
+    async () => {
+      const { data: u } = await getSupabase().auth.getUser();
+      const { error } = await getSupabase().from('purchases').insert({
+        title: title.trim(), vendor: vendor.trim() || null,
+        amount: Number(amount), currency, requested_by: u.user!.id,
+      });
+      if (error) throw new Error(error.message);
+      setTitle(''); setVendor(''); setAmount('');
+    },
+    { invalidate: [key], successMessage: 'رُفع طلب الشراء' }
+  );
+
+  const patch = useAppMutation(
+    async ({ id, p }: { id: string; p: Record<string, unknown> }) => {
+      const { error } = await getSupabase().from('purchases').update(p as never).eq('id', id);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [key] }
+  );
+
+  if (isLoading || !data) return <SkeletonList rows={5} />;
+  const rate = (code: string) => Number(data.rates.find((r) => r.code === code)?.rate_to_sar ?? 1);
+  const canDecide = data.me?.role === 'admin' || data.me?.role === 'cfo';
+
+  return (
+    <div className="space-y-5">
+      <FxConverter rates={data.rates} canEdit={canDecide} invalidateKey={key} />
+
+      <form className="flex flex-wrap items-end gap-2 rounded-sm border border-gray-dark p-3"
+        onSubmit={(e) => { e.preventDefault(); if (title.trim() && Number(amount) > 0) createReq.mutate(undefined as never); }}>
+        <Input label="ماذا نشتري؟" value={title} onChange={(e) => setTitle(e.target.value)} className="w-64" />
+        <Input label="المورد" value={vendor} onChange={(e) => setVendor(e.target.value)} className="w-40" />
+        <Input label="المبلغ" type="number" dir="ltr" value={amount}
+          onChange={(e) => setAmount(e.target.value)} className="w-28" />
+        <Select label="العملة" value={currency} onChange={(e) => setCurrency(e.target.value)} className="w-24">
+          {data.rates.map((r) => <option key={r.code} value={r.code}>{r.code}</option>)}
+        </Select>
+        <Button type="submit" size="sm" loading={createReq.isPending}
+          disabled={!title.trim() || !(Number(amount) > 0)}>
+          طلب شراء
+        </Button>
+        {Number(amount) > 0 && Number(amount) * rate(currency) > 1000 && (
+          <span className="text-xs text-pulse-orange">
+            فوق ١٠٠٠ ريال — سيتطلب الاعتماد عرضي سعر أو سبب استثناء
+          </span>
+        )}
+      </form>
+
+      {data.purchases.length === 0 ? (
+        <EmptyState icon={<Receipt className="h-8 w-8" aria-hidden />} title="لا طلبات شراء"
+          hint="أي عضو يرفع طلباً — والاعتماد للمدير أو المدير المالي." />
+      ) : data.purchases.map((p) => {
+        const quotes = (p.quotes as unknown as PurchaseQuote[] | null) ?? [];
+        const sar = Number(p.amount) * rate(p.currency);
+        const needsQuotes = sar > 1000 && p.status === 'pending';
+        const st = PURCHASE_STATUS_AR[p.status] ?? PURCHASE_STATUS_AR.pending;
+        return (
+          <Card key={p.id} className="p-3 text-sm">
+            <div className="flex flex-wrap items-center gap-2">
+              <b>{p.title}</b>
+              {p.vendor && <span className="text-gray-medium">{p.vendor}</span>}
+              <span dir="ltr" className="font-bold">{fmt(Number(p.amount))} {p.currency}</span>
+              {p.currency !== 'SAR' && (
+                <span dir="ltr" className="text-xs text-gray-medium">≈ SAR {fmt(sar)}</span>
+              )}
+              <Badge variant={st.variant}>{st.label}</Badge>
+              {quotes.length > 0 && <Badge variant="outline">{quotes.length} عروض</Badge>}
+              <span className="ms-auto flex gap-1.5">
+                {p.status === 'pending' && (
+                  <Button variant="ghost" size="xs" onClick={() => setOpenId(openId === p.id ? null : p.id)}>
+                    {openId === p.id ? 'إغلاق' : needsQuotes ? 'عروض الأسعار / الاستثناء' : 'تفاصيل'}
+                  </Button>
+                )}
+                {canDecide && p.status === 'pending' && (
+                  <>
+                    <Button size="xs" loading={patch.isPending}
+                      onClick={() => patch.mutate({ id: p.id, p: { status: 'approved' } })}>
+                      اعتماد
+                    </Button>
+                    <Button variant="ghost" size="xs"
+                      onClick={() => patch.mutate({ id: p.id, p: { status: 'rejected' } })}>
+                      رفض
+                    </Button>
+                  </>
+                )}
+                {canDecide && p.status === 'approved' && (
+                  <Button variant="outline" size="xs" loading={patch.isPending}
+                    onClick={() => patch.mutate({ id: p.id, p: { status: 'purchased' } })}>
+                    تم الشراء (يسجل مصروفاً)
+                  </Button>
+                )}
+              </span>
+            </div>
+            {openId === p.id && p.status === 'pending' && (
+              <QuotesEditor purchase={p} quotes={quotes}
+                onSave={(q, exc) => patch.mutate({ id: p.id, p: { quotes: q as never, exception_reason: exc || null } })} />
+            )}
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
+function QuotesEditor({ purchase, quotes, onSave }: {
+  purchase: Tables<'purchases'>;
+  quotes: PurchaseQuote[];
+  onSave: (q: PurchaseQuote[], exception: string) => void;
+}) {
+  const [rows, setRows] = useState<PurchaseQuote[]>(
+    quotes.length ? quotes : [{ vendor: '', amount: 0 }, { vendor: '', amount: 0 }]);
+  const [exception, setException] = useState(purchase.exception_reason ?? '');
+  return (
+    <div className="mt-3 space-y-2 rounded-sm border border-gray-dark bg-gray-dark/20 p-3">
+      <p className="text-xs text-gray-light">
+        عروض الأسعار المقارنة — أو اترك سبب استثناء واضحاً (مورد وحيد، عقد قائم…):
+      </p>
+      {rows.map((r, i) => (
+        <div key={i} className="flex gap-2">
+          <Input value={r.vendor} placeholder={`المورد ${i + 1}`} aria-label={`مورد العرض ${i + 1}`}
+            onChange={(e) => setRows(rows.map((x, j) => j === i ? { ...x, vendor: e.target.value } : x))} />
+          <Input type="number" dir="ltr" value={r.amount || ''} placeholder="المبلغ"
+            aria-label={`مبلغ العرض ${i + 1}`} className="w-32"
+            onChange={(e) => setRows(rows.map((x, j) => j === i ? { ...x, amount: Number(e.target.value) } : x))} />
+        </div>
+      ))}
+      <div className="flex flex-wrap items-center gap-2">
+        <Button variant="ghost" size="xs" onClick={() => setRows([...rows, { vendor: '', amount: 0 }])}>
+          + عرض ثالث
+        </Button>
+        <Input value={exception} placeholder="سبب الاستثناء (بديل عن العروض)"
+          aria-label="سبب الاستثناء" className="min-w-64 flex-1"
+          onChange={(e) => setException(e.target.value)} />
+        <Button size="xs" onClick={() =>
+          onSave(rows.filter((r) => r.vendor.trim() && r.amount > 0), exception.trim())}>
+          حفظ
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/** محول العملة — الدولار مربوط ٣٫٧٥ (L 2026-08-09): للباقات والاشتراكات الأجنبية */
+function FxConverter({ rates, canEdit, invalidateKey }: {
+  rates: Tables<'fx_rates'>[];
+  canEdit: boolean;
+  invalidateKey: string[];
+}) {
+  const [amt, setAmt] = useState('100');
+  const [code, setCode] = useState('USD');
+  const rate = Number(rates.find((r) => r.code === code)?.rate_to_sar ?? 1);
+  const updateRate = useAppMutation(
+    async ({ c, v }: { c: string; v: number }) => {
+      const { error } = await getSupabase().from('fx_rates')
+        .update({ rate_to_sar: v }).eq('code', c);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [invalidateKey], successMessage: 'حُدث السعر' }
+  );
+  return (
+    <Card className="flex flex-wrap items-center gap-3 p-3 text-sm">
+      <RefreshCw className="h-4 w-4 text-pulse-orange" aria-hidden />
+      <b>محول العملة</b>
+      <div dir="ltr" className="flex items-center gap-2">
+        <Input type="number" value={amt} aria-label="المبلغ الأجنبي" className="w-28"
+          onChange={(e) => setAmt(e.target.value)} />
+        <Select value={code} aria-label="العملة" onChange={(e) => setCode(e.target.value)} className="w-24">
+          {rates.filter((r) => r.code !== 'SAR').map((r) => (
+            <option key={r.code} value={r.code}>{r.code}</option>
+          ))}
+        </Select>
+        <span className="text-gray-medium">=</span>
+        <b className="text-pulse-orange">SAR {fmt(Number(amt || 0) * rate)}</b>
+      </div>
+      <span className="text-xs text-gray-medium" dir="ltr">1 {code} = {rate} SAR</span>
+      {canEdit && (
+        <Input type="number" dir="ltr" step="0.01" defaultValue={rate} aria-label="تعديل السعر"
+          className="w-24 py-1 text-xs"
+          onBlur={(e) => {
+            const v = Number(e.target.value);
+            if (v > 0 && v !== rate) updateRate.mutate({ c: code, v });
+          }} />
+      )}
+      <Hint text="الدولار مربوط رسمياً بـ ٣٫٧٥ ريال. المشتريات بعملة أجنبية تُقيّم بالمكافئ الريالي تلقائياً (حد الألف والمصروف المسجل). تعديل الأسعار للمدير المالي." />
+    </Card>
   );
 }

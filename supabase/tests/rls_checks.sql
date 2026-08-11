@@ -432,4 +432,43 @@ begin
   delete from public.client_health where score = 88;
 end $$;
 
+-- ---------- المشتريات وأسعار الصرف (حزمة المالية ١) ---------------------------
+do $$
+declare v_pid uuid; n int;
+begin
+  -- المنفذ يرفع طلباً لكنه لا يعتمد ولا يعدل أسعار الصرف
+  perform set_config('request.jwt.claims',
+    '{"sub":"00000000-0000-0000-0000-0000000000e1","role":"authenticated"}', true);
+  perform set_config('role', 'authenticated', true);
+  insert into public.purchases (title, amount, requested_by)
+  values ('حزام: جهاز', 5000, '00000000-0000-0000-0000-0000000000e1')
+  returning id into v_pid;
+  -- محاولة الاعتماد كمنفذ تُرفض (حارس العروض أو with-check للسياسة — كلاهما يرمي)
+  begin
+    update public.purchases set status = 'approved' where id = v_pid;
+  exception when others then null;
+  end;
+  perform set_config('role', 'postgres', true);
+  select count(*) into n from public.purchases where id = v_pid and status = 'pending';
+  if n <> 1 then raise exception 'executor: purchase approval must be denied'; end if;
+  update public.fx_rates set rate_to_sar = 9 where code = 'USD';
+  -- (كمنفذ) تحديث السعر لا يمر
+  perform set_config('role', 'authenticated', true);
+  update public.fx_rates set rate_to_sar = 5 where code = 'USD';
+  perform set_config('role', 'postgres', true);
+  select count(*) into n from public.fx_rates where code = 'USD' and rate_to_sar = 5;
+  if n <> 0 then raise exception 'executor: fx update must be denied'; end if;
+  update public.fx_rates set rate_to_sar = 3.75 where code = 'USD';
+
+  -- العميل لا يرى المشتريات إطلاقاً
+  perform set_config('request.jwt.claims',
+    '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated"}', true);
+  perform set_config('role', 'authenticated', true);
+  select count(*) into n from public.purchases;
+  if n <> 0 then raise exception 'client: purchases must be hidden, got %', n; end if;
+
+  perform set_config('role', 'postgres', true);
+  delete from public.purchases where id = v_pid;
+end $$;
+
 select 'RLS_CHECKS_PASSED' as result;

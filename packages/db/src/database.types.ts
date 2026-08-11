@@ -2672,6 +2672,24 @@ export type Database = {
           },
         ]
       }
+      fx_rates: {
+        Row: {
+          code: string
+          rate_to_sar: number
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          rate_to_sar: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          rate_to_sar?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ims_controls: {
         Row: {
           applicability_reason: string | null
@@ -4554,6 +4572,89 @@ export type Database = {
             columns: ["roadmap_id"]
             isOneToOne: false
             referencedRelation: "roadmaps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchases: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          decided_at: string | null
+          decided_by: string | null
+          exception_reason: string | null
+          expense_id: string | null
+          id: string
+          note: string | null
+          quotes: Json
+          requested_by: string
+          status: Database["public"]["Enums"]["purchase_status"]
+          title: string
+          updated_at: string
+          vendor: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          exception_reason?: string | null
+          expense_id?: string | null
+          id?: string
+          note?: string | null
+          quotes?: Json
+          requested_by?: string
+          status?: Database["public"]["Enums"]["purchase_status"]
+          title: string
+          updated_at?: string
+          vendor?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          exception_reason?: string | null
+          expense_id?: string | null
+          id?: string
+          note?: string | null
+          quotes?: Json
+          requested_by?: string
+          status?: Database["public"]["Enums"]["purchase_status"]
+          title?: string
+          updated_at?: string
+          vendor?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchases_currency_fkey"
+            columns: ["currency"]
+            isOneToOne: false
+            referencedRelation: "fx_rates"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "purchases_decided_by_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchases_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "expenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchases_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -6478,6 +6579,7 @@ export type Database = {
         | "paused"
         | "completed"
         | "archived"
+      purchase_status: "pending" | "approved" | "rejected" | "purchased"
       risk_category:
         | "business"
         | "quality"
@@ -6799,6 +6901,7 @@ export const Constants = {
       ],
       project_mode: ["recurring", "milestone"],
       project_status: ["planning", "active", "paused", "completed", "archived"],
+      purchase_status: ["pending", "approved", "rejected", "purchased"],
       risk_category: [
         "business",
         "quality",
