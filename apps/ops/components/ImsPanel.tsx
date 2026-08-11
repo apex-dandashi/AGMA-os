@@ -31,6 +31,7 @@ export default function ImsPanel() {
       </p>
       <Tabs active={tab} onChange={setTab} tabs={[
         { key: 'overview', label: 'نظرة عامة' },
+        { key: 'govdocs', label: 'السياسات والإجراءات' },
         { key: 'controls', label: 'الضوابط' },
         { key: 'risks', label: 'المخاطر' },
         { key: 'obligations', label: 'الالتزامات' },
@@ -41,6 +42,7 @@ export default function ImsPanel() {
       ]} />
       <div className="mt-4">
         {tab === 'overview' && <OverviewTab />}
+        {tab === 'govdocs' && <GovDocsTab />}
         {tab === 'controls' && <ControlsTab />}
         {tab === 'risks' && <RisksTab />}
         {tab === 'obligations' && <ObligationsTab />}
@@ -834,6 +836,170 @@ function AiTab() {
           {a.risk_note && <p className="w-full text-xs text-gray-medium">{a.risk_note}</p>}
         </Card>
       ))}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------- SOPs + policies */
+/** السياسات والإجراءات (L 2026-08-09): وثيقة لكل وحدة — التفعيل ينشرها
+ *  للمساعد تلقائياً، والتعديل يرفع النسخة، والمراجعة الدورية تذكّر بنفسها. */
+const GOV_MODULES = [
+  'المسار', 'المشاريع', 'العملاء', 'المحتوى', 'المالية', 'المشتريات',
+  'الفريق', 'الأمان', 'الذكاء الاصطناعي', 'الحوكمة', 'عام',
+];
+const GOV_STATUS_AR: Record<string, { label: string; variant: 'neutral' | 'accent' | 'outline' }> = {
+  draft: { label: 'مسودة', variant: 'neutral' },
+  active: { label: 'نشطة', variant: 'accent' },
+  retired: { label: 'متقاعدة', variant: 'outline' },
+};
+
+function GovDocsTab() {
+  const me = useProfile();
+  const key = ['gov_docs'];
+  const { data, isLoading } = useQuery({
+    queryKey: key,
+    queryFn: async () => {
+      const { data } = await getSupabase().from('gov_documents')
+        .select('*').order('module').order('kind').order('title');
+      return data ?? [];
+    },
+  });
+  const canManage = ['admin', 'legal', 'strategist', 'cfo'].includes(me.role);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+
+  const save = useAppMutation(
+    async ({ id, patch }: { id: string | null; patch: Partial<Tables<'gov_documents'>> }) => {
+      const s = getSupabase();
+      if (id) {
+        const { error } = await s.from('gov_documents')
+          .update({ ...patch, updated_by: me.id } as never).eq('id', id);
+        if (error) throw new Error(error.message);
+      } else {
+        const { error } = await s.from('gov_documents')
+          .insert({ ...patch, updated_by: me.id } as never);
+        if (error) throw new Error(error.message);
+        setCreating(false);
+      }
+    },
+    { invalidate: [key], successMessage: 'حُفظت' }
+  );
+
+  if (isLoading || !data) return <SkeletonList rows={6} />;
+
+  const byModule = new Map<string, typeof data>();
+  for (const d of data) byModule.set(d.module, [...(byModule.get(d.module) ?? []), d]);
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center gap-3">
+        <p className="text-sm text-gray-medium">
+          إجراء تشغيل قياسي (SOP) أو سياسة لكل وحدة — النشطة يجيب عنها المساعد فوراً،
+          والمراجعة الدورية تذكّر بنفسها عند الاستحقاق.
+        </p>
+        {canManage && (
+          <Button size="sm" variant="outline" className="ms-auto shrink-0"
+            onClick={() => setCreating(!creating)}>
+            {creating ? 'إغلاق' : '+ وثيقة'}
+          </Button>
+        )}
+      </div>
+
+      {creating && canManage && (
+        <GovDocEditor onSave={(patch) => save.mutate({ id: null, patch })} saving={save.isPending} />
+      )}
+
+      {[...byModule.entries()].map(([mod, docs]) => (
+        <section key={mod}>
+          <h3 className="mb-2 text-sm font-bold text-pulse-orange">{mod}</h3>
+          <div className="space-y-2">
+            {docs.map((d) => {
+              const st = GOV_STATUS_AR[d.status] ?? GOV_STATUS_AR.draft;
+              const overdue = d.status === 'active' && d.review_due <= new Date().toISOString().slice(0, 10);
+              return (
+                <Card key={d.id} className="p-3 text-sm">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="outline">{d.kind === 'sop' ? 'إجراء' : 'سياسة'}</Badge>
+                    <b>{d.title}</b>
+                    <Badge variant={st.variant}>{st.label}</Badge>
+                    <span className="text-xs text-gray-medium">نسخة {d.version}</span>
+                    {overdue && <Badge variant="accent">مراجعة مستحقة!</Badge>}
+                    <span className="ms-auto flex gap-1.5">
+                      <Button variant="ghost" size="xs"
+                        onClick={() => setOpenId(openId === d.id ? null : d.id)}>
+                        {openId === d.id ? 'إغلاق' : canManage ? 'تحرير' : 'عرض'}
+                      </Button>
+                      {canManage && d.status === 'draft' && (
+                        <Button size="xs" onClick={() => save.mutate({ id: d.id, patch: { status: 'active' } })}>
+                          تفعيل ونشر
+                        </Button>
+                      )}
+                      {canManage && d.status === 'active' && (
+                        <>
+                          <Button variant="ghost" size="xs"
+                            onClick={() => save.mutate({ id: d.id, patch: { review_due: (() => { const x = new Date(); x.setDate(x.getDate() + 180); return x.toISOString().slice(0, 10); })() } })}>
+                            راجعتها (+١٨٠ يوماً)
+                          </Button>
+                          <Button variant="ghost" size="xs"
+                            onClick={() => save.mutate({ id: d.id, patch: { status: 'retired' } })}>
+                            تقاعد
+                          </Button>
+                        </>
+                      )}
+                    </span>
+                  </div>
+                  {openId === d.id && (
+                    canManage ? (
+                      <GovDocEditor doc={d} saving={save.isPending}
+                        onSave={(patch) => save.mutate({ id: d.id, patch })} />
+                    ) : (
+                      <pre className="mt-2 whitespace-pre-wrap rounded-sm bg-gray-dark/20 p-3 text-xs leading-6 text-gray-light">{d.body_md}</pre>
+                    )
+                  )}
+                </Card>
+              );
+            })}
+          </div>
+        </section>
+      ))}
+      {data.length === 0 && (
+        <EmptyState icon={<ShieldCheck className="h-8 w-8" aria-hidden />}
+          title="لا وثائق بعد" hint="ابدأ بأكثر إجراء تشرحه للناس مرتين." />
+      )}
+    </div>
+  );
+}
+
+function GovDocEditor({ doc, onSave, saving }: {
+  doc?: Tables<'gov_documents'>;
+  onSave: (patch: Partial<Tables<'gov_documents'>>) => void;
+  saving: boolean;
+}) {
+  const [kind, setKind] = useState(doc?.kind ?? 'sop');
+  const [module, setModule] = useState(doc?.module ?? 'عام');
+  const [title, setTitle] = useState(doc?.title ?? '');
+  const [body, setBody] = useState(doc?.body_md ?? '');
+  return (
+    <div className="mt-3 space-y-2 rounded-sm border border-gray-dark bg-gray-dark/20 p-3">
+      <div className="flex flex-wrap gap-2">
+        <Select label="النوع" value={kind} onChange={(e) => setKind(e.target.value as 'sop' | 'policy')} className="w-32">
+          <option value="sop">إجراء SOP</option>
+          <option value="policy">سياسة</option>
+        </Select>
+        <Select label="الوحدة" value={module} onChange={(e) => setModule(e.target.value)} className="w-40">
+          {GOV_MODULES.map((m) => <option key={m} value={m}>{m}</option>)}
+        </Select>
+        <div className="min-w-56 flex-1">
+          <Input label="العنوان" value={title} onChange={(e) => setTitle(e.target.value)} />
+        </div>
+      </div>
+      <Textarea label="النص (Markdown — خطوات مرقمة للإجراء، بنود قاطعة للسياسة)"
+        value={body} onChange={(e) => setBody(e.target.value)} rows={8} />
+      <Button size="sm" loading={saving}
+        disabled={title.trim().length < 3 || body.trim().length < 10}
+        onClick={() => onSave({ kind, module, title: title.trim(), body_md: body })}>
+        حفظ {doc?.status === 'active' ? '(يحدّث المعرفة ويرفع النسخة)' : 'كمسودة'}
+      </Button>
     </div>
   );
 }

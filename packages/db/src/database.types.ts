@@ -1204,6 +1204,175 @@ export type Database = {
         }
         Relationships: []
       }
+      collaborator_assignments: {
+        Row: {
+          agreed_amount: number
+          collaborator_id: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          due: string | null
+          expense_id: string | null
+          id: string
+          note: string | null
+          project_id: string | null
+          quality_rating: number | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          agreed_amount: number
+          collaborator_id: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          due?: string | null
+          expense_id?: string | null
+          id?: string
+          note?: string | null
+          project_id?: string | null
+          quality_rating?: number | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          agreed_amount?: number
+          collaborator_id?: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          due?: string | null
+          expense_id?: string | null
+          id?: string
+          note?: string | null
+          project_id?: string | null
+          quality_rating?: number | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaborator_assignments_collaborator_id_fkey"
+            columns: ["collaborator_id"]
+            isOneToOne: false
+            referencedRelation: "collaborators"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collaborator_assignments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collaborator_assignments_currency_fkey"
+            columns: ["currency"]
+            isOneToOne: false
+            referencedRelation: "fx_rates"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "collaborator_assignments_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "expenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collaborator_assignments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_costs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collaborator_assignments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      collaborators: {
+        Row: {
+          city: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          email: string | null
+          full_name: string
+          id: string
+          nda_signed_on: string | null
+          notes: string | null
+          phone: string | null
+          portfolio_url: string | null
+          rate: number | null
+          rate_type: string
+          rating: number | null
+          specialty: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          nda_signed_on?: string | null
+          notes?: string | null
+          phone?: string | null
+          portfolio_url?: string | null
+          rate?: number | null
+          rate_type?: string
+          rating?: number | null
+          specialty: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          nda_signed_on?: string | null
+          notes?: string | null
+          phone?: string | null
+          portfolio_url?: string | null
+          rate?: number | null
+          rate_type?: string
+          rating?: number | null
+          specialty?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaborators_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collaborators_currency_fkey"
+            columns: ["currency"]
+            isOneToOne: false
+            referencedRelation: "fx_rates"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
       complaints: {
         Row: {
           assigned_to: string | null
@@ -2724,6 +2893,69 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      gov_documents: {
+        Row: {
+          body_md: string
+          created_at: string
+          id: string
+          kb_article_id: string | null
+          kind: string
+          module: string
+          owner_role: string
+          review_due: string
+          status: string
+          title: string
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          body_md: string
+          created_at?: string
+          id?: string
+          kb_article_id?: string | null
+          kind: string
+          module: string
+          owner_role?: string
+          review_due?: string
+          status?: string
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          body_md?: string
+          created_at?: string
+          id?: string
+          kb_article_id?: string | null
+          kind?: string
+          module?: string
+          owner_role?: string
+          review_due?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gov_documents_kb_article_id_fkey"
+            columns: ["kb_article_id"]
+            isOneToOne: false
+            referencedRelation: "kb_articles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gov_documents_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ims_controls: {
         Row: {
@@ -6443,6 +6675,7 @@ export type Database = {
       expense_account: { Args: { p_category: string }; Returns: string }
       generate_allocation: { Args: never; Returns: undefined }
       god_mode_active: { Args: never; Returns: boolean }
+      gov_review_nudges: { Args: never; Returns: undefined }
       is_accounting: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       is_biller: { Args: never; Returns: boolean }

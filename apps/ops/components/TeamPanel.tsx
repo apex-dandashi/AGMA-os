@@ -2,11 +2,12 @@
 
 import { useState, type FormEvent } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Badge, Button, Hint, Input, Select, SkeletonList, Table, Td, Tr, useToast } from '@agma/ui';
+import { Badge, Button, Card, Hint, Input, Select, SkeletonList, Table, Td, Tr, useToast } from '@agma/ui';
 import type { Enums, Tables } from '@agma/db';
 import { PenLine } from 'lucide-react';
 import { getSupabase } from '../lib/supabase';
 import { keys, useAppMutation } from '../lib/queries';
+import { fmtNum } from '../lib/format';
 import { readImageAsDataUri } from '../lib/images';
 import { CareersSection } from './PublicLayerAdmin';
 
@@ -310,6 +311,7 @@ export default function TeamPanel({ me }: { me: Tables<'profiles'> }) {
         </Table>
       )}
       {isAdmin && <StaffLifecycle team={(profiles ?? []).filter((p) => p.role !== 'client')} />}
+      <CollaboratorsSection me={me} />
       <PeopleAnalyzer
         team={(profiles ?? []).filter((p) => p.role !== 'client' && p.active)}
         isAdmin={isAdmin} meId={me.id} />
@@ -654,6 +656,214 @@ function PeopleAnalyzer({ team, isAdmin, meId }: {
           );
         })}
       </Table>
+    </section>
+  );
+}
+
+/* --------------------------------------------------------- collaborators */
+/** المنفذون والمتعاونون (L 2026-08-09): مستقلون بلا حسابات دخول — سجل كامل
+ *  بالتخصص والأسعار وNDA، وإسنادات لا تُدفع إلا بتقييم جودة (يفرضه المحفز). */
+const COLLAB_STATUS_AR: Record<string, { label: string; variant: 'accent' | 'neutral' | 'outline' }> = {
+  active: { label: 'نشط', variant: 'accent' },
+  paused: { label: 'متوقف', variant: 'neutral' },
+  blacklisted: { label: 'محظور', variant: 'outline' },
+};
+const ASG_STATUS_AR: Record<string, string> = {
+  assigned: 'مُسند', delivered: 'مُسلّم', paid: 'مدفوع', cancelled: 'ملغي',
+};
+const RATE_AR: Record<string, string> = {
+  hourly: 'بالساعة', per_project: 'بالمشروع', monthly: 'شهري',
+};
+
+function CollaboratorsSection({ me }: { me: Tables<'profiles'> }) {
+  const key = ['collaborators'];
+  const canManage = ['admin', 'strategist', 'pm', 'hr'].includes(me.role);
+  const { data } = useQuery({
+    queryKey: key,
+    queryFn: async () => {
+      const s = getSupabase();
+      const [collabs, asgs, rates] = await Promise.all([
+        s.from('collaborators').select('*').order('status').order('full_name'),
+        s.from('collaborator_assignments').select('*').order('created_at', { ascending: false }),
+        s.from('fx_rates').select('code'),
+      ]);
+      return { collabs: collabs.data ?? [], asgs: asgs.data ?? [], codes: (rates.data ?? []).map((r) => r.code) };
+    },
+  });
+
+  const [showNew, setShowNew] = useState(false);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [nName, setNName] = useState(''); const [nSpec, setNSpec] = useState('تصميم');
+  const [nPhone, setNPhone] = useState(''); const [nRate, setNRate] = useState('');
+  const [nRateType, setNRateType] = useState('per_project'); const [nCur, setNCur] = useState('SAR');
+
+  const addCollab = useAppMutation(
+    async () => {
+      const { error } = await getSupabase().from('collaborators').insert({
+        full_name: nName.trim(), specialty: nSpec, phone: nPhone.trim() || null,
+        rate: Number(nRate) || null, rate_type: nRateType, currency: nCur, created_by: me.id,
+      });
+      if (error) throw new Error(error.message);
+      setNName(''); setNPhone(''); setNRate(''); setShowNew(false);
+    },
+    { invalidate: [key], successMessage: 'أُضيف المتعاون' }
+  );
+  const patchCollab = useAppMutation(
+    async ({ id, p }: { id: string; p: Record<string, unknown> }) => {
+      const { error } = await getSupabase().from('collaborators').update(p as never).eq('id', id);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [key] }
+  );
+  const patchAsg = useAppMutation(
+    async ({ id, p }: { id: string; p: Record<string, unknown> }) => {
+      const { error } = await getSupabase().from('collaborator_assignments').update(p as never).eq('id', id);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [key] }
+  );
+  const [asgTitle, setAsgTitle] = useState(''); const [asgAmount, setAsgAmount] = useState('');
+  const [asgCur, setAsgCur] = useState('SAR');
+  const addAsg = useAppMutation(
+    async (collabId: string) => {
+      const { error } = await getSupabase().from('collaborator_assignments').insert({
+        collaborator_id: collabId, title: asgTitle.trim(),
+        agreed_amount: Number(asgAmount), currency: asgCur, created_by: me.id,
+      });
+      if (error) throw new Error(error.message);
+      setAsgTitle(''); setAsgAmount('');
+    },
+    { invalidate: [key], successMessage: 'أُسند العمل' }
+  );
+
+  if (!data) return null;
+
+  return (
+    <section className="mt-8">
+      <h2 className="mb-1 flex items-center gap-2 text-base font-bold">
+        المنفذون والمتعاونون
+        <Hint wide text="المستقلون وشركاء الإنتاج (مطورون، مصممون، مصورون، مونتيرية…) بلا حسابات دخول — منفصلون عن أعضاء النظام. الدفع يتطلب تقييم جودة إلزامياً ويتسجل مصروفاً بالمكافئ الريالي تلقائياً. لا تُسند عملاً يمس بيانات عميل لمن لم يوقع NDA." />
+        {canManage && (
+          <Button size="xs" variant="outline" className="ms-auto" onClick={() => setShowNew(!showNew)}>
+            {showNew ? 'إغلاق' : '+ متعاون'}
+          </Button>
+        )}
+      </h2>
+
+      {showNew && canManage && (
+        <form className="mb-3 flex flex-wrap items-end gap-2 rounded-sm border border-gray-dark p-3"
+          onSubmit={(e) => { e.preventDefault(); if (nName.trim()) addCollab.mutate(undefined as never); }}>
+          <Input label="الاسم" value={nName} onChange={(e) => setNName(e.target.value)} className="w-44" />
+          <Select label="التخصص" value={nSpec} onChange={(e) => setNSpec(e.target.value)} className="w-36">
+            {['تصميم', 'تطوير', 'تصوير', 'مونتاج', 'موشن جرافيك', 'كتابة', 'تسويق أداء', 'صوت', 'أخرى'].map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </Select>
+          <Input label="الجوال" dir="ltr" value={nPhone} onChange={(e) => setNPhone(e.target.value)} className="w-36" />
+          <Select label="التسعير" value={nRateType} onChange={(e) => setNRateType(e.target.value)} className="w-28">
+            {Object.entries(RATE_AR).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+          </Select>
+          <Input label="السعر" type="number" dir="ltr" value={nRate} onChange={(e) => setNRate(e.target.value)} className="w-24" />
+          <Select label="العملة" value={nCur} onChange={(e) => setNCur(e.target.value)} className="w-24">
+            {data.codes.map((c) => <option key={c} value={c}>{c}</option>)}
+          </Select>
+          <Button type="submit" size="sm" loading={addCollab.isPending} disabled={!nName.trim()}>حفظ</Button>
+        </form>
+      )}
+
+      {data.collabs.length === 0 ? (
+        <p className="text-sm text-gray-medium">لا متعاونين بعد — سجّل شبكة منفذيك هنا.</p>
+      ) : (
+        <div className="space-y-2">
+          {data.collabs.map((c) => {
+            const st = COLLAB_STATUS_AR[c.status] ?? COLLAB_STATUS_AR.active;
+            const asgs = data.asgs.filter((a) => a.collaborator_id === c.id);
+            return (
+              <Card key={c.id} className="p-3 text-sm">
+                <div className="flex flex-wrap items-center gap-2">
+                  <b>{c.full_name}</b>
+                  <Badge variant="outline">{c.specialty}</Badge>
+                  <Badge variant={st.variant}>{st.label}</Badge>
+                  {c.rating && <span title="متوسط جودة التسليمات">{'★'.repeat(c.rating)}</span>}
+                  {c.rate && (
+                    <span dir="ltr" className="text-xs text-gray-medium">
+                      {fmtNum(Number(c.rate))} {c.currency} / {RATE_AR[c.rate_type]}
+                    </span>
+                  )}
+                  <Badge variant={c.nda_signed_on ? 'neutral' : 'accent'}>
+                    {c.nda_signed_on ? 'NDA ✓' : 'بلا NDA'}
+                  </Badge>
+                  <span className="ms-auto flex gap-1.5">
+                    {canManage && !c.nda_signed_on && (
+                      <Button variant="ghost" size="xs"
+                        onClick={() => patchCollab.mutate({ id: c.id, p: { nda_signed_on: new Date().toISOString().slice(0, 10) } })}>
+                        وقّع NDA
+                      </Button>
+                    )}
+                    <Button variant="ghost" size="xs" onClick={() => setOpenId(openId === c.id ? null : c.id)}>
+                      {openId === c.id ? 'إغلاق' : `الإسنادات (${asgs.length})`}
+                    </Button>
+                    {canManage && (
+                      <Button variant="ghost" size="xs"
+                        onClick={() => patchCollab.mutate({ id: c.id, p: { status: c.status === 'active' ? 'paused' : 'active' } })}>
+                        {c.status === 'active' ? 'إيقاف' : 'تفعيل'}
+                      </Button>
+                    )}
+                  </span>
+                </div>
+                {openId === c.id && (
+                  <div className="mt-3 space-y-2 border-t border-gray-dark pt-3">
+                    {canManage && c.status === 'active' && (
+                      <form className="flex flex-wrap items-end gap-2"
+                        onSubmit={(e) => { e.preventDefault(); if (asgTitle.trim() && Number(asgAmount) > 0) addAsg.mutate(c.id as never); }}>
+                        <Input label="العمل المسند" value={asgTitle} onChange={(e) => setAsgTitle(e.target.value)} className="w-56" />
+                        <Input label="المبلغ المتفق" type="number" dir="ltr" value={asgAmount}
+                          onChange={(e) => setAsgAmount(e.target.value)} className="w-28" />
+                        <Select label="العملة" value={asgCur} onChange={(e) => setAsgCur(e.target.value)} className="w-24">
+                          {data.codes.map((cd) => <option key={cd} value={cd}>{cd}</option>)}
+                        </Select>
+                        <Button type="submit" size="sm" variant="outline" loading={addAsg.isPending}
+                          disabled={!asgTitle.trim() || !(Number(asgAmount) > 0)}>
+                          إسناد
+                        </Button>
+                      </form>
+                    )}
+                    {asgs.map((a) => (
+                      <div key={a.id} className="flex flex-wrap items-center gap-2 text-xs">
+                        <span className="font-medium">{a.title}</span>
+                        <span dir="ltr" className="text-gray-medium">{fmtNum(Number(a.agreed_amount))} {a.currency}</span>
+                        <Badge variant={a.status === 'paid' ? 'neutral' : 'outline'}>{ASG_STATUS_AR[a.status]}</Badge>
+                        {a.quality_rating && <span>{'★'.repeat(a.quality_rating)}</span>}
+                        {canManage && a.status === 'assigned' && (
+                          <Button variant="ghost" size="xs"
+                            onClick={() => patchAsg.mutate({ id: a.id, p: { status: 'delivered' } })}>
+                            تسلمناه
+                          </Button>
+                        )}
+                        {canManage && a.status === 'delivered' && (
+                          <span className="flex items-center gap-1">
+                            <Select aria-label="تقييم الجودة" defaultValue=""
+                              onChange={(e) => {
+                                const r = Number(e.target.value);
+                                if (r) patchAsg.mutate({ id: a.id, p: { status: 'paid', quality_rating: r } });
+                              }} className="w-40 py-1 text-xs">
+                              <option value="" disabled>قيّم وادفع…</option>
+                              {[5, 4, 3, 2, 1].map((r) => (
+                                <option key={r} value={r}>{'★'.repeat(r)} — {r === 5 ? 'ممتاز' : r === 4 ? 'جيد جداً' : r === 3 ? 'جيد' : r === 2 ? 'مقبول' : 'ضعيف'}</option>
+                              ))}
+                            </Select>
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                    {asgs.length === 0 && <p className="text-xs text-gray-medium">لا إسنادات بعد.</p>}
+                  </div>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }

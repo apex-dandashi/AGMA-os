@@ -22,6 +22,27 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 9 | Help Centre / RAG + chatbots | ✅ Done (2026-08-09) — KB+RAG core, then Help Center: 14 seeded articles (نصائح تسويقية + دليل النظام), two-tier brain (grounded/general-advice), /help site page, ops help surface |
 | 10 | Employee portal + Analytics + digests | ✅ Done (2026-08-09) — staff lifecycle (auto onboarding/offboarding checklists, welcome emails, 30/60/90 nudges, equipment log, signature generator), client health weekly → scorecard, Analytics dashboard, digest v2 (rocks+issues, WhatsApp-ready) |
 
+## Gov docs + collaborators log (2026-08-09)
+
+- `20260809140000_sops_policies.sql`: gov_documents (sop|policy per
+  module, owner_role, version, review_due, status) — **activating
+  publishes into kb_articles (category السياسات والإجراءات) so the
+  assistant answers from it**; body edits bump version + sync the
+  article; retiring unpublishes. Review-due nudges via run_daily_jobs_v4
+  (cron chain v3→v4). 6 seeded active docs (invoice SOP, procurement
+  SOP, campaign-launch SOP, password/access policy, client-comms
+  policy, internal AI policy). IMS tab «السياسات والإجراءات»: grouped
+  by module, editor, activate/retire, «راجعتها +180», overdue badge.
+- `20260809150000_collaborators.sql`: collaborators (specialty, rates
+  w/ currency, NDA date, status incl. blacklisted, auto rating) +
+  collaborator_assignments (agreed amount/currency, assigned→delivered→
+  paid). **Paying requires a quality rating (trigger)**; payment creates
+  the «رواتب ومستقلون» expense at SAR equivalent (proved $200→750) which
+  auto-posts to the ledger; ratings roll up to the collaborator card.
+  RLS: team reads, admin/strategist/pm/hr manage. TeamPanel section
+  «المنفذون والمتعاونون»: add/NDA/pause, assignments inline with
+  قيّم-وادفع selector. KB guides shipped with both.
+
 ## Accounting log (2026-08-09) — الدفتر السعودي الكامل
 
 - `20260809130000_accounting.sql`: chart_of_accounts (Saudi mini CoA,
