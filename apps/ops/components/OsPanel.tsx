@@ -695,6 +695,76 @@ function MeetingTab() {
           </Button>
         </div>
       </MeetingSection>
+
+      <MinutesSection onTodosCreated={() => void 0} todosKey={todosKey} />
+    </div>
+  );
+}
+
+/** دقائق بالذكاء (L 2026-08-09): الصق نص أي اجتماع — ملخص + قرارات + بنود
+ *  عمل تصير مهام متابعة تلقائياً. راجع الناتج قبل الاعتماد دائماً. */
+function MinutesSection({ todosKey }: { todosKey: string[]; onTodosCreated: () => void }) {
+  const [title, setTitle] = useState('');
+  const [transcript, setTranscript] = useState('');
+  const [result, setResult] = useState<{
+    summary_md: string; decisions: string[];
+    action_items: { title: string; owner_hint?: string }[];
+  } | null>(null);
+
+  const extract = useAppMutation(
+    async () => {
+      const { data, error } = await getSupabase().functions.invoke('meeting-minutes', {
+        body: { transcript, title: title.trim() || undefined },
+      });
+      if (error || !data?.ok) {
+        const ctx = (error as { context?: unknown } | null)?.context;
+        if (ctx instanceof Response) {
+          const b = await ctx.json().catch(() => null);
+          if (b?.message) throw new Error(b.message);
+        }
+        throw new Error(data?.message ?? 'تعذر الاستخراج — أعد المحاولة');
+      }
+      setResult(data.minutes);
+      setTranscript('');
+    },
+    { invalidate: [todosKey], successMessage: 'استُخرجت الدقائق — بنود العمل صارت مهام متابعة' }
+  );
+
+  return (
+    <div className="rounded-sm border border-gray-dark p-4">
+      <p className="mb-2 flex items-center gap-2 text-sm font-bold">
+        دقائق الاجتماع بالذكاء
+        <Hint wide text="الصق نص الاجتماع (Meet وZoom يولدان نصاً) أو ملاحظاتك الخام — الذكاء يستخرج ملخصاً وقرارات وبنود عمل تدخل قائمة مهام المتابعة تلقائياً. الذكاء يلتزم بما قيل فعلاً ولا يخترع — لكن راجع الناتج قبل اعتماده دائماً." />
+      </p>
+      <div className="space-y-2">
+        <Input label="عنوان الاجتماع (اختياري)" value={title}
+          onChange={(e) => setTitle(e.target.value)} placeholder="مثال: جلسة تخطيط حملة أكتوبر" />
+        <Textarea label="نص الاجتماع أو الملاحظات" rows={6} value={transcript}
+          onChange={(e) => setTranscript(e.target.value)}
+          placeholder="الصق هنا نص المحادثة أو ملاحظاتك الخام (٥٠ حرفاً على الأقل)…" />
+        <Button size="sm" loading={extract.isPending} disabled={transcript.trim().length < 50}
+          onClick={() => extract.mutate(undefined as never)}>
+          استخرج الدقائق
+        </Button>
+      </div>
+      {result && (
+        <div className="mt-4 space-y-3 border-t border-gray-dark pt-3 text-sm">
+          <pre className="whitespace-pre-wrap rounded-sm bg-gray-dark/20 p-3 text-xs leading-6 text-gray-light">{result.summary_md}</pre>
+          {result.decisions.length > 0 && (
+            <div>
+              <p className="mb-1 font-bold text-pulse-orange">القرارات:</p>
+              <ul className="space-y-1 text-gray-light">
+                {result.decisions.map((d, i) => <li key={i}>• {d}</li>)}
+              </ul>
+            </div>
+          )}
+          {result.action_items.length > 0 && (
+            <p className="text-xs text-gray-medium">
+              أُضيفت {result.action_items.length} بنود عمل لقائمة مهام المتابعة أعلاه ↑
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

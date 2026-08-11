@@ -1,18 +1,20 @@
-// طبقة التوليد النصي الموحدة — مزودان بالأولوية:
+// طبقة التوليد النصي الموحدة — ثلاثة مزودين بالأولوية:
 //   ١) ANTHROPIC_API_KEY  → Claude (أعلى جودة عربية + مخرجات مهيكلة مضمونة)
-//   ٢) OPENROUTER_API_KEY → OpenRouter (نماذج مجانية — OPENROUTER_MODEL
-//      اختياري، الافتراضي 'openrouter/free' يوجه تلقائياً لأفضل مجاني متاح)
+//   ٢) GEMINI_API_KEY     → Gemini (سخي مجاناً وجيد عربياً — GEMINI_MODEL
+//      اختياري، الافتراضي gemini-2.5-flash) — طلب المالك لدقائق الاجتماعات
+//   ٣) OPENROUTER_API_KEY → OpenRouter (نماذج مجانية متقلبة الجودة)
 //
-// أضف أياً منهما في أسرار الدوال ويعمل التوليد فوراً. عند وجود الاثنين
-// يُستخدم Claude. حدود المجاني (~٥٠ طلباً/يوم بلا رصيد) تكفي حجمنا اليومي.
+// أضف أياً منها في أسرار الدوال ويعمل التوليد فوراً؛ وعند التعدد الأعلى يفوز،
+// وتعثر Gemini يسقط تلقائياً على OpenRouter إن وُجد.
 import Anthropic from 'npm:@anthropic-ai/sdk';
 
 export function llmConfigured(): boolean {
-  return Boolean(Deno.env.get('ANTHROPIC_API_KEY') || Deno.env.get('OPENROUTER_API_KEY'));
+  return Boolean(Deno.env.get('ANTHROPIC_API_KEY') || Deno.env.get('GEMINI_API_KEY')
+    || Deno.env.get('OPENROUTER_API_KEY'));
 }
 
 export const LLM_SETUP_MSG =
-  'التوليد غير مهيأ بعد — أضف OPENROUTER_API_KEY (نماذج مجانية) أو ANTHROPIC_API_KEY في أسرار الدوال ليعمل فوراً';
+  'التوليد غير مهيأ بعد — أضف GEMINI_API_KEY أو OPENROUTER_API_KEY (مجانية) أو ANTHROPIC_API_KEY في أسرار الدوال ليعمل فوراً';
 
 async function openrouterOnce(
   system: string,
@@ -77,6 +79,55 @@ function throwProviderError(status: number, body: string): never {
   throw new Error(`provider:${status}:${body.slice(0, 160)}`);
 }
 
+async function geminiOnce(
+  system: string,
+  prompt: string,
+  maxTokens: number,
+  jsonMode: boolean,
+): Promise<{ ok: true; text: string } | { ok: false; status: number; body: string }> {
+  const key = Deno.env.get('GEMINI_API_KEY')!;
+  const model = Deno.env.get('GEMINI_MODEL') || 'gemini-2.5-flash';
+  let res: Response;
+  try {
+    res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: system }] },
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: {
+            maxOutputTokens: maxTokens,
+            ...(jsonMode ? { responseMimeType: 'application/json' } : {}),
+          },
+        }),
+        signal: AbortSignal.timeout(110_000),
+      },
+    );
+  } catch (e) {
+    if ((e as Error).name === 'TimeoutError' || (e as Error).name === 'AbortError') {
+      throw new Error('timeout');
+    }
+    throw e;
+  }
+  const bodyText = await res.text();
+  if (!res.ok) {
+    console.error('gemini', res.status, bodyText.slice(0, 400));
+    return { ok: false, status: res.status, body: bodyText.slice(0, 400) };
+  }
+  let data: Record<string, unknown>;
+  try { data = JSON.parse(bodyText); } catch {
+    return { ok: false, status: 502, body: bodyText.slice(0, 200) };
+  }
+  const text = ((data as {
+    candidates?: { content?: { parts?: { text?: string }[] } }[];
+  }).candidates?.[0]?.content?.parts ?? [])
+    .map((pp) => pp.text ?? '').join('');
+  if (!text.trim()) return { ok: false, status: 502, body: 'empty completion' };
+  return { ok: true, text };
+}
+
 async function openrouterChat(
   system: string,
   prompt: string,
@@ -90,6 +141,24 @@ async function openrouterChat(
   }
   if (!r.ok) throwProviderError(r.status, r.body);
   return r.text;
+}
+
+/** المزود المجاني المتاح: Gemini أولاً وتعثره يسقط على OpenRouter إن وُجد. */
+async function freeChat(
+  system: string,
+  prompt: string,
+  maxTokens: number,
+  jsonMode: boolean,
+): Promise<string> {
+  if (Deno.env.get('GEMINI_API_KEY')) {
+    const r = await geminiOnce(system, prompt, maxTokens, jsonMode);
+    if (r.ok) return r.text;
+    if (Deno.env.get('OPENROUTER_API_KEY')) {
+      return openrouterChat(system, prompt, maxTokens, jsonMode);
+    }
+    throwProviderError(r.status, r.body);
+  }
+  return openrouterChat(system, prompt, maxTokens, jsonMode);
 }
 
 /** رسالة عربية مفهومة من أخطاء المزود — تستخدمها الدوال في ردودها. */
@@ -139,7 +208,7 @@ export async function completeText(
     if (!text) throw new Error('empty');
     return text;
   }
-  return (await openrouterChat(system, prompt, maxTokens, false)).trim();
+  return (await freeChat(system, prompt, maxTokens, false)).trim();
 }
 
 /** استخراج JSON من رد نموذج قد يلفه بأسوار كود أو كلام زائد. */
@@ -188,12 +257,12 @@ export async function completeJSON<T>(
     'أجب بكائن JSON واحد صالح فقط — بلا أي نص قبله أو بعده وبلا أسوار كود.',
     `المخطط المطلوب حرفياً: ${JSON.stringify(schema)}`,
   ].join('\n');
-  const first = await openrouterChat(jsonInstr, prompt, maxTokens, true);
+  const first = await freeChat(jsonInstr, prompt, maxTokens, true);
   try {
     return extractJSON<T>(first);
   } catch {
     // محاولة إصلاح واحدة — نعيد للنموذج رده ليصححه JSON صالحاً
-    const fixed = await openrouterChat(
+    const fixed = await freeChat(
       'أصلح النص التالي ليكون كائن JSON واحداً صالحاً مطابقاً للمخطط، وأعد الـ JSON فقط.',
       `المخطط: ${JSON.stringify(schema)}\n\nالنص:\n${first.slice(0, 12000)}`,
       maxTokens,

@@ -3712,28 +3712,43 @@ export type Database = {
       }
       meetings: {
         Row: {
+          attendees: string | null
           created_at: string
+          decisions: Json
           headlines: string | null
           held_on: string
           id: string
           kind: Database["public"]["Enums"]["meeting_kind"]
+          minutes_md: string | null
           rating: number | null
+          title: string | null
+          transcript: string | null
         }
         Insert: {
+          attendees?: string | null
           created_at?: string
+          decisions?: Json
           headlines?: string | null
           held_on?: string
           id?: string
           kind?: Database["public"]["Enums"]["meeting_kind"]
+          minutes_md?: string | null
           rating?: number | null
+          title?: string | null
+          transcript?: string | null
         }
         Update: {
+          attendees?: string | null
           created_at?: string
+          decisions?: Json
           headlines?: string | null
           held_on?: string
           id?: string
           kind?: Database["public"]["Enums"]["meeting_kind"]
+          minutes_md?: string | null
           rating?: number | null
+          title?: string | null
+          transcript?: string | null
         }
         Relationships: []
       }

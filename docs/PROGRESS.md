@@ -22,6 +22,27 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 9 | Help Centre / RAG + chatbots | ✅ Done (2026-08-09) — KB+RAG core, then Help Center: 14 seeded articles (نصائح تسويقية + دليل النظام), two-tier brain (grounded/general-advice), /help site page, ops help surface |
 | 10 | Employee portal + Analytics + digests | ✅ Done (2026-08-09) — staff lifecycle (auto onboarding/offboarding checklists, welcome emails, 30/60/90 nudges, equipment log, signature generator), client health weekly → scorecard, Analytics dashboard, digest v2 (rocks+issues, WhatsApp-ready) |
 
+## Meetings AI log (2026-08-09) — دقائق بالذكاء + مزود Gemini
+
+- **llm.ts v3**: GEMINI_API_KEY added as middle provider (Anthropic →
+  Gemini → OpenRouter; Gemini failure falls through to OpenRouter).
+  gemini-2.5-flash default (GEMINI_MODEL override), JSON mode via
+  responseMimeType. All LLM edge functions redeployed on the new layer.
+- `20260809160000_meetings_ai.sql`: meetings += title/attendees/
+  transcript/minutes_md/decisions. `meeting-minutes` function (team
+  JWT): raw transcript (≤60k chars) → completeJSON {summary_md,
+  decisions[], action_items[{title, owner_hint}]} → saves the minutes
+  on the meeting and inserts action items as meeting_todos (owner name
+  appended). Prompt contract: extract only what was actually said.
+- MeetingTab «دقائق الاجتماع بالذكاء»: paste transcript → extract →
+  summary + decisions shown, todos land in section ٤ automatically.
+- **Live-verified in prod**: 3-speaker Arabic test transcript → exactly
+  3 faithful decisions + 3 action items with owner names; test rows
+  cleaned. KB reindexed (11 new articles from this whole module round:
+  gov-docs sync ×6 + 5 module guides).
+- Deferred honestly: live audio recording/transcription needs audio
+  infra — v1 is paste-the-transcript (Meet/Zoom both export text).
+
 ## Gov docs + collaborators log (2026-08-09)
 
 - `20260809140000_sops_policies.sql`: gov_documents (sop|policy per
