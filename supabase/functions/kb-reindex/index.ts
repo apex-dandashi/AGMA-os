@@ -44,9 +44,10 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: 'forbidden' }), { status: 403, headers });
   }
 
-  // دفعة صغيرة لكل استدعاء — التضمين يستهلك حصة الحوسبة، والواجهة تكرر
-  // النداء حتى remaining = 0 (درس WORKER_RESOURCE_LIMIT مع ١٤ مقالاً دفعة واحدة)
-  const BATCH = 3;
+  // مقال واحد لكل استدعاء — التضمين يستهلك حصة معالج Edge، والمقالات الطويلة
+  // (أدلة الخدمات) بمقاطعها الست تكفي وحدها؛ الواجهة تكرر حتى remaining = 0
+  // (درس WORKER_RESOURCE_LIMIT: ١٤ دفعة واحدة ثم ٣ طويلة)
+  const BATCH = 1;
   const { data: dirty, count } = await supabase.from('kb_articles')
     .select('id, title, body_md', { count: 'exact' })
     .eq('published', true).is('indexed_at', null).limit(BATCH);

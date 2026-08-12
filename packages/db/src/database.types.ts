@@ -5649,6 +5649,60 @@ export type Database = {
         }
         Relationships: []
       }
+      service_guides: {
+        Row: {
+          client_inputs: Json
+          deliverables: Json
+          duration_ar: string
+          ideal_for_ar: string
+          kb_article_id: string | null
+          kpis: Json
+          pitch_ar: string
+          service_id: string
+          steps: Json
+          updated_at: string
+        }
+        Insert: {
+          client_inputs?: Json
+          deliverables?: Json
+          duration_ar: string
+          ideal_for_ar: string
+          kb_article_id?: string | null
+          kpis?: Json
+          pitch_ar: string
+          service_id: string
+          steps?: Json
+          updated_at?: string
+        }
+        Update: {
+          client_inputs?: Json
+          deliverables?: Json
+          duration_ar?: string
+          ideal_for_ar?: string
+          kb_article_id?: string | null
+          kpis?: Json
+          pitch_ar?: string
+          service_id?: string
+          steps?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_guides_kb_article_id_fkey"
+            columns: ["kb_article_id"]
+            isOneToOne: false
+            referencedRelation: "kb_articles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_guides_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: true
+            referencedRelation: "services_catalog"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_packages: {
         Row: {
           active: boolean

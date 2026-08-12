@@ -22,6 +22,34 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 9 | Help Centre / RAG + chatbots | ✅ Done (2026-08-09) — KB+RAG core, then Help Center: 14 seeded articles (نصائح تسويقية + دليل النظام), two-tier brain (grounded/general-advice), /help site page, ops help surface |
 | 10 | Employee portal + Analytics + digests | ✅ Done (2026-08-09) — staff lifecycle (auto onboarding/offboarding checklists, welcome emails, 30/60/90 nudges, equipment log, signature generator), client health weekly → scorecard, Analytics dashboard, digest v2 (rocks+issues, WhatsApp-ready) |
 
+## Service guides log (2026-08-09) — ٣٧ دليلاً بالتفصيل الدقيق
+
+Owner: «ابيه كامل متكامل لكل خدماتنا بالتفصيل الدقيق — خذ وقتك».
+
+- `20260809180000_service_guides.sql`: service_guides (per service:
+  pitch, ideal_for, duration, deliverables[], steps[{title,desc}],
+  client_inputs[], kpis[]) + sync trigger composing a full KB article
+  «دليل الخدمة: X» (category دليل الخدمات, internal) on insert/update —
+  one source feeding the sales guide UI AND the assistant. **All 37
+  services authored in detail**: honest pitches, range durations
+  (explicitly non-contractual), concrete client inputs, measurable
+  KPIs — with AGMA doctrine baked in (2-quote rule, human review of AI
+  output, client owns ad accounts, no password sharing, بروفة before
+  print, NDA before client-data assignments).
+- SalesGuide UI v2: service chips are now buttons opening the full
+  ServiceDetail card (pitch/لمن/المدة/المخرجات/الخطوات/المدخلات/القياس);
+  categories without playbooks (production-support) now reachable —
+  the old filter hid their 5 fully-authored services.
+- SQL lesson: string_agg cannot contain window fns — `with ordinality`
+  for numbered steps. Reindex lesson #3: long guide articles blew the
+  per-invocation CPU budget even at BATCH=3 → **BATCH=1** + UI loop cap
+  80; the 16 “failed” rounds had each partially indexed before dying
+  (per-article commits), so totals reconciled at exactly 37.
+- Live-verified: 37/37 indexed (127 chunks). Ops assistant asked «وش
+  يستلم العميل في المتاجر الإلكترونية وكم تاخذ؟» → grounded answer
+  citing «دليل الخدمة: المتاجر الإلكترونية» with the actual
+  deliverables list. KB now 75 articles.
+
 ## Sales guide log (2026-08-09)
 
 Owner: «اضف section for quick access to Services Roadmaps and steps

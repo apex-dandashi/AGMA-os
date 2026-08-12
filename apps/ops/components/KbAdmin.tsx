@@ -75,7 +75,7 @@ export default function KbAdmin() {
     async () => {
       // الدالة تفهرس دفعة صغيرة كل نداء (حدود حوسبة Edge) — نكرر حتى تفرغ
       let total = 0;
-      for (let round = 0; round < 20; round++) {
+      for (let round = 0; round < 80; round++) {
         const { data: res, error } = await getSupabase().functions.invoke('kb-reindex', { body: {} });
         if (error) {
           const ctx = (error as { context?: unknown }).context;
