@@ -22,6 +22,24 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 9 | Help Centre / RAG + chatbots | ✅ Done (2026-08-09) — KB+RAG core, then Help Center: 14 seeded articles (نصائح تسويقية + دليل النظام), two-tier brain (grounded/general-advice), /help site page, ops help surface |
 | 10 | Employee portal + Analytics + digests | ✅ Done (2026-08-09) — staff lifecycle (auto onboarding/offboarding checklists, welcome emails, 30/60/90 nudges, equipment log, signature generator), client health weekly → scorecard, Analytics dashboard, digest v2 (rocks+issues, WhatsApp-ready) |
 
+## Sales guide log (2026-08-09)
+
+Owner: «اضف section for quick access to Services Roadmaps and steps
+under Sales Guide Section».
+
+- New SalesGuide component under the pipeline board: collapsible
+  «دليل المبيعات — خرائط الخدمات وخطواتها». Category chips → the
+  category's playbook rendered as the 4-phase AGMA method (تحليل ←
+  توليد ← تسويق ← تكيّف) with stages and expandable task-template steps
+  (role · default days · client-approval flag), mode badge (recurring/
+  milestone), quick stats (stages count, ~total days, client approvals)
+  and the category's service chips. Disclaimer: durations are playbook
+  estimates, the contractual commitment lives in scope+quote.
+- Categories without playbooks (production-support) get an honest
+  empty note. Data lazy-loads only when the section opens.
+- دليل المسار KB article appended with the sales-guide section
+  (indexed_at reset + prod reindex — docs-with-ship).
+
 ## Meetings AI log (2026-08-09) — دقائق بالذكاء + مزود Gemini
 
 - **llm.ts v3**: GEMINI_API_KEY added as middle provider (Anthropic →
