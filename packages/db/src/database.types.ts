@@ -4871,10 +4871,12 @@ export type Database = {
         Row: {
           client_id: string
           created_at: string
+          cycle_weeks: number | null
           id: string
           method_phase: Database["public"]["Enums"]["method_phase"]
           mode: Database["public"]["Enums"]["project_mode"]
           name: string
+          next_cycle_on: string | null
           playbook_id: string
           roadmap_id: string | null
           status: Database["public"]["Enums"]["project_status"]
@@ -4883,10 +4885,12 @@ export type Database = {
         Insert: {
           client_id: string
           created_at?: string
+          cycle_weeks?: number | null
           id?: string
           method_phase?: Database["public"]["Enums"]["method_phase"]
           mode: Database["public"]["Enums"]["project_mode"]
           name: string
+          next_cycle_on?: string | null
           playbook_id: string
           roadmap_id?: string | null
           status?: Database["public"]["Enums"]["project_status"]
@@ -4895,10 +4899,12 @@ export type Database = {
         Update: {
           client_id?: string
           created_at?: string
+          cycle_weeks?: number | null
           id?: string
           method_phase?: Database["public"]["Enums"]["method_phase"]
           mode?: Database["public"]["Enums"]["project_mode"]
           name?: string
+          next_cycle_on?: string | null
           playbook_id?: string
           roadmap_id?: string | null
           status?: Database["public"]["Enums"]["project_status"]
@@ -6718,6 +6724,7 @@ export type Database = {
         Returns: string
       }
       current_client_id: { Args: never; Returns: string }
+      cycle_rollover: { Args: never; Returns: undefined }
       delete_client_if_unlinked: {
         Args: { p_client: string }
         Returns: undefined
@@ -6806,6 +6813,8 @@ export type Database = {
         }
         Returns: undefined
       }
+      open_cycle_now: { Args: { p_project: string }; Returns: string }
+      open_project_cycle: { Args: { p_project: string }; Returns: string }
       prune_content_signals: { Args: never; Returns: undefined }
       recognize_revenue: { Args: never; Returns: undefined }
       render_template: {
@@ -6970,7 +6979,7 @@ export type Database = {
       kb_audience: "public" | "client" | "internal"
       kpi_direction: "up" | "down"
       lead_outcome: "open" | "won" | "lost"
-      lead_source: "call" | "whatsapp" | "email" | "site"
+      lead_source: "call" | "whatsapp" | "email" | "site" | "import"
       lead_stage:
         | "discovery_call"
         | "opportunity_analysis"
@@ -7299,7 +7308,7 @@ export const Constants = {
       kb_audience: ["public", "client", "internal"],
       kpi_direction: ["up", "down"],
       lead_outcome: ["open", "won", "lost"],
-      lead_source: ["call", "whatsapp", "email", "site"],
+      lead_source: ["call", "whatsapp", "email", "site", "import"],
       lead_stage: [
         "discovery_call",
         "opportunity_analysis",

@@ -22,6 +22,34 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 9 | Help Centre / RAG + chatbots | ✅ Done (2026-08-09) — KB+RAG core, then Help Center: 14 seeded articles (نصائح تسويقية + دليل النظام), two-tier brain (grounded/general-advice), /help site page, ops help surface |
 | 10 | Employee portal + Analytics + digests | ✅ Done (2026-08-09) — staff lifecycle (auto onboarding/offboarding checklists, welcome emails, 30/60/90 nudges, equipment log, signature generator), client health weekly → scorecard, Analytics dashboard, digest v2 (rocks+issues, WhatsApp-ready) |
 
+## Phase 11 log (2026-09-04) — إقفال الديون: الدورات والإجازات والاستيراد
+
+The 0–10 blueprint is complete; phase 11 closes the honest deferred
+backlog that needs no external keys.
+
+- `20260904090000_cycles_leaves.sql`: **recurring-project cycle
+  automation** (deferred since 3.5C) — projects += cycle_weeks (1/2/4,
+  NULL = off, safe for existing rows) + next_cycle_on;
+  open_project_cycle() creates the numbered sprint and clones operating
+  tasks (generate/market/adapt stages only — analyze runs once at
+  setup) with due dates capped to cycle end, advances next_cycle_on,
+  notifies team; open_cycle_now() strategist+ manual trigger;
+  cycle_rollover() in run_daily_jobs_v5 (cron chain v4→v5, verified in
+  prod). Proofs: auto-open via daily job, no double-open same day,
+  manual open numbered 2, milestone projects rejected, notification
+  queued (9 operating tasks per social cycle).
+- **Leaves UI** (phase-10 promise closed): TeamPanel section — self-
+  service request (annual/sick/unpaid/other), «في إجازة الآن» badge,
+  admin manages, member deletes own future ones.
+- **CSV import** (docs/08 P4 debt): parseCsv added to lib/csv (quote-
+  aware, BOM-safe, header-keyed); leads import on the pipeline (name
+  required, dedupe by name, new lead_source 'import') and clients
+  import (company required, dedupe). Lesson: regen types AFTER db
+  reset applies the enum value, not before.
+- ProjectDetail CycleControls (rhythm select, next-due date, «افتح
+  دورة الآن»). KB article shipped and reindexed in prod. First real
+  ship through ./scripts/sb — pinning works in anger.
+
 ## Ops note (2026-09-04) — Supabase account pinning
 
 Full-chain connection test (local/GitHub/Hostinger/Supabase) found all

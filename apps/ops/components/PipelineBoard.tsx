@@ -31,7 +31,7 @@ import { leadInputSchema } from '@agma/db/schemas';
 import { getSupabase } from '../lib/supabase';
 import { keys, useAppMutation, useLeads, useMoveLeadStage } from '../lib/queries';
 import { AlertTriangle, Clock, Download, KanbanSquare, Trophy } from 'lucide-react';
-import { exportCsv } from '../lib/csv';
+import { exportCsv, parseCsv } from '../lib/csv';
 import { normalizeAr } from '../lib/format';
 import { activitiesKey, useOpenActivities } from './ActivitiesBell';
 
@@ -53,6 +53,7 @@ const SOURCE_LABELS: Record<Enums<'lead_source'>, string> = {
   whatsapp: 'واتساب',
   email: 'بريد',
   site: 'الموقع',
+  import: 'استيراد',
 };
 
 export default function PipelineBoard() {
@@ -173,6 +174,7 @@ export default function PipelineBoard() {
               l.value, l.expected_close, l.outcome, l.created_at.slice(0, 10)]))}>
           <Download className="h-3.5 w-3.5" aria-hidden /> CSV
         </Button>
+        <LeadsCsvImport existing={leads ?? []} />
       </div>
 
       <SourceAnalytics />
@@ -597,5 +599,46 @@ function EditLeadModal({ lead, onClose }: { lead: Lead | null; onClose: () => vo
           onClose();
         }} />
     </Modal>
+  );
+}
+
+/** استيراد CSV (المرحلة ١١ — دين docs/08 P4): عمود name إلزامي، company
+ *  وvalue اختياريان؛ المكرر بالاسم يُتخطى — للانتقال من الجداول القديمة. */
+function LeadsCsvImport({ existing }: { existing: Lead[] }) {
+  const toast = useToast();
+  const importCsv = useAppMutation(
+    async (file: File) => {
+      const rows = parseCsv(await file.text());
+      if (rows.length === 0) throw new Error('الملف فارغ أو بلا ترويسة — الصف الأول لازم يحمل أسماء الأعمدة (name…)');
+      if (!('name' in rows[0])) throw new Error('عمود name مفقود من الترويسة');
+      const have = new Set(existing.map((l) => l.name.trim()));
+      const fresh = rows
+        .filter((r) => r.name && !have.has(r.name))
+        .map((r) => ({
+          name: r.name,
+          company: r.company || null,
+          value: r.value && !isNaN(Number(r.value)) ? Number(r.value) : null,
+          source: 'import' as const,
+        }));
+      const skipped = rows.length - fresh.length;
+      if (fresh.length === 0) throw new Error(`لا جديد — ${skipped} صفوف مكررة أو بلا اسم`);
+      const { error } = await getSupabase().from('leads').insert(fresh as never);
+      if (error) throw new Error(error.message);
+      toast.success(`استُورد ${fresh.length} عميلاً محتملاً${skipped ? ` · تُخطي ${skipped} (مكرر/بلا اسم)` : ''}`);
+    },
+    { invalidate: [keys.leads] }
+  );
+  return (
+    <label className="cursor-pointer">
+      <span className="inline-flex items-center gap-1 rounded-sm px-2 py-1 text-xs text-gray-medium hover:text-gray-light">
+        استيراد CSV
+      </span>
+      <input type="file" accept=".csv,text/csv" className="hidden" aria-label="استيراد عملاء محتملين من CSV"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) importCsv.mutate(f as never);
+          e.target.value = '';
+        }} />
+    </label>
   );
 }

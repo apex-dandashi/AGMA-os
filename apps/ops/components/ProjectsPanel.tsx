@@ -9,6 +9,7 @@ import {
   Card,
   ConfirmDialog,
   EmptyState,
+  Hint,
   Input,
   Modal,
   Select,
@@ -336,6 +337,8 @@ function ProjectDetail({ project, clientName, onBack }:
         </div>
       </div>
 
+      {project.mode === 'recurring' && <CycleControls project={project} />}
+
       {isLoading || !data ? (
         <SkeletonList rows={6} />
       ) : (
@@ -650,5 +653,72 @@ function TimeLogModal({ open, onClose, task }:
         )}
       </div>
     </Modal>
+  );
+}
+
+/** إيقاع الدورات (المرحلة ١١): المشروع الدوري يفتح سبرنته الجديدة بنفسه —
+ *  فعّل الإيقاع وحدد أول استحقاق، أو افتح دورة فورية. الفتح الآلي 6 صباحاً. */
+function CycleControls({ project }: { project: Project }) {
+  const canManage = ['admin', 'strategist', 'cfo', 'pm'].includes(useProfile().role);
+  const patch = useAppMutation(
+    async (p: { cycle_weeks?: number | null; next_cycle_on?: string | null }) => {
+      const { error } = await getSupabase().from('projects').update(p as never).eq('id', project.id);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [projectsKey as unknown as readonly string[]], successMessage: 'حُفظ الإيقاع' }
+  );
+  const openNow = useAppMutation(
+    async () => {
+      const { error } = await getSupabase().rpc('open_cycle_now', { p_project: project.id });
+      if (error) throw new Error(error.message);
+    },
+    {
+      invalidate: [projectsKey as unknown as readonly string[], ['project', project.id]],
+      successMessage: 'فُتحت دورة جديدة — مهام التشغيل هبطت في المشروع',
+    }
+  );
+  const enabled = project.cycle_weeks != null;
+  return (
+    <div className="mb-4 flex flex-wrap items-center gap-3 rounded-sm border border-gray-dark p-3 text-sm">
+      <span className="flex items-center gap-1.5 font-bold">
+        إيقاع الدورات
+        <Hint text="المشروع الدوري يفتح دورته تلقائياً كل استحقاق: سبرنت مرقّم بمهام التشغيل من الكتيب (التوليد/التسويق/التكيّف). عطّل الإيقاع بمسح الاستحقاق." />
+      </span>
+      {canManage ? (
+        <>
+          <Select value={project.cycle_weeks?.toString() ?? ''} aria-label="إيقاع الدورة"
+            onChange={(e) => patch.mutate({
+              cycle_weeks: e.target.value ? Number(e.target.value) : null,
+              ...(e.target.value && !project.next_cycle_on
+                ? { next_cycle_on: new Date().toISOString().slice(0, 10) } : {}),
+            })} className="w-36">
+            <option value="">بلا أتمتة</option>
+            <option value="1">أسبوعي</option>
+            <option value="2">كل أسبوعين</option>
+            <option value="4">شهري</option>
+          </Select>
+          {enabled && (
+            <>
+              <label className="flex items-center gap-1.5 text-xs text-gray-light">
+                الاستحقاق القادم
+                <Input type="date" dir="ltr" value={project.next_cycle_on ?? ''}
+                  aria-label="تاريخ الدورة القادمة" className="w-36 py-1 text-xs"
+                  onChange={(e) => patch.mutate({ next_cycle_on: e.target.value || null })} />
+              </label>
+              <Button size="xs" variant="outline" loading={openNow.isPending}
+                onClick={() => openNow.mutate(undefined as never)}>
+                افتح دورة الآن
+              </Button>
+            </>
+          )}
+        </>
+      ) : (
+        <span className="text-gray-light">
+          {enabled
+            ? `${project.cycle_weeks === 1 ? 'أسبوعي' : project.cycle_weeks === 2 ? 'كل أسبوعين' : 'شهري'} — القادمة ${project.next_cycle_on ?? '—'}`
+            : 'بلا أتمتة'}
+        </span>
+      )}
+    </div>
   );
 }

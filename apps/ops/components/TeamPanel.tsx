@@ -312,6 +312,7 @@ export default function TeamPanel({ me }: { me: Tables<'profiles'> }) {
       )}
       {isAdmin && <StaffLifecycle team={(profiles ?? []).filter((p) => p.role !== 'client')} />}
       <CollaboratorsSection me={me} />
+      <LeavesSection me={me} team={(profiles ?? []).filter((p) => p.role !== 'client')} />
       <PeopleAnalyzer
         team={(profiles ?? []).filter((p) => p.role !== 'client' && p.active)}
         isAdmin={isAdmin} meId={me.id} />
@@ -863,6 +864,116 @@ function CollaboratorsSection({ me }: { me: Tables<'profiles'> }) {
             );
           })}
         </div>
+      )}
+    </section>
+  );
+}
+
+/* -------------------------------------------------------------- leaves */
+/** الإجازات (وعد المرحلة ١٠ المكتمل الآن): كل عضو يسجل إجازته، والغائب
+ *  اليوم يظهر بشارة — فيعرف الجميع من غير متاح قبل الإسناد. */
+const LEAVE_AR: Record<string, string> = {
+  annual: 'سنوية', sick: 'مرضية', unpaid: 'بلا راتب', other: 'أخرى',
+};
+
+export function todayOnLeave(leaves: Tables<'leaves'>[] | undefined, memberId: string): boolean {
+  const today = new Date().toISOString().slice(0, 10);
+  return (leaves ?? []).some((l) =>
+    l.member === memberId && l.starts_on <= today && l.ends_on >= today);
+}
+
+function LeavesSection({ me, team }: { me: Tables<'profiles'>; team: Tables<'profiles'>[] }) {
+  const key = ['leaves'];
+  const isAdmin = me.role === 'admin';
+  const { data: leaves } = useQuery({
+    queryKey: key,
+    queryFn: async () => {
+      const { data } = await getSupabase().from('leaves')
+        .select('*').gte('ends_on', new Date(Date.now() - 90 * 864e5).toISOString().slice(0, 10))
+        .order('starts_on', { ascending: false });
+      return data ?? [];
+    },
+  });
+
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
+  const [kind, setKind] = useState('annual');
+  const [note, setNote] = useState('');
+
+  const add = useAppMutation(
+    async () => {
+      const { error } = await getSupabase().from('leaves').insert({
+        member: me.id, starts_on: from, ends_on: to,
+        kind: kind as never, note: note.trim() || null,
+      });
+      if (error) throw new Error(error.message);
+      setFrom(''); setTo(''); setNote('');
+    },
+    { invalidate: [key], successMessage: 'سُجلت الإجازة' }
+  );
+  const remove = useAppMutation(
+    async (id: string) => {
+      const { error } = await getSupabase().from('leaves').delete().eq('id', id);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [key], successMessage: 'حُذفت' }
+  );
+
+  const name = (id: string) => {
+    const p = team.find((t) => t.id === id);
+    return p?.full_name || p?.email || '—';
+  };
+  const today = new Date().toISOString().slice(0, 10);
+
+  return (
+    <section className="mt-8">
+      <h2 className="mb-2 flex items-center gap-2 text-base font-bold">
+        الإجازات
+        <Hint text="سجل إجازتك بنفسك — من في إجازة اليوم يظهر بشارة على صفه في جدول الفريق، فلا يُسند له عمل وهو غائب. التعديل والحذف لمدير النظام (وحذف سجلك أنت قبل بدايته)." />
+      </h2>
+      <form className="mb-3 flex flex-wrap items-end gap-2 rounded-sm border border-gray-dark p-3"
+        onSubmit={(e) => { e.preventDefault(); if (from && to) add.mutate(undefined as never); }}>
+        <Input label="من" type="date" dir="ltr" value={from}
+          onChange={(e) => setFrom(e.target.value)} className="w-36" />
+        <Input label="إلى" type="date" dir="ltr" value={to}
+          onChange={(e) => setTo(e.target.value)} className="w-36" />
+        <Select label="النوع" value={kind} onChange={(e) => setKind(e.target.value)} className="w-28">
+          {Object.entries(LEAVE_AR).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+        </Select>
+        <Input label="ملاحظة" value={note} onChange={(e) => setNote(e.target.value)} className="w-44" />
+        <Button type="submit" size="sm" variant="outline" loading={add.isPending}
+          disabled={!from || !to || to < from}>
+          سجّل إجازتي
+        </Button>
+      </form>
+      {(leaves ?? []).length === 0 ? (
+        <p className="text-sm text-gray-medium">لا إجازات مسجلة.</p>
+      ) : (
+        <Table head={['العضو', 'من', 'إلى', 'النوع', 'ملاحظة', '']}>
+          {(leaves ?? []).map((l) => {
+            const active = l.starts_on <= today && l.ends_on >= today;
+            return (
+              <Tr key={l.id}>
+                <Td className="font-medium">
+                  {name(l.member)}
+                  {active && <Badge variant="accent" className="ms-1.5">في إجازة الآن</Badge>}
+                </Td>
+                <Td dir="ltr">{l.starts_on}</Td>
+                <Td dir="ltr">{l.ends_on}</Td>
+                <Td className="text-gray-light">{LEAVE_AR[l.kind] ?? l.kind}</Td>
+                <Td className="text-gray-medium">{l.note ?? '—'}</Td>
+                <Td>
+                  {(isAdmin || (l.member === me.id && l.starts_on > today)) && (
+                    <Button variant="ghost" size="xs" loading={remove.isPending}
+                      onClick={() => remove.mutate(l.id as never)}>
+                      حذف
+                    </Button>
+                  )}
+                </Td>
+              </Tr>
+            );
+          })}
+        </Table>
       )}
     </section>
   );

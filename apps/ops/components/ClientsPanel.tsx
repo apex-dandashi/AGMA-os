@@ -25,7 +25,7 @@ import { getSupabase } from '../lib/supabase';
 import { BUDGET_TIERS, DIAL_CODES, SAUDI_CITIES, SECTORS } from '../lib/geo';
 import { keys, useAppMutation, useCatalog, useClientDetail, useClients } from '../lib/queries';
 import { Download, FileSpreadsheet, Pencil, Trash2, Users } from 'lucide-react';
-import { exportCsv } from '../lib/csv';
+import { exportCsv, parseCsv } from '../lib/csv';
 import { fmtDate, fmtSAR } from '../lib/format';
 import { renderStatement } from '@agma/legal-templates';
 import { useProfile } from './AppShell';
@@ -103,6 +103,7 @@ export default function ClientsPanel() {
             error={newError}
           />
           <Button type="submit" size="sm" loading={addClient.isPending}>+</Button>
+          <ClientsCsvImport />
         </form>
         <div className="mb-2 flex items-center gap-1.5">
           <Input
@@ -883,5 +884,42 @@ function ClientDocumentsSection({ clientId }: { clientId: string }) {
         ))}
       </div>
     </section>
+  );
+}
+
+/** استيراد عملاء من CSV (المرحلة ١١): عمود company إلزامي + city اختياري؛
+ *  المكرر بالشركة يُتخطى. */
+function ClientsCsvImport() {
+  const toast = useToast();
+  const { data: clients } = useClients();
+  const importCsv = useAppMutation(
+    async (file: File) => {
+      const rows = parseCsv(await file.text());
+      if (rows.length === 0) throw new Error('الملف فارغ أو بلا ترويسة (company…)');
+      if (!('company' in rows[0])) throw new Error('عمود company مفقود من الترويسة');
+      const have = new Set((clients ?? []).map((c) => c.company.trim()));
+      const fresh = rows
+        .filter((r) => r.company && !have.has(r.company))
+        .map((r) => ({ company: r.company, city: r.city || null }));
+      const skipped = rows.length - fresh.length;
+      if (fresh.length === 0) throw new Error(`لا جديد — ${skipped} صفوف مكررة أو بلا شركة`);
+      const { error } = await getSupabase().from('clients').insert(fresh as never);
+      if (error) throw new Error(error.message);
+      toast.success(`استُورد ${fresh.length} عميلاً${skipped ? ` · تُخطي ${skipped}` : ''}`);
+    },
+    { invalidate: [keys.clients] }
+  );
+  return (
+    <label className="cursor-pointer self-center">
+      <span className="inline-flex items-center rounded-sm px-2 py-1 text-xs text-gray-medium hover:text-gray-light">
+        استيراد CSV
+      </span>
+      <input type="file" accept=".csv,text/csv" className="hidden" aria-label="استيراد عملاء من CSV"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) importCsv.mutate(f as never);
+          e.target.value = '';
+        }} />
+    </label>
   );
 }
