@@ -1,0 +1,12 @@
+#!/bin/sh
+# Supabase CLI مثبَّت على هوية AGMA — محصّن ضد أي `supabase login` عام.
+# التوكن يُقرأ من مدخل كيتشين مخصص (Supabase CLI (AGMA)) لحظة التنفيذ،
+# فتبديل الحساب العام لمشروع آخر (bach وغيره) لا يمس AGMA أبداً.
+# الاستخدام: ./scripts/sb db push · ./scripts/sb functions deploy X …
+set -e
+TOKEN="$(security find-generic-password -s 'Supabase CLI (AGMA)' -w 2>/dev/null)" || {
+  echo 'مدخل الكيتشين «Supabase CLI (AGMA)» مفقود — سجّل دخول حساب AGMA ثم:' >&2
+  echo "security add-generic-password -U -s 'Supabase CLI (AGMA)' -a agma -w \"\$(security find-generic-password -s 'Supabase CLI' -w)\"" >&2
+  exit 1
+}
+SUPABASE_ACCESS_TOKEN="$TOKEN" exec "$(dirname "$0")/../node_modules/.bin/supabase" "$@"

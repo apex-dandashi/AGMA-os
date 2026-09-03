@@ -22,6 +22,18 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 9 | Help Centre / RAG + chatbots | ✅ Done (2026-08-09) — KB+RAG core, then Help Center: 14 seeded articles (نصائح تسويقية + دليل النظام), two-tier brain (grounded/general-advice), /help site page, ops help surface |
 | 10 | Employee portal + Analytics + digests | ✅ Done (2026-08-09) — staff lifecycle (auto onboarding/offboarding checklists, welcome emails, 30/60/90 nudges, equipment log, signature generator), client health weekly → scorecard, Analytics dashboard, digest v2 (rocks+issues, WhatsApp-ready) |
 
+## Ops note (2026-09-04) — Supabase account pinning
+
+Full-chain connection test (local/GitHub/Hostinger/Supabase) found all
+green except management auth: a `supabase login` for another project
+(bach-platform, different account, ~Aug 14) had silently replaced the
+global CLI token — AGMA management calls 403'd for 3 weeks while the
+data plane worked fine. Fixed: owner re-logged into the AGMA account;
+token now **pinned** in keychain entry `Supabase CLI (AGMA)` and every
+remote CLI command goes through `./scripts/sb` which injects it as
+SUPABASE_ACCESS_TOKEN (immune to future global logins). bach got its
+own scripts/sb reading `Supabase CLI (bach)`. CLAUDE.md rule 7 amended.
+
 ## Service guides log (2026-08-09) — ٣٧ دليلاً بالتفصيل الدقيق
 
 Owner: «ابيه كامل متكامل لكل خدماتنا بالتفصيل الدقيق — خذ وقتك».
