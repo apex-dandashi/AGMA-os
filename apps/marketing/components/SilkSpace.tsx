@@ -191,6 +191,10 @@ export default function SilkSpace() {
     const dvX = new Float32Array(RIBBONS * (SEGS + 1));
     const dvY = new Float32Array(RIBBONS * (SEGS + 1));
     const segGlow = new Float32Array(RIBBONS * (SEGS + 1));
+    /* خط المنتصف النهائي (مسار + إزاحة + موجة) — تُحسب منه العموديات بعد
+       تنعيمه، فلا تتقاطع حافتا الشريط أبداً (سبب الطيّات الحادة) */
+    const cX = new Float32Array(RIBBONS * (SEGS + 1));
+    const cY = new Float32Array(RIBBONS * (SEGS + 1));
 
     const VERTS = (SEGS + 1) * 2;
     const rPos = new Float32Array(RIBBONS * VERTS * 2);
@@ -327,14 +331,14 @@ export default function SilkSpace() {
       return [bestU, Math.sqrt(bestD)];
     }
     function emit(u: number, amp: number) {
-      if (waves.length > 28) waves.shift();
+      if (waves.length > 10) waves.shift();
       waves.push({ u, t0: wt, amp });
     }
     const onDown = (e: PointerEvent) => {
       if (e.pointerType === 'mouse' && e.button !== 0) return;
       const [u, d] = nearestU(e.clientX, e.clientY);
       const near = Math.max(0.25, 1 - d / (H * 0.5));
-      emit(u, 46 * near);
+      emit(u, 30 * near);
       const k = Math.round(u * SEGS);
       for (let j = -4; j <= 4; j++) { const kk = k + j; if (kk >= 0 && kk <= SEGS) segGlow[kk] = Math.min(segGlow[kk] + 0.9 * near, 2.0); }
     };
@@ -397,11 +401,11 @@ export default function SilkSpace() {
       const push = 1.4 + pointer.speed * 0.16;
       const drag = -vel * 0.03;                          /* التمرير يسحب النسيج */
       /* إطلاق موجة من حركة اليد قرب الحرير (خارج أقسام القرار) */
-      if (pointer.active && !inSilk && pointer.speed > 0.6 && wt - lastEmit > 0.1) {
+      if (pointer.active && !inSilk && pointer.speed > 2 && wt - lastEmit > 0.22) {
         const [u, d] = nearestU(pointer.x, pointer.y);
         if (d < R * 1.3) {
           const near = 1 - d / (R * 1.3);
-          emit(u, Math.min(30, 4 + pointer.speed * 0.55) * near);
+          emit(u, Math.min(18, 3 + pointer.speed * 0.3) * near);
           lastEmit = wt;
         }
       }
@@ -439,7 +443,7 @@ export default function SilkSpace() {
           let wave = 0;
           for (let w = 0; w < waves.length; w++) {
             const age = wt - waves[w].t0;
-            const sig = 0.045 + 0.05 * age;
+            const sig = 0.085 + 0.05 * age;
             const x = (Math.abs(pu - waves[w].u) - 0.42 * age) / sig;
             if (x > 3 || x < -3) continue;
             wave += waves[w].amp * Math.exp(-age * 1.15) * (1 - x * x) * Math.exp(-x * x * 0.5);
@@ -470,15 +474,39 @@ export default function SilkSpace() {
           dispX[k] += dvX[k]; dispY[k] += dvY[k];
           segGlow[k] *= 0.955;
 
-          const px2 = cx + dispX[k] + nx * wave, py2 = cy + dispY[k] + ny * wave;
+          cX[k] = cx + dispX[k] + nx * wave; cY[k] = cy + dispY[k] + ny * wave;
           const vi = (r * VERTS + s2 * 2) * 2;
-          const wHere = halfW * (0.5 + Math.sin(pu * Math.PI) * 0.8);
-          rPos[vi] = px2 + nx * wHere;     rPos[vi + 1] = py2 + ny * wHere;
-          rPos[vi + 2] = px2 - nx * wHere; rPos[vi + 3] = py2 - ny * wHere;
           rUV[vi] = pu; rUV[vi + 1] = 0;
           rUV[vi + 2] = pu; rUV[vi + 3] = 1;
           const gi = r * VERTS + s2 * 2;
           rGlow[gi] = segGlow[k]; rGlow[gi + 1] = segGlow[k];
+        }
+      }
+      /* الهندسة من خط المنتصف النهائي: تنعيم مرتين ثم عموديات من الجيران */
+      for (let r = 0; r < RIBBONS; r++) {
+        const base = r * (SEGS + 1);
+        const halfW = (r === 0 ? H * 0.052 : H * 0.026);
+        for (let pass = 0; pass < 2; pass++) {
+          let pX = cX[base], pY = cY[base];
+          for (let s2 = 1; s2 < SEGS; s2++) {
+            const k = base + s2;
+            const mx = (pX + cX[k + 1]) * 0.5, my = (pY + cY[k + 1]) * 0.5;
+            pX = cX[k]; pY = cY[k];
+            cX[k] += (mx - cX[k]) * 0.5; cY[k] += (my - cY[k]) * 0.5;
+          }
+        }
+        for (let s2 = 0; s2 <= SEGS; s2++) {
+          const k = base + s2;
+          const ka = base + Math.max(0, s2 - 1), kb = base + Math.min(SEGS, s2 + 1);
+          let tx = cX[kb] - cX[ka], ty = cY[kb] - cY[ka];
+          const tl = Math.hypot(tx, ty) || 1;
+          tx /= tl; ty /= tl;
+          const nx = -ty, ny = tx;
+          const pu = s2 / SEGS;
+          const wHere = halfW * (0.5 + Math.sin(pu * Math.PI) * 0.8);
+          const vi = (r * VERTS + s2 * 2) * 2;
+          rPos[vi] = cX[k] + nx * wHere;     rPos[vi + 1] = cY[k] + ny * wHere;
+          rPos[vi + 2] = cX[k] - nx * wHere; rPos[vi + 3] = cY[k] - ny * wHere;
         }
       }
       /* تنعيم الجيران: الإزاحات تنساب على طول الشريط فلا تتكون شوكة */

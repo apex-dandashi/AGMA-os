@@ -98,6 +98,15 @@ Step 1 of the agreed 4-step plan shipped:
   pruned after 2.8s. Pointer speed now decays per frame so a resting
   hand emits nothing. Attraction/ignition inside data-silk unchanged.
   Verified: sweep and click frames are smooth S-curves, no edges.
+- **Step 7 (owner: sharp crease still there; wants smooth hover, less
+  sensitivity, no glitches)**: root cause found in the strip geometry,
+  not the forces: strip width was extruded along the *base path* normal,
+  so any steep displacement made the two edges cross → a bright crease.
+  Now the final centreline (path + spring displacement + wave) is stored,
+  smoothed twice (3-point, 0.5), and the normals are taken from that
+  smoothed line, so edges can never cross. Ripple made gentler: emit
+  every ≥220ms only above speed 2, amplitude 3–18px, σ 0.085+, click
+  30px, ≤10 waves alive. Verified sweep + click frames: silky.
   Next: cleanup of legacy glow blobs on inner pages.
 
 ## Apple-design round log (2026-09-04) — استجابة · مواد · حواف
