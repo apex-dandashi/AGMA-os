@@ -3,7 +3,7 @@
 import React from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import NeuralMesh from '@/components/NeuralMesh';
+import SignatureField from '@/components/SignatureField';
 import { motion, AnimatePresence, useScroll, useTransform, useInView } from 'framer-motion';
 import { 
   Zap, 
@@ -161,7 +161,7 @@ export default function HomeClient() {
         onMouseLeave={() => setIsHoveredHero(false)}
       >
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-          <NeuralMesh />
+          <SignatureField />
           <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0A]/80 via-transparent to-[#0A0A0A]/80 opacity-60" />
           
           {/* Interactive Glowing Cursor Follower in the background */}

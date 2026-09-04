@@ -22,6 +22,26 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 9 | Help Centre / RAG + chatbots | ✅ Done (2026-08-09) — KB+RAG core, then Help Center: 14 seeded articles (نصائح تسويقية + دليل النظام), two-tier brain (grounded/general-advice), /help site page, ops help surface |
 | 10 | Employee portal + Analytics + digests | ✅ Done (2026-08-09) — staff lifecycle (auto onboarding/offboarding checklists, welcome emails, 30/60/90 nudges, equipment log, signature generator), client health weekly → scorecard, Analytics dashboard, digest v2 (rocks+issues, WhatsApp-ready) |
 
+## Signature hero log (2026-09-04) — جرعة Lusion
+
+Owner loved lusion.co; agreed dose over clone (their product is their
+site; ours must still sell — friends already called the site heavy).
+
+- **SignatureField.tsx**: dependency-free raw-WebGL particle field
+  replacing the 100-particle 2D NeuralMesh in the home hero. 7,800
+  points desktop / 3,200 touch: spring-home physics, pointer/touch
+  repulsion where hand speed drives push force, kinetic energy ignites
+  ember→white additive glow, breathing idle drift, depth-based
+  parallax. Performance doctrine: DPR≤2, first frame drawn
+  synchronously (no blank canvas ever), IntersectionObserver +
+  visibilitychange pause, prefers-reduced-motion = static frame,
+  low-power context, WebGL-fail renders nothing (gradient covers).
+- Hero copy: owner restored the original AGMA identity headline +
+  description (his call — «بالريال» line removed everywhere incl.
+  /light). /light parked for the finale by owner decision.
+- Immersive «تجربة AGMA» scroll-world page agreed as the crown piece
+  after the comfort improvements — not started yet.
+
 ## Comfort round log (2026-09-04) — جولة الراحة والقراءة + نسخة فاتحة
 
 Owner relayed consistent friend feedback (wordy, gloomy dark, small
