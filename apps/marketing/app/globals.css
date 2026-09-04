@@ -159,6 +159,11 @@ button:not(:disabled):active {
   border-color: rgba(244, 77, 43, 0.35);
   border-top-color: rgba(244, 77, 43, 0.6);
 }
+/* الحالة المختارة (كروت المنهجية): حافة برتقالية كاملة */
+.material-card.is-active {
+  border-color: rgba(244, 77, 43, 0.85);
+  border-top-color: rgba(255, 140, 110, 0.95);
+}
 .material-panel {
   background-color: rgba(18, 18, 22, 0.38);
   background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02) 40%, rgba(255, 255, 255, 0));

@@ -127,8 +127,8 @@ export default function IndustriesPage() {
         <div className="grid-pattern" />
         <div className="container mx-auto text-center relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)", transitionEnd: { filter: "none" } }}
             transition={{ type: "spring", bounce: 0, duration: 0.6 }}
           >
             <div className="inline-block px-4 py-1 mb-6 border border-pulse-orange/30 rounded-full bg-pulse-orange/5 text-pulse-orange text-xs font-bold tracking-widest uppercase font-mono">
@@ -179,8 +179,8 @@ export default function IndustriesPage() {
             {industries.map((industry, i) => (
               <motion.div 
                 key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
+                whileInView={{ opacity: 1, y: 0, filter: "blur(0px)", transitionEnd: { filter: "none" } }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.05 }}
                 className="geometric-card bg-pure-ink p-8 flex flex-col lg:flex-row gap-8 group hover:border-pulse-orange/30 transition-colors"

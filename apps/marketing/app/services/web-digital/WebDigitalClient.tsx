@@ -268,8 +268,8 @@ ${baseMsg}
         <div className="grid-pattern" />
         <div className="container mx-auto text-center relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)", transitionEnd: { filter: "none" } }}
             transition={{ type: "spring", bounce: 0, duration: 0.6 }}
           >
             <div className="inline-block px-4 py-1 mb-6 border border-pulse-orange/30 rounded-full bg-pulse-orange/5 text-pulse-orange text-xs font-bold tracking-widest uppercase font-mono">
@@ -329,8 +329,8 @@ ${baseMsg}
           
           <div className="text-center max-w-3xl mx-auto mb-14 space-y-4">
             <motion.div 
-              initial={{ opacity: 0, y: 15 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 15, filter: "blur(8px)" }}
+              whileInView={{ opacity: 1, y: 0, filter: "blur(0px)", transitionEnd: { filter: "none" } }}
               viewport={{ once: true }}
               className="inline-flex items-center gap-2 px-3 tracking-widest py-1 border border-pulse-orange/25 bg-pulse-orange/5 text-pulse-orange text-[10.5px] font-mono font-bold uppercase rounded-full"
             >
@@ -338,8 +338,8 @@ ${baseMsg}
               Interactive Wireframe Blueprint
             </motion.div>
             <motion.h2 
-              initial={{ opacity: 0, y: 15 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 15, filter: "blur(8px)" }}
+              whileInView={{ opacity: 1, y: 0, filter: "blur(0px)", transitionEnd: { filter: "none" } }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
               className="text-4xl sm:text-5xl font-black text-snow leading-tight tracking-tight animate-none"
@@ -347,8 +347,8 @@ ${baseMsg}
               مطور الهيكل التفاعلي السريع
             </motion.h2>
             <motion.p 
-              initial={{ opacity: 0, y: 15 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 15, filter: "blur(8px)" }}
+              whileInView={{ opacity: 1, y: 0, filter: "blur(0px)", transitionEnd: { filter: "none" } }}
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
               className="text-gray-medium text-sm sm:text-base leading-relaxed"
@@ -674,8 +674,8 @@ ${baseMsg}
                         <div className="space-y-3">
                           <motion.h3 
                             key={demoColor}
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
+                            initial={{ opacity: 0, y: 8, filter: "blur(8px)" }}
+                            animate={{ opacity: 1, y: 0, filter: "blur(0px)", transitionEnd: { filter: "none" } }}
                             className="text-2xl sm:text-4xl font-black text-snow leading-tight font-sans"
                           >
                             نصنع واجهات ويب حية فائقة السرعة تكتسح الأسواق
@@ -1007,8 +1007,8 @@ ${baseMsg}
             {webServices.map((service, i) => (
               <motion.div 
                 key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
+                whileInView={{ opacity: 1, y: 0, filter: "blur(0px)", transitionEnd: { filter: "none" } }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
                 className="geometric-card group bg-pure-ink p-8 lg:p-12 flex flex-col justify-between border-none"

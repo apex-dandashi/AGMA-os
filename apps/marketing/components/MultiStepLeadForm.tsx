@@ -433,8 +433,8 @@ export default function MultiStepLeadForm() {
                       {/* Sub-services selection */}
                       {formData.services.includes(item.id) && (
                         <motion.div 
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
+                          initial={{ opacity: 0, y: 10, filter: "blur(8px)" }}
+                          animate={{ opacity: 1, y: 0, filter: "blur(0px)", transitionEnd: { filter: "none" } }}
                           className="bg-pure-ink p-4 rounded-xl border border-pulse-orange/30 shadow-2xl relative z-20"
                         >
                           <span className="text-[10px] font-bold text-pulse-orange uppercase tracking-widest mb-3 block">الخدمات الفرعية</span>
@@ -486,8 +486,8 @@ export default function MultiStepLeadForm() {
                   <AnimatePresence>
                     {errors.length > 0 && step === 1 && (
                       <motion.div 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
+                        initial={{ opacity: 0, y: 10, filter: "blur(8px)" }}
+                        animate={{ opacity: 1, y: 0, filter: "blur(0px)", transitionEnd: { filter: "none" } }}
                         exit={{ opacity: 0, y: 10 }}
                         className="bg-red-500/10 border border-red-500/50 text-red-500 px-4 py-2 rounded-lg text-sm font-bold"
                       >
@@ -588,8 +588,8 @@ export default function MultiStepLeadForm() {
                   <AnimatePresence>
                     {errors.length > 0 && step === 2 && (
                       <motion.div 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
+                        initial={{ opacity: 0, y: 10, filter: "blur(8px)" }}
+                        animate={{ opacity: 1, y: 0, filter: "blur(0px)", transitionEnd: { filter: "none" } }}
                         exit={{ opacity: 0, y: 10 }}
                         className="bg-red-500/10 border border-red-500/50 text-red-500 px-6 py-3 rounded-xl text-sm font-bold"
                       >
@@ -685,8 +685,8 @@ export default function MultiStepLeadForm() {
                   <AnimatePresence>
                     {errors.length > 0 && step === 3 && (
                       <motion.div 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
+                        initial={{ opacity: 0, y: 10, filter: "blur(8px)" }}
+                        animate={{ opacity: 1, y: 0, filter: "blur(0px)", transitionEnd: { filter: "none" } }}
                         exit={{ opacity: 0, y: 10 }}
                         className="bg-red-500/10 border border-red-500/50 text-red-500 px-6 py-3 rounded-xl text-center text-sm font-bold"
                       >

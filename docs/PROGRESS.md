@@ -58,8 +58,20 @@ Step 1 of the agreed 4-step plan shipped:
   blur (.66). reduced-transparency / contrast:more → solid surface-1.
   Legacy orange scan line in the CTA removed (one light source).
   Scroll-velocity input clamped to ±80px/frame so anchor jumps don't
-  fling the fabric off-screen. Next: unified materialize reveal + tilt,
-  cleanup of remaining glow blobs.
+  fling the fabric off-screen.
+- **Step 3 (owner: «خله ينجذب لمركز قسم الختام وكمل الظهور المتجسّد»)**:
+  the ribbon's y now eases (0.06/frame) toward the viewport centre of the
+  active `data-silk` section (clamped 22–78% of H) so it passes behind
+  the CTA glass, and follows the depth curve elsewhere. Materialize
+  reveal unified: 37 `initial/whileInView|animate` pairs across the site
+  and the home `itemVariants` now go blur(8px)+y → blur(0) with
+  `transitionEnd: { filter: 'none' }` so no filter lingers (a lingering
+  filter is a backdrop root and would blind the glass cards under it);
+  Playwright probe after a full scroll: 24 reveal styles, 0 filters left.
+  RevealGuard also clears filter. AGMA-Method phase cards moved to
+  `.material-card` (+ `.is-active` orange edge) so they refract like the
+  rest. Next: tilt toward pointer, cleanup of legacy glow blobs on inner
+  pages.
 
 ## Apple-design round log (2026-09-04) — استجابة · مواد · حواف
 

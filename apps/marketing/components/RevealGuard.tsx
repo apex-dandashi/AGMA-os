@@ -15,6 +15,7 @@ export default function RevealGuard() {
         if (parseFloat(getComputedStyle(el).opacity) < 0.05) {
           el.style.opacity = '1';
           el.style.transform = 'none';
+          el.style.filter = 'none'; /* الظهور المتجسّد يبدأ مضبّباً */
         }
       });
     };

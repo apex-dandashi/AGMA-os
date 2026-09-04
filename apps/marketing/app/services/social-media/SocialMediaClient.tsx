@@ -274,8 +274,8 @@ export default function SocialMediaClient() {
             {/* Right Column: Copywriting and CTA */}
             <div className="lg:col-span-5 space-y-8 text-right">
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)", transitionEnd: { filter: "none" } }}
                 transition={{ type: "spring", bounce: 0, duration: 0.6 }}
               >
                 <div className="inline-block px-4 py-1 mb-6 border border-pulse-orange/30 rounded-full bg-pulse-orange/5 text-pulse-orange text-xs font-bold tracking-widest uppercase font-mono">
@@ -762,8 +762,8 @@ export default function SocialMediaClient() {
             {socialServices.map((service, i) => (
               <motion.div 
                 key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
+                whileInView={{ opacity: 1, y: 0, filter: "blur(0px)", transitionEnd: { filter: "none" } }}
                 viewport={{ once: true }}
                 className="geometric-card group bg-gray-dark/10 p-8 lg:p-12 flex flex-col justify-between"
               >

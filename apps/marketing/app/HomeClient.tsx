@@ -134,11 +134,15 @@ export default function HomeClient() {
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
+    /* الظهور المتجسّد: قماش يستقر — ضبابية تصفو مع ارتفاع خفيف، ثم يُرفع
+       الفلتر نهائياً كي لا يقطع زجاج الكروت خلفيتَه (backdrop root) */
+    hidden: { opacity: 0, y: 30, filter: 'blur(8px)' },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] as const },
+      filter: 'blur(0px)',
+      transitionEnd: { filter: 'none' },
+      transition: { type: 'spring' as const, bounce: 0, duration: 0.6 },
     },
   };
 
@@ -268,8 +272,8 @@ export default function HomeClient() {
         <div className="grid-pattern opacity-[0.015]" />
         <div className="container mx-auto relative z-10">
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
+            whileInView={{ opacity: 1, y: 0, filter: "blur(0px)", transitionEnd: { filter: "none" } }}
             viewport={{ once: true }}
             transition={{ type: "spring", bounce: 0, duration: 0.6 }}
             className="flex flex-col lg:flex-row items-start lg:items-end justify-between mb-16 gap-6"
@@ -299,10 +303,10 @@ export default function HomeClient() {
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
                     onClick={() => setActiveMethodIndex(idx)}
-                    className={`p-6 rounded-2xl border text-right cursor-pointer transition-all duration-300 relative overflow-hidden flex flex-col justify-between ${
-                      isActive 
-                        ? 'bg-neutral-900 border-pulse-orange shadow-[0_4px_25px_rgba(255,97,0,0.1)]' 
-                        : 'bg-neutral-950/40 border-white/5 opacity-60 hover:opacity-100 hover:border-white/10'
+                    className={`material-card p-6 rounded-2xl text-right cursor-pointer relative overflow-hidden flex flex-col justify-between ${
+                      isActive
+                        ? 'is-active shadow-[0_4px_25px_rgba(255,97,0,0.1)]'
+                        : 'opacity-70 hover:opacity-100'
                     }`}
                   >
                     <div className="flex justify-between items-start gap-4 mb-2">
@@ -570,8 +574,8 @@ export default function HomeClient() {
         
         <div className="container mx-auto">
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
+            whileInView={{ opacity: 1, y: 0, filter: "blur(0px)", transitionEnd: { filter: "none" } }}
             viewport={{ once: true }}
             className="text-center mb-16 relative px-4"
           >

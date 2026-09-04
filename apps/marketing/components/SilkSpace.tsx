@@ -269,13 +269,16 @@ export default function SilkSpace() {
 
     /* شدّة القسم: data-silk يغلب، وإلا منحنى التمرير (هيرو → خافت → قرار) */
     let silkOverride: number | null = null;
+    let silkEl: HTMLElement | null = null;   /* الحرير ينجذب لمركز هذا القسم */
     const ratios = new Map<Element, number>();
     const io = new IntersectionObserver((entries) => {
       for (const en of entries) ratios.set(en.target, en.isIntersecting ? en.intersectionRatio : 0);
-      let best: Element | null = null, bestR = 0.3;
-      ratios.forEach((r, el) => { if (r > bestR) { bestR = r; best = el; } });
-      const v = best ? parseFloat((best as HTMLElement).dataset.silk ?? '') : NaN;
+      let best = null as HTMLElement | null;
+      let bestR = 0.3;
+      ratios.forEach((r, el) => { if (r > bestR) { bestR = r; best = el as HTMLElement; } });
+      const v = best ? parseFloat(best.dataset.silk ?? '') : NaN;
       silkOverride = Number.isFinite(v) ? Math.max(0, Math.min(1, v)) : null;
+      silkEl = silkOverride !== null ? best : null;
     }, { threshold: [0, 0.3, 0.5, 0.7, 1] });
     function scanSilk() {
       ratios.clear();
@@ -310,8 +313,16 @@ export default function SilkSpace() {
       const flow = 1 + Math.min(Math.abs(vel), 60) * 0.02;
       t += 0.016 * flow;
 
-      /* موضع الحرير في الشاشة: يغوص ويطفو ببطء مع عمق الصفحة */
-      ribbonY = H * (0.5 + 0.14 * Math.cos(sy / (H * 1.35)));
+      /* موضع الحرير: يغوص ويطفو مع عمق الصفحة، وينجذب لمركز القسم الذي
+         يحمل data-silk (لوح القرار) كي يمرّ خلف زجاجه لا فوقه */
+      let yTarget = H * (0.5 + 0.14 * Math.cos(sy / (H * 1.35)));
+      if (silkEl) {
+        const rc = silkEl.getBoundingClientRect();
+        const c = rc.top + rc.height * 0.5;
+        yTarget = Math.max(H * 0.22, Math.min(H * 0.78, c));
+      }
+      if (ribbonY === 0) ribbonY = yTarget;
+      ribbonY += (yTarget - ribbonY) * 0.06;
 
       /* الشدّة المستهدفة */
       const s = sy / H;

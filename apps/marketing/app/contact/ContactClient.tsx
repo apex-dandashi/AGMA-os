@@ -32,8 +32,8 @@ export default function ContactClient() {
         <div className="grid-pattern" />
         <div className="container mx-auto text-center relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)", transitionEnd: { filter: "none" } }}
             transition={{ type: "spring", bounce: 0, duration: 0.6 }}
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-pulse-orange/10 border border-pulse-orange/20 text-pulse-orange text-[10px] font-bold uppercase tracking-[0.2em] mb-8">
@@ -55,8 +55,8 @@ export default function ContactClient() {
         <div className="container mx-auto">
           <div className="max-w-5xl mx-auto">
             <motion.div 
-               initial={{ opacity: 0, y: 40 }}
-               whileInView={{ opacity: 1, y: 0 }}
+               initial={{ opacity: 0, y: 40, filter: "blur(8px)" }}
+               whileInView={{ opacity: 1, y: 0, filter: "blur(0px)", transitionEnd: { filter: "none" } }}
                viewport={{ once: true }}
                transition={{ type: "spring", bounce: 0, duration: 0.6 }}
                className="geometric-card bg-gray-dark/5 p-8 lg:p-20 relative ring-1 ring-white/5"
