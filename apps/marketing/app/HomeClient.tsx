@@ -210,9 +210,9 @@ export default function HomeClient() {
               <span className="text-pulse-orange text-xs font-bold tracking-widest uppercase">وكالة سعودية · من الرياض، قلب المملكة</span>
             </div>
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black font-black-arabic mb-6 leading-[1.25] text-snow max-w-4xl mx-auto tracking-normal py-2">
-              نموّ يُقاس <span className="text-gradient px-2 inline-block">بالريال</span>،
+              نموّ يُقاس <span className="text-gradient px-2 inline-block">بالريال</span>،{' '}
               <br className="hidden sm:block" />
-              لا بالإعجابات.
+              لا{' '}بالإعجابات.
             </h1>
             <p className="text-gray-light text-base sm:text-lg lg:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-medium px-4">
               AGMA — وكالة جيل الذكاء الاصطناعي: فريقك التسويقي الكامل من الرياض.
