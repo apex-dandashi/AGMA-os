@@ -155,7 +155,7 @@ export default function PRMediaPage() {
   ];
 
   return (
-    <main className="min-h-screen relative overflow-hidden bg-pure-ink">
+    <main className="min-h-screen relative overflow-hidden">
       <Header />
       
       {/* Hero Section */}
@@ -355,7 +355,7 @@ export default function PRMediaPage() {
                     key={currentChannel.id}
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="p-6 sm:p-8 rounded-3xl bg-white/[0.01] border border-white/5 space-y-6 flex flex-col justify-between h-full"
+                    className="p-6 sm:p-8 rounded-3xl material-card space-y-6 flex flex-col justify-between h-full"
                   >
                     <div className="space-y-4">
                       <div className="flex items-center gap-2">

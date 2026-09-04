@@ -122,7 +122,7 @@ export default function AIAutomationClient() {
   };
 
   return (
-    <main className="min-h-screen relative overflow-hidden bg-pure-ink">
+    <main className="min-h-screen relative overflow-hidden">
       <Header />
 
       {/* Hero Section */}
@@ -163,9 +163,6 @@ export default function AIAutomationClient() {
             <div className="lg:col-span-6 w-full relative z-10">
               <div className="bg-gray-dark/15 border border-gray-dark/40 p-5 sm:p-8 rounded-3xl relative backdrop-blur-md overflow-hidden shadow-2xl ring-1 ring-white/5 group">
                 {/* Abstract background glow */}
-                <div className="absolute top-0 right-1/4 w-72 h-72 bg-pulse-orange/5 rounded-full blur-[100px] pointer-events-none" />
-                <div className="absolute -bottom-10 left-1/4 w-64 h-64 bg-deep-navy/20 rounded-full blur-[80px] pointer-events-none" />
-                
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8 pb-4 border-b border-gray-dark/40">
                   <div className="flex items-center gap-3">
@@ -487,7 +484,7 @@ export default function AIAutomationClient() {
               </div>
             </div>
             <div className="relative group">
-                <div className="aspect-square bg-gray-dark/20 border border-gray-dark relative flex items-center justify-center p-12">
+                <div className="aspect-square material-card relative flex items-center justify-center p-12">
                    <div className="grid-pattern opacity-[0.05]" />
                    <div className="absolute inset-0 flex items-center justify-center">
                      <div className="w-3/4 h-3/4 border border-pulse-orange/20 rounded-full animate-spin-slow opacity-30" />

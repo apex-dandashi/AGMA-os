@@ -107,7 +107,19 @@ Step 1 of the agreed 4-step plan shipped:
   smoothed line, so edges can never cross. Ripple made gentler: emit
   every ≥220ms only above speed 2, amplitude 3–18px, σ 0.085+, click
   30px, ≤10 waves alive. Verified sweep + click frames: silky.
-  Next: cleanup of legacy glow blobs on inner pages.
+- **Video hero trial (2026-09-05)**: owner shared a Higgsfield globe
+  clip; /lab (noindex) showed it under the real hero in raw / warm-tinted
+  / dim variants. Found the live CSP (`public/.htaccess`, default-src
+  'self', no media-src) silently blocks external video; allowed the CDN
+  for the trial. Owner: «عجبتني الفكرة لكن الموقع الحالي أجمل» → lab page,
+  poster and the CSP media-src exception removed again; strict CSP back.
+- **Step 8 inner pages**: 10 static decorative glow blobs (blurred
+  orange/navy circles) removed from the service pages; 18 legacy card
+  patterns → `.material-card`; final CTA sections of about / pricing /
+  services / process / industries / agma-method get `data-silk="0.85"`,
+  contact hero 0.7 with its opaque bg dropped; about's opaque section →
+  40%. Next: inner-page copy trims and CTA hierarchy (comfort list), then
+  the immersive «تجربة AGMA» page.
 
 ## Apple-design round log (2026-09-04) — استجابة · مواد · حواف
 

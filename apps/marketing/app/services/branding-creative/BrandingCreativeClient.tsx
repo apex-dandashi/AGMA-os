@@ -206,7 +206,7 @@ export default function BrandingCreativeClient() {
   };
 
   return (
-    <main className="min-h-screen relative overflow-hidden bg-pure-ink">
+    <main className="min-h-screen relative overflow-hidden">
       <Header />
 
       {/* Hero Section */}

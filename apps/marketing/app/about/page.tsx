@@ -46,7 +46,7 @@ export default function AboutPage() {
   ];
 
   return (
-    <main className="min-h-screen relative overflow-hidden bg-pure-ink">
+    <main className="min-h-screen relative overflow-hidden">
       <Header />
       
       {/* Meta Title/Description set in layout if using Server Components, 
@@ -113,7 +113,7 @@ export default function AboutPage() {
               </div>
             </div>
             <div className="relative">
-              <div className="aspect-[4/5] rounded-sm bg-gray-dark/30 border border-gray-dark overflow-hidden relative group">
+              <div className="aspect-[4/5] rounded-sm material-card overflow-hidden relative group">
                 <div className="absolute inset-0 bg-gradient-to-t from-pure-ink to-transparent z-10" />
                 <div className="grid-pattern opacity-[0.05]" />
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -235,7 +235,7 @@ export default function AboutPage() {
       </section>
 
       {/* Values */}
-      <section className="py-24 px-6 bg-pure-ink">
+      <section className="py-24 px-6 bg-pure-ink/40">
         <div className="container mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl lg:text-5xl font-bold text-snow mb-6">قيمنا الراسخة</h2>
@@ -285,7 +285,7 @@ export default function AboutPage() {
       </section>
 
       {/* CTA Final */}
-      <section className="py-24 px-6">
+      <section data-silk="0.85" className="py-24 px-6">
         <div className="container mx-auto">
           <div className="border border-gray-dark p-12 lg:p-20 text-center relative overflow-hidden bg-gray-dark/5">
             <div className="grid-pattern opacity-[0.03]" />

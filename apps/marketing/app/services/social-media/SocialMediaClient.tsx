@@ -262,7 +262,7 @@ export default function SocialMediaClient() {
   };
 
   return (
-    <main className="min-h-screen relative overflow-hidden bg-pure-ink">
+    <main className="min-h-screen relative overflow-hidden">
       <Header />
 
       {/* Hero Section */}
@@ -307,9 +307,6 @@ export default function SocialMediaClient() {
                 className="bg-gray-dark/15 border border-gray-dark/40 p-4 sm:p-7 rounded-3xl relative backdrop-blur-md overflow-hidden shadow-2xl ring-1 ring-white/5 cursor-pointer group select-none transition-all duration-300"
               >
                 {/* Abstract background glow */}
-                <div className="absolute top-1/4 left-1/3 w-64 h-64 bg-pulse-orange/5 rounded-full blur-[90px] pointer-events-none" />
-                <div className="absolute -bottom-8 right-1/3 w-72 h-72 bg-deep-navy/30 rounded-full blur-[100px] pointer-events-none" />
-
                 {/* Particle Cascade Overlay */}
                 <div className="absolute inset-0 pointer-events-none overflow-hidden z-20">
                   <AnimatePresence>
@@ -718,7 +715,7 @@ export default function SocialMediaClient() {
                         e.stopPropagation();
                         handleReset();
                       }}
-                      className="bg-gray-dark/20 border border-gray-dark/40 p-4 rounded-xl text-gray-medium hover:text-snow hover:bg-gray-dark/40 transition-colors flex items-center justify-center gap-1.5 relative z-50 cursor-pointer"
+                      className="material-card/40 p-4 rounded-xl text-gray-medium hover:text-snow hover:bg-gray-dark/40 transition-colors flex items-center justify-center gap-1.5 relative z-50 cursor-pointer"
                     >
                       <RotateCcw size={15} />
                       <span className="text-xs font-bold leading-none">إعادة محاكاة</span>
@@ -824,7 +821,7 @@ export default function SocialMediaClient() {
               </div>
             </div>
             <div className="relative">
-               <div className="aspect-square bg-gray-dark/20 border border-gray-dark flex flex-col items-center justify-center p-8 text-center gap-6">
+               <div className="aspect-square material-card flex flex-col items-center justify-center p-8 text-center gap-6">
                   <div className="w-24 h-24 rounded-full border-2 border-pulse-orange flex items-center justify-center relative">
                      <Users className="text-pulse-orange" size={40} />
                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-pulse-orange rounded-full flex items-center justify-center">
@@ -872,7 +869,7 @@ export default function SocialMediaClient() {
           </div>
           <div className="flex flex-wrap justify-center gap-3">
              {contentTypes.map((type, i) => (
-               <div key={i} className="px-8 py-4 border border-gray-dark bg-gray-dark/10 text-snow font-bold text-sm hover:border-pulse-orange transition-colors">
+               <div key={i} className="px-8 py-4 material-card text-snow font-bold text-sm hover:border-pulse-orange transition-colors">
                   {type}
                </div>
              ))}

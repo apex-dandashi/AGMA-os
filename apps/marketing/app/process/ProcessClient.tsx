@@ -65,7 +65,7 @@ export default function ProcessPage() {
   ];
 
   return (
-    <main className="min-h-screen relative overflow-hidden bg-pure-ink">
+    <main className="min-h-screen relative overflow-hidden">
       <Header />
       
       {/* Hero Section */}
@@ -225,7 +225,7 @@ export default function ProcessPage() {
       </section>
 
       {/* CTA Final */}
-      <section className="py-24 px-6 border-t border-gray-dark">
+      <section data-silk="0.85" className="py-24 px-6 border-t border-gray-dark">
         <div className="container mx-auto">
           <div className="border border-gray-dark p-12 lg:p-20 text-center relative overflow-hidden bg-gray-dark/5">
             <div className="grid-pattern opacity-[0.03]" />

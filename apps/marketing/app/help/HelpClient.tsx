@@ -43,7 +43,7 @@ export default function HelpClient() {
   }, [filtered]);
 
   return (
-    <main className="min-h-screen relative bg-pure-ink">
+    <main className="min-h-screen relative">
       <Header />
       <div dir="rtl" className="mx-auto max-w-3xl px-4 pb-20 pt-32 lg:pt-40">
         <h1 className="text-3xl font-black text-snow">مركز المساعدة</h1>

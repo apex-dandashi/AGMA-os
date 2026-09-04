@@ -49,7 +49,7 @@ export default async function ArticlePage(
   if (!a) {
     // حارس البناء: القاعدة غير متاحة لحظة التصدير — صفحة بسيطة بدل كسر البناء
     return (
-      <main className="min-h-screen relative bg-pure-ink">
+      <main className="min-h-screen relative">
         <Header />
         <div dir="rtl" className="mx-auto max-w-3xl px-4 pb-20 pt-32 lg:pt-40">
           <p className="text-gray-light">المقال في الطريق —</p>
@@ -83,7 +83,7 @@ export default async function ArticlePage(
   };
 
   return (
-    <main className="min-h-screen relative bg-pure-ink">
+    <main className="min-h-screen relative">
       <Header />
       <div dir="rtl" className="mx-auto max-w-3xl px-4 pb-20 pt-32 lg:pt-40">
       <script type="application/ld+json"

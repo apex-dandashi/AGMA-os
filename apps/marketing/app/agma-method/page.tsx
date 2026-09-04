@@ -95,7 +95,7 @@ export default function MethodologyPage() {
   ];
 
   return (
-    <main className="min-h-screen relative overflow-hidden bg-pure-ink">
+    <main className="min-h-screen relative overflow-hidden">
       <Header />
 
       {/* Hero Section */}
@@ -191,7 +191,7 @@ export default function MethodologyPage() {
               </div>
 
               <div className={`${i % 2 !== 0 ? 'lg:order-1' : ''}`}>
-                <div className="aspect-video lg:aspect-square bg-gray-dark/20 border border-gray-dark rounded-sm overflow-hidden relative group">
+                <div className="aspect-video lg:aspect-square material-card rounded-sm overflow-hidden relative group">
                   <div className="absolute inset-0 grid-pattern opacity-[0.05]" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="w-2/3 h-2/3 border border-pulse-orange/20 rounded-full animate-spin-slow flex items-center justify-center">
@@ -247,7 +247,7 @@ export default function MethodologyPage() {
       </section>
 
       {/* CTA Final */}
-      <section className="py-24 px-6">
+      <section data-silk="0.85" className="py-24 px-6">
         <div className="container mx-auto">
           <div className="border border-gray-dark p-12 lg:p-20 text-center relative overflow-hidden bg-gray-dark/5">
             <div className="grid-pattern opacity-[0.03]" />

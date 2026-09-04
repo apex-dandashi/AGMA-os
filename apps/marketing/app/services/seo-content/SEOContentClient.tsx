@@ -240,7 +240,7 @@ export default function SEOContentClient() {
   });
 
   return (
-    <main className="min-h-screen relative overflow-hidden bg-pure-ink">
+    <main className="min-h-screen relative overflow-hidden">
       <Header />
 
       {/* Hero Section */}
@@ -281,9 +281,6 @@ export default function SEOContentClient() {
             <div className="lg:col-span-7 w-full relative z-10">
               <div className="bg-gray-dark/15 border border-gray-dark/40 p-4 sm:p-7 rounded-3xl relative backdrop-blur-md overflow-hidden shadow-2xl ring-1 ring-white/5">
                 {/* Abstract background glow */}
-                <div className="absolute top-1/3 left-1/4 w-72 h-72 bg-pulse-orange/5 rounded-full blur-[100px] pointer-events-none" />
-                <div className="absolute -bottom-10 right-1/4 w-64 h-64 bg-deep-navy/20 rounded-full blur-[80px] pointer-events-none" />
-                
                 {/* Header widget info */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-gray-dark/40">
                   <div className="flex items-center gap-3">
@@ -326,7 +323,7 @@ export default function SEOContentClient() {
                 <div className="bg-pure-ink/95 border border-gray-dark/50 rounded-2xl p-4 md:p-5 mb-5 relative">
                   
                   {/* Mock Search Bar with dynamic text reflecting selected sector query */}
-                  <div className="flex items-center gap-2.5 bg-gray-dark/20 border border-gray-dark/40 rounded-full px-4 py-2 mb-5">
+                  <div className="flex items-center gap-2.5 material-card/40 rounded-full px-4 py-2 mb-5">
                     <Search size={15} className="text-pulse-orange animate-pulse" />
                     <span className="text-xs font-bold text-snow select-none truncate">
                       {currentSectorData.searchQuery}
@@ -570,7 +567,7 @@ export default function SEOContentClient() {
               </div>
             </div>
             <div className="relative">
-              <div className="aspect-square bg-gray-dark/20 border border-gray-dark flex items-center justify-center p-12">
+              <div className="aspect-square material-card flex items-center justify-center p-12">
                  <div className="grid-pattern opacity-[0.05]" />
                  <div className="absolute inset-0 flex items-center justify-center">
                    <div className="w-3/4 h-3/4 border border-pulse-orange/10 rounded-full animate-spin-slow" />

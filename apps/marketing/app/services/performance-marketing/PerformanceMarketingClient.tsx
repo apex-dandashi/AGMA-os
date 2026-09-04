@@ -146,7 +146,7 @@ export default function PerformanceMarketingClient() {
   };
 
   return (
-    <main className="min-h-screen relative overflow-hidden bg-pure-ink">
+    <main className="min-h-screen relative overflow-hidden">
       <Header />
 
       {/* Hero Section */}
@@ -187,9 +187,6 @@ export default function PerformanceMarketingClient() {
             <div className="lg:col-span-6 w-full relative z-10">
               <div className="bg-gray-dark/15 border border-gray-dark/40 p-5 sm:p-8 rounded-3xl relative backdrop-blur-md overflow-hidden shadow-2xl ring-1 ring-white/5">
                 {/* Abstract background glow */}
-                <div className="absolute top-0 right-1/4 w-72 h-72 bg-pulse-orange/5 rounded-full blur-[100px] pointer-events-none" />
-                <div className="absolute -bottom-10 left-1/4 w-64 h-64 bg-deep-navy/20 rounded-full blur-[80px] pointer-events-none" />
-                
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8 pb-4 border-b border-gray-dark/40">
                   <div className="flex items-center gap-3">
@@ -278,7 +275,7 @@ export default function PerformanceMarketingClient() {
                     <span className="bg-pulse-orange/10 border border-pulse-orange/30 px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg backdrop-blur-sm text-[9px] sm:text-[10px] font-bold text-pulse-orange uppercase tracking-wider">
                       {roas}x ROAS 🚀
                     </span>
-                    <span className="text-[8px] sm:text-[9px] text-gray-medium/70 font-bold bg-gray-dark/20 border border-gray-dark/50 px-1.5 py-0.5 rounded">
+                    <span className="text-[8px] sm:text-[9px] text-gray-medium/70 font-bold material-card/50 px-1.5 py-0.5 rounded">
                       السوق: 2.1x ⛔
                     </span>
                   </div>
@@ -497,7 +494,7 @@ export default function PerformanceMarketingClient() {
               </div>
             </div>
             <div className="relative group">
-                <div className="aspect-square bg-gray-dark/20 border border-gray-dark relative flex items-center justify-center p-12">
+                <div className="aspect-square material-card relative flex items-center justify-center p-12">
                    <div className="grid-pattern opacity-[0.05]" />
                    <div className="w-full h-full border border-pulse-orange/20 rounded-full flex items-center justify-center animate-spin-slow">
                       <div className="w-1/2 h-1/2 border border-pulse-orange/40 rounded-full animate-reverse-spin" />

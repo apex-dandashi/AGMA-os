@@ -27,7 +27,7 @@ export default function ReadClient() {
 
   if (article === undefined || article === null) {
     return (
-      <main className="min-h-screen relative bg-pure-ink">
+      <main className="min-h-screen relative">
         <Header />
         <div dir="rtl" className="mx-auto max-w-3xl px-4 pb-20 pt-32 lg:pt-40">
           {article === undefined ? (
@@ -47,7 +47,7 @@ export default function ReadClient() {
   const html = marked.parse(article.body_md ?? '', { async: false }) as string;
 
   return (
-    <main className="min-h-screen relative bg-pure-ink">
+    <main className="min-h-screen relative">
       <Header />
       <div dir="rtl" className="mx-auto max-w-3xl px-4 pb-20 pt-32 lg:pt-40">
       <nav className="mb-6 text-xs text-gray-medium">

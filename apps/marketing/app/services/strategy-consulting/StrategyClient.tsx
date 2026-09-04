@@ -184,7 +184,7 @@ ${goal.benefits.map((b, idx) => `  ${idx + 1}. [${b.label}]: ${b.desc}`).join('\
   ];
 
   return (
-    <main className="min-h-screen relative overflow-hidden bg-pure-ink">
+    <main className="min-h-screen relative overflow-hidden">
       <Header />
       
       {/* Hero Section */}
@@ -484,7 +484,7 @@ ${goal.benefits.map((b, idx) => `  ${idx + 1}. [${b.label}]: ${b.desc}`).join('\
                   const activeColorHex = currentGoalData.id === 'dominance' ? '#ff6100' : currentGoalData.id === 'roi' ? '#00f3ff' : '#10b981';
                   
                   return (
-                    <div className="flex flex-col items-center justify-center p-6 sm:p-8 rounded-3xl bg-white/[0.01] border border-white/5 relative overflow-hidden">
+                    <div className="flex flex-col items-center justify-center p-6 sm:p-8 rounded-3xl material-card relative overflow-hidden">
                       {/* Interactive Radar pulses */}
                       <div className="w-24 h-24 mb-6 rounded-full flex items-center justify-center relative">
                         <motion.div 
@@ -518,7 +518,7 @@ ${goal.benefits.map((b, idx) => `  ${idx + 1}. [${b.label}]: ${b.desc}`).join('\
                       </div>
 
                       {/* Small visual validation note for custom consult */}
-                      <div className="mt-6 flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.02] border border-white/5 text-[9px] text-gray-medium/70 font-mono">
+                      <div className="mt-6 flex items-center gap-1.5 px-3 py-1 rounded-full material-card text-[9px] text-gray-medium/70 font-mono">
                         <ShieldCheck size={11} className="text-emerald-400" />
                         [DECISION_PRECISION_OPTIMIZED]
                       </div>

@@ -260,7 +260,7 @@ ${baseMsg}
   };
 
   return (
-    <main className="min-h-screen relative overflow-hidden bg-pure-ink">
+    <main className="min-h-screen relative overflow-hidden">
       <Header />
       
       {/* Hero Section */}
@@ -322,9 +322,6 @@ ${baseMsg}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-pure-ink/55 to-pure-ink pointer-events-none" />
         
         {/* Ambient background glows */}
-        <div className="absolute top-1/4 left-1/4 w-[350px] h-[350px] bg-pulse-orange/5 rounded-full filter blur-[100px] pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-[350px] h-[350px] bg-sky-500/5 rounded-full filter blur-[100px] pointer-events-none" />
-
         <div className="container mx-auto max-w-6xl relative z-10">
           
           <div className="text-center max-w-3xl mx-auto mb-14 space-y-4">
@@ -445,7 +442,7 @@ ${baseMsg}
                           <span className="text-pulse-orange">COMPILE_STATUS: ASSEMBLING</span>
                           <span className="text-snow">{assembleProgress}%</span>
                         </div>
-                        <div className="h-2 w-full bg-white/[0.02] border border-white/5 rounded-full overflow-hidden p-[1px]">
+                        <div className="h-2 w-full material-card rounded-full overflow-hidden p-[1px]">
                           <motion.div 
                             className="h-full bg-gradient-to-r from-pulse-orange to-yellow-400 rounded-full"
                             style={{ width: `${assembleProgress}%` }}
@@ -650,7 +647,7 @@ ${baseMsg}
                           </motion.div>
 
                           {/* Personalize Appearance Real-time inside simulated site! */}
-                          <div className="flex items-center gap-2.5 bg-white/[0.02] border border-white/5 px-2.5 py-1.5 rounded-xl">
+                          <div className="flex items-center gap-2.5 material-card px-2.5 py-1.5 rounded-xl">
                             <span className="text-[9px] text-gray-semibold font-bold pl-1">الهوية الفنية للمحاكي:</span>
                             {[
                               { id: 'cyan', color: 'bg-cyan-400', label: 'سيان فضائي' },
@@ -758,7 +755,7 @@ ${baseMsg}
                         </div>
 
                         {/* Live User Ticker Indicator */}
-                        <div className="flex justify-between items-center bg-white/[0.02] border border-white/5 px-3 py-2 rounded-xl text-[10px] font-mono text-cyan-300">
+                        <div className="flex justify-between items-center material-card px-3 py-2 rounded-xl text-[10px] font-mono text-cyan-300">
                           <span className="flex items-center gap-1.5 font-bold">
                             <span className={`w-2 h-2 rounded-full animate-ping inline-block ${
                               demoColor === 'cyan' ? 'bg-cyan-400' : demoColor === 'teal' ? 'bg-teal-400' : 'bg-emerald-400'
@@ -788,7 +785,7 @@ ${baseMsg}
                             whileHover={{ scale: 1.03 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => openContactWithMsg('مرحباً فريق جيل الذكاء الاصطناعي، أبحث عن شريك رقمي لتأسيس موقعنا الإلكتروني وترقية المحتوى البرمجي. أرجو التواصل لمناقشة التفاصيل والأسعار.', 'consultation')}
-                            className="bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 text-snow text-xs py-3 px-5 rounded-xl cursor-pointer"
+                            className="bg-white/[0.03] hover:material-card text-snow text-xs py-3 px-5 rounded-xl cursor-pointer"
                           >
                             <span className="flex items-center justify-center gap-1.5">
                               <span>اتصل بنا</span>
@@ -1349,7 +1346,7 @@ ${baseMsg}
                     </div>
 
                     {/* Right Price Breakout Info block (Span 5) */}
-                    <div className="lg:col-span-5 bg-white/[0.02] border border-white/5 p-6 rounded-2xl text-right space-y-4">
+                    <div className="lg:col-span-5 material-card p-6 rounded-2xl text-right space-y-4">
                       <h4 className="text-gray-medium text-xs font-black tracking-tight border-b border-white/5 pb-2.5">
                         ⚙️ الهيكل الاستثماري التقديري
                       </h4>

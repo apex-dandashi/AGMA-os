@@ -201,7 +201,7 @@ export default function TermsClient() {
   ];
 
   return (
-    <main className="min-h-screen relative overflow-hidden bg-pure-ink font-sans">
+    <main className="min-h-screen relative overflow-hidden font-sans">
       <Header />
 
       {/* Hero Section */}

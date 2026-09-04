@@ -24,7 +24,7 @@ const processSteps = [
 
 export default function ContactClient() {
   return (
-    <main className="min-h-screen relative overflow-hidden bg-pure-ink">
+    <main className="min-h-screen relative overflow-hidden">
       <Header />
 
       {/* Hero Section */}
@@ -68,7 +68,7 @@ export default function ContactClient() {
         </div>
       </section>
 
-      <section className="py-32 px-6 bg-pure-ink relative overflow-hidden">
+      <section data-silk="0.7" className="py-32 px-6 relative overflow-hidden">
         <div className="container mx-auto relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-20">
             {/* Info & Steps */}

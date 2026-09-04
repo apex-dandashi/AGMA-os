@@ -104,7 +104,7 @@ export default function PricingPage() {
   ];
 
   return (
-    <main className="min-h-screen relative overflow-hidden bg-pure-ink">
+    <main className="min-h-screen relative overflow-hidden">
       <Header />
       
       {/* Hero Section */}
@@ -247,7 +247,7 @@ export default function PricingPage() {
              {requestSteps.map((step, i) => (
                <ScrollFocus key={i}>
                  <Tilt className="h-full">
-                   <div className="p-8 border border-gray-dark bg-pure-ink group hover:border-pulse-orange/30 transition-all flex flex-col items-center text-center h-full">
+                   <div className="p-8 border border-gray-dark material-panel group hover:border-pulse-orange/30 transition-all flex flex-col items-center text-center h-full">
                       <span className="text-pulse-orange font-mono font-bold text-xs mb-4 block">0{i+1}</span>
                       <h4 className="text-snow font-bold mb-2 group-hover:text-pulse-orange transition-colors">{step.title}</h4>
                       <p className="text-gray-medium text-xs leading-relaxed">{step.desc}</p>
@@ -260,7 +260,7 @@ export default function PricingPage() {
       </section>
 
       {/* CTA Final */}
-      <section className="py-24 px-6">
+      <section data-silk="0.85" className="py-24 px-6">
         <div className="container mx-auto">
           <div className="border border-gray-dark p-12 lg:p-20 text-center relative overflow-hidden bg-gray-dark/5 shadow-2xl shadow-pulse-orange/5">
             <div className="grid-pattern opacity-[0.03]" />

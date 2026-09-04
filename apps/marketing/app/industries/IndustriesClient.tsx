@@ -119,7 +119,7 @@ export default function IndustriesPage() {
   ];
 
   return (
-    <main className="min-h-screen relative overflow-hidden bg-pure-ink">
+    <main className="min-h-screen relative overflow-hidden">
       <Header />
       
       {/* Hero Section */}
@@ -255,7 +255,7 @@ export default function IndustriesPage() {
       </section>
 
       {/* CTA Final */}
-      <section className="py-24 px-6">
+      <section data-silk="0.85" className="py-24 px-6">
         <div className="container mx-auto">
           <div className="border border-pulse-orange/20 p-12 lg:p-20 text-center relative overflow-hidden bg-gray-dark/5">
             <div className="grid-pattern opacity-[0.03]" />
