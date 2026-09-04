@@ -24,7 +24,7 @@ void main() {
   vec2 p = aPos + uParallax * (aDepth - 0.5) * 26.0;
   vec2 clip = (p / uRes) * 2.0 - 1.0;
   gl_Position = vec4(clip.x, -clip.y, 0.0, 1.0);
-  gl_PointSize = (1.4 + aDepth * 2.6) * (1.0 + aEnergy * 2.2);
+  gl_PointSize = (1.9 + aDepth * 3.4) * (1.0 + aEnergy * 2.2);
   vEnergy = aEnergy;
   vDepth = aDepth;
 }`;
@@ -41,7 +41,7 @@ void main() {
   vec3 ember = vec3(0.957, 0.302, 0.169);      /* برتقالة AGMA */
   vec3 hot = vec3(1.0, 0.93, 0.85);
   vec3 col = mix(ember, hot, min(vEnergy * 1.4, 1.0));
-  float alpha = glow * (0.16 + vDepth * 0.30 + vEnergy * 0.55);
+  float alpha = glow * (0.30 + vDepth * 0.38 + vEnergy * 0.55);
   gl_FragColor = vec4(col * alpha, alpha);
 }`;
 

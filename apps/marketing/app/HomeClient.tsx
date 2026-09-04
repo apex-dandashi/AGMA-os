@@ -162,7 +162,7 @@ export default function HomeClient() {
       >
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
           <SignatureField />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0A]/80 via-transparent to-[#0A0A0A]/80 opacity-60" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0A]/70 via-transparent to-[#0A0A0A]/70 opacity-35" />
           
           {/* Interactive Glowing Cursor Follower in the background */}
           {isHoveredHero && (
@@ -1043,7 +1043,7 @@ function HeroAsk() {
         className="min-w-0 flex-1 bg-transparent text-sm sm:text-base text-snow placeholder:text-gray-medium focus:outline-none py-2"
       />
       <button type="submit" disabled={q.trim().length < 5}
-        className="shrink-0 rounded-full bg-pulse-orange px-5 py-2.5 text-sm font-bold text-white transition-opacity disabled:opacity-40">
+        className="shrink-0 rounded-full bg-pulse-orange px-5 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-75">
         اقترح لي
       </button>
     </form>
