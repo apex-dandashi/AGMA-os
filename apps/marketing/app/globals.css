@@ -50,10 +50,16 @@ body {
     @apply antialiased bg-pure-ink text-snow;
   }
   
+  /* تايبوغرافي بحسب الحجم (جولة Apple 2026-09-04): التتبع صفر — العربية خط
+     متصل والتضييق السالب يكسر الوصل (قاعدة «سالب للعناوين» لاتينية فقط)؛
+     الأسطر تضيق كلما كبر الخط: عناوين ١.٢ · فرعية ١.٣٥ · جسم ١.٧٥ */
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-tajawal), sans-serif;
-    @apply tracking-tighter;
+    letter-spacing: 0;
   }
+  h1, h2 { line-height: 1.2; }
+  h3, h4 { line-height: 1.35; }
+  :lang(en) h1, :lang(en) h2 { letter-spacing: -0.02em; }
 }
 
 @layer utilities {
@@ -64,7 +70,7 @@ body {
 
 @layer components {
   .btn-primary {
-    @apply bg-pulse-orange text-snow px-6 py-3 rounded-sm font-bold transition-all duration-300 hover:opacity-90 active:scale-95 shadow-lg shadow-pulse-orange/20 leading-normal tracking-normal;
+    @apply bg-pulse-orange text-snow px-6 py-3 rounded-sm font-bold hover:opacity-90 shadow-lg shadow-pulse-orange/20 leading-normal tracking-normal;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -72,7 +78,7 @@ body {
   }
   
   .btn-outline {
-    @apply bg-transparent border border-pulse-orange text-pulse-orange px-6 py-3 rounded-full font-bold transition-all duration-300 hover:bg-pulse-orange hover:text-white leading-normal tracking-normal;
+    @apply bg-transparent border border-pulse-orange text-pulse-orange px-6 py-3 rounded-full font-bold hover:bg-pulse-orange hover:text-white leading-normal tracking-normal;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -80,16 +86,106 @@ body {
   }
 
   .btn-secondary {
-    @apply bg-gray-dark text-snow border border-gray-medium/30 px-6 py-3 rounded-sm font-bold transition-all hover:bg-gray-dark/80 leading-normal tracking-normal;
+    @apply bg-gray-dark text-snow border border-gray-medium/30 px-6 py-3 rounded-sm font-bold hover:bg-gray-dark/80 leading-normal tracking-normal;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     text-align: center;
   }
-  
+
   .geometric-card {
-    @apply bg-gray-dark/20 border border-gray-dark p-6 transition-all duration-300 hover:border-pulse-orange/50;
+    @apply p-6;
   }
+}
+
+/* ── جولة Apple (2026-09-04): استجابة · مواد · حواف ──────────────────── */
+
+/* ١) الاستجابة على الضغط لا على الإفلات: انكماش فوري ٠٫٩٧ خلال ١٠٠ms.
+   خاصية scale المستقلة لا تلمس transform الخاص بالعنصر (مغناطيس/إزاحة). */
+.btn-primary, .btn-outline, .btn-secondary {
+  transition: background-color 200ms ease-out, color 200ms ease-out,
+    border-color 200ms ease-out, opacity 200ms ease-out, scale 100ms ease-out;
+}
+.btn-primary:active, .btn-outline:active, .btn-secondary:active,
+button:not(:disabled):active {
+  scale: 0.97;
+  transition: scale 100ms ease-out;
+}
+
+/* ٢) المواد: الكروم (الهيدر/القوائم) زجاج شفاف فوق المحتوى بحافة علوية
+   مضيئة، وبدل الخط الفاصل الحاد تدرّج «حافة تمرير» يذوب في الصفحة. */
+.glass-chrome {
+  /* لا position هنا — الهيدر fixed ويكفي كحاوية لـ ::after */
+  background: rgba(10, 10, 10, 0.62);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+.glass-chrome::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; top: 100%;
+  height: 28px;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(10, 10, 10, 0.5), transparent);
+}
+/* أثقل من الكروم عمداً: قائمة داخل هيدر له backdrop-filter لا ترى خلفية
+   الصفحة (جذر الخلفية يقطعها) فتعتمد على عتامتها — ٠٫٩٥ تحفظ القراءة */
+.glass-panel {
+  background: rgba(10, 10, 10, 0.95);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  backdrop-filter: blur(24px) saturate(160%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 24px 48px -16px rgba(0, 0, 0, 0.7);
+}
+
+/* الكروت: سطح متدرج على قاعدة صلبة (لا blur — الخلفية ثابتة فلا قيمة له)
+   بحافة علوية ألمع = ضوء يلمس المادة؛ اللوح الكبير أثخن وأعمق ظلاً. */
+.material-card, .geometric-card {
+  background-color: var(--color-surface-1);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.015));
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-top-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 8px 24px -14px rgba(0, 0, 0, 0.7);
+  transition: border-color 200ms ease-out, box-shadow 200ms ease-out;
+}
+.material-card:hover, .geometric-card:hover {
+  border-color: rgba(244, 77, 43, 0.35);
+  border-top-color: rgba(244, 77, 43, 0.6);
+}
+.material-panel {
+  background-color: var(--color-surface-1);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02) 40%, rgba(255, 255, 255, 0));
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-top-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 32px 64px -28px rgba(0, 0, 0, 0.85);
+}
+
+/* فواصل الأقسام: خط يذوب عند الطرفين بدل حد ١px مصمت من الحافة للحافة */
+.edge-line-t, .edge-line-y {
+  border-top: 1px solid transparent;
+  border-image: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.14), transparent) 1;
+}
+.edge-line-y { border-bottom: 1px solid transparent; }
+
+/* ٣) إشارات الإتاحة الثلاث */
+@media (prefers-reduced-transparency: reduce) {
+  .glass-chrome, .glass-panel {
+    background: #0A0A0A;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .glass-chrome::after { display: none; }
+}
+@media (prefers-contrast: more) {
+  :root { --color-gray-medium: #D4D4D4; }
+  .material-card, .geometric-card, .material-panel { border-color: rgba(255, 255, 255, 0.4); }
+  .glass-chrome, .glass-panel { background: #0A0A0A; border-bottom: 1px solid rgba(255, 255, 255, 0.4); }
+  .edge-line-t, .edge-line-y { border-image: none; border-color: rgba(255, 255, 255, 0.4); }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* تقليل الحركة ≠ لا تغذية راجعة: الضغط يُرى بالعتامة لا بالحجم */
+  .btn-primary:active, .btn-outline:active, .btn-secondary:active,
+  button:not(:disabled):active { scale: 1; opacity: 0.8; }
 }
 
 .text-gradient {

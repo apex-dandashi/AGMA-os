@@ -105,7 +105,7 @@ export default function MethodologyPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            transition={{ type: "spring", bounce: 0, duration: 0.6 }}
           >
             <div className="inline-block px-4 py-1 mb-6 border border-pulse-orange/30 rounded-full bg-pulse-orange/5">
               <span className="text-pulse-orange text-xs font-bold tracking-widest uppercase font-mono">SYSTEM v4.0</span>
@@ -155,7 +155,7 @@ export default function MethodologyPage() {
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-100px' }}
-              transition={{ duration: 0.8, delay: i * 0.1 }}
+              transition={{ type: "spring", bounce: 0, duration: 0.6, delay: i * 0.1 }}
               className={`grid grid-cols-1 lg:grid-cols-2 gap-16 items-center ${i % 2 !== 0 ? 'lg:flex-row-reverse' : ''}`}
             >
               <div className={`${i % 2 !== 0 ? 'lg:order-2' : ''} space-y-8`}>

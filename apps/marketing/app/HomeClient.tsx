@@ -239,7 +239,7 @@ export default function HomeClient() {
       <TransformExperience />
 
       {/* Stats / Proof Section */}
-      <section className="py-20 border-y border-gray-dark bg-gray-dark/10">
+      <section className="py-20 edge-line-y bg-gray-dark/10">
         <div className="container mx-auto px-6">
           <motion.div 
             variants={containerVariants}
@@ -272,7 +272,7 @@ export default function HomeClient() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
+            transition={{ type: "spring", bounce: 0, duration: 0.6 }}
             className="flex flex-col lg:flex-row items-start lg:items-end justify-between mb-16 gap-6"
           >
             <div className="max-w-xl">
@@ -338,7 +338,7 @@ export default function HomeClient() {
             </div>
 
             {/* DIGITAL COMMAND CENTER (7/12 columns) */}
-            <div className="lg:col-span-7 bg-neutral-950 border border-white/5 shadow-2xl rounded-3xl p-5 sm:p-7 relative overflow-hidden flex flex-col justify-between h-[450px] transition-all duration-300">
+            <div className="lg:col-span-7 material-panel rounded-3xl p-5 sm:p-7 relative overflow-hidden flex flex-col justify-between h-[450px] transition-all duration-300">
               {/* TOP COCKPIT CONTROLS HEADER */}
               <div className="flex justify-between items-center border-b border-white/5 pb-3">
                 <div className="flex gap-1.5">
@@ -374,11 +374,11 @@ export default function HomeClient() {
                         </div>
                         
                         <div className="grid grid-cols-2 gap-3 pt-2">
-                          <div className="bg-white/[0.02] border border-white/5 p-3 rounded-xl text-right">
+                          <div className="material-card p-3 rounded-xl text-right">
                             <span className="text-[9px] text-gray-medium block">ثقة التنبؤ الديموغرافي:</span>
                             <strong className="text-base font-black text-emerald-400">98.6%</strong>
                           </div>
-                          <div className="bg-white/[0.02] border border-white/5 p-3 rounded-xl text-right">
+                          <div className="material-card p-3 rounded-xl text-right">
                             <span className="text-[9px] text-gray-medium block">تكلفة حد سقف المحاكاة:</span>
                             <strong className="text-base font-black text-snow">14.2 ريال SAR</strong>
                           </div>
@@ -415,11 +415,11 @@ export default function HomeClient() {
                         </div>
                         
                         <div className="grid grid-cols-2 gap-3 pt-2">
-                          <div className="bg-white/[0.02] border border-white/5 p-3 rounded-xl text-right">
+                          <div className="material-card p-3 rounded-xl text-right">
                             <span className="text-[9px] text-gray-medium block">التكرارات الإبداعية / دقيقة:</span>
                             <strong className="text-base font-black text-cyan-400">120x baseline</strong>
                           </div>
-                          <div className="bg-white/[0.02] border border-white/5 p-3 rounded-xl text-right">
+                          <div className="material-card p-3 rounded-xl text-right">
                             <span className="text-[9px] text-gray-medium block">المعدل الإضافي CTR:</span>
                             <strong className="text-base font-black text-snow">+4.2%</strong>
                           </div>
@@ -462,11 +462,11 @@ export default function HomeClient() {
                         </div>
                         
                         <div className="grid grid-cols-2 gap-3 pt-2">
-                          <div className="bg-white/[0.02] border border-white/5 p-3 rounded-xl text-right">
+                          <div className="material-card p-3 rounded-xl text-right">
                             <span className="text-[9px] text-gray-medium block">تتبع الصرف والتحويل:</span>
                             <strong className="text-base font-black text-amber-400">24/7 Live Sync</strong>
                           </div>
-                          <div className="bg-white/[0.02] border border-white/5 p-3 rounded-xl text-right">
+                          <div className="material-card p-3 rounded-xl text-right">
                             <span className="text-[9px] text-gray-medium block">أتمتة تعديل المزايدات:</span>
                             <strong className="text-base font-black text-snow">كل 15 ثانية</strong>
                           </div>
@@ -492,7 +492,7 @@ export default function HomeClient() {
                                 className="bg-amber-400 h-full rounded-full" 
                                 initial={{ width: 0 }}
                                 animate={{ width: plat.p }}
-                                transition={{ duration: 0.8, delay: idx * 0.1 }}
+                                transition={{ type: "spring", bounce: 0, duration: 0.6, delay: idx * 0.1 }}
                               />
                             </div>
                           </div>
@@ -511,11 +511,11 @@ export default function HomeClient() {
                         </div>
                         
                         <div className="grid grid-cols-2 gap-3 pt-2">
-                          <div className="bg-white/[0.02] border border-white/5 p-3 rounded-xl text-right">
+                          <div className="material-card p-3 rounded-xl text-right">
                             <span className="text-[9px] text-gray-medium block">الميزانية المستردة من التسرب:</span>
                             <strong className="text-base font-black text-pulse-orange">35% توفير</strong>
                           </div>
-                          <div className="bg-white/[0.02] border border-white/5 p-3 rounded-xl text-right">
+                          <div className="material-card p-3 rounded-xl text-right">
                             <span className="text-[9px] text-gray-medium block">مستهدف استرداد العوائد (CPA):</span>
                             <strong className="text-base font-black text-snow">5.2x ROAS Peak</strong>
                           </div>
@@ -611,7 +611,7 @@ export default function HomeClient() {
                           initial: { top: "-10%", opacity: 0 },
                           hover: { top: "110%", opacity: 1 }
                         }}
-                        transition={{ duration: 0.8, ease: "easeOut" }}
+                        transition={{ type: "spring", bounce: 0, duration: 0.6 }}
                         className="absolute left-0 right-0 h-[3px] bg-pulse-orange shadow-[0_0_20px_rgba(244,77,43,1)] z-20"
                       />
                       
@@ -620,7 +620,7 @@ export default function HomeClient() {
                           initial: { top: "-40%", opacity: 0 },
                           hover: { top: "110%", opacity: 0.4 }
                         }}
-                        transition={{ duration: 0.8, ease: "easeOut" }}
+                        transition={{ type: "spring", bounce: 0, duration: 0.6 }}
                         className="absolute left-0 right-0 h-40 bg-gradient-to-b from-pulse-orange/50 via-pulse-orange/10 to-transparent z-10"
                       />
                     </div>
@@ -837,7 +837,7 @@ export default function HomeClient() {
                     <Zap className="text-pulse-orange w-32 h-32 opacity-20" />
                  </div>
               </div>
-              <div className="absolute -bottom-6 -right-6 geometric-card bg-gray-dark p-6 max-w-[240px]">
+              <div className="absolute -bottom-6 -right-6 geometric-card p-6 max-w-[240px]">
                 <p className="text-pulse-orange font-bold text-sm mb-1 font-heading uppercase tracking-widest">AGMA Native-AI</p>
                 <p className="text-xs text-gray-light leading-relaxed font-medium">كل عملياتنا مبنية بالذكاء الاصطناعي من الداخل، لسنا وكالة تستخدم أدوات فقط.</p>
               </div>
@@ -959,7 +959,7 @@ export default function HomeClient() {
             initial="initial"
             whileHover="hover"
             data-cursor-text="CONTACT" 
-            className="border border-gray-dark p-12 lg:p-20 text-center relative overflow-hidden bg-gray-dark/5 rounded-[40px]"
+            className="material-panel p-12 lg:p-20 text-center relative overflow-hidden rounded-[40px]"
           >
             {/* Digital Scan Line Effect for CTA */}
             <motion.div 

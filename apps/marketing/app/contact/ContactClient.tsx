@@ -34,7 +34,7 @@ export default function ContactClient() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            transition={{ type: "spring", bounce: 0, duration: 0.6 }}
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-pulse-orange/10 border border-pulse-orange/20 text-pulse-orange text-[10px] font-bold uppercase tracking-[0.2em] mb-8">
               <Sparkles size={12} /> لنصنع فارقاً حقيقياً
@@ -58,7 +58,7 @@ export default function ContactClient() {
                initial={{ opacity: 0, y: 40 }}
                whileInView={{ opacity: 1, y: 0 }}
                viewport={{ once: true }}
-               transition={{ duration: 0.8 }}
+               transition={{ type: "spring", bounce: 0, duration: 0.6 }}
                className="geometric-card bg-gray-dark/5 p-8 lg:p-20 relative ring-1 ring-white/5"
             >
               <div className="grid-pattern opacity-[0.02]" />

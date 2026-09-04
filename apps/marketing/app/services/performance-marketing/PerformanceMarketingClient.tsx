@@ -160,7 +160,7 @@ export default function PerformanceMarketingClient() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8 }}
+                transition={{ type: "spring", bounce: 0, duration: 0.6 }}
               >
                 <div className="inline-block px-4 py-1 mb-6 border border-pulse-orange/30 rounded-full bg-pulse-orange/5 text-pulse-orange text-xs font-bold tracking-widest uppercase font-mono">
                   Live Growth & ROI Simulator

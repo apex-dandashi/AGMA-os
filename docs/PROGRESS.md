@@ -22,6 +22,51 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 9 | Help Centre / RAG + chatbots | ✅ Done (2026-08-09) — KB+RAG core, then Help Center: 14 seeded articles (نصائح تسويقية + دليل النظام), two-tier brain (grounded/general-advice), /help site page, ops help surface |
 | 10 | Employee portal + Analytics + digests | ✅ Done (2026-08-09) — staff lifecycle (auto onboarding/offboarding checklists, welcome emails, 30/60/90 nudges, equipment log, signature generator), client health weekly → scorecard, Analytics dashboard, digest v2 (rocks+issues, WhatsApp-ready) |
 
+## Apple-design round log (2026-09-04) — استجابة · مواد · حواف
+
+Owner approved applying the apple-design skill to agma.com.sa
+(«انطلق حمستني»). Scope kept to the four approved points; dark/orange
+identity and IBM Plex Arabic untouched.
+
+- **Motion system**: `MotionConfig transition={{type:'spring', bounce:0,
+  duration:0.45}}` in ClientProviders → every motion element without its
+  own transition now uses a critically-damped spring (interruptible,
+  starts from the current value). The 25 scattered
+  `transition={{ duration: 0.8 }}` / `easeOut` reveals across 18 files
+  were rewritten to `spring bounce:0 duration:0.6` by sed.
+- **Press feedback** (globals.css): `.btn-*` and every enabled `button`
+  shrink to `scale: 0.97` on `:active` within 100ms — the independent
+  `scale` property so Magnetic/translate transforms are untouched.
+  `transition-all` removed from the button classes (explicit property
+  list instead).
+- **Materials**: header is now a translucent glass layer
+  (`.glass-chrome`: rgba .62 + blur 20px/saturate 160%, bright inset top
+  edge, `::after` scroll-edge gradient replacing the 1px `border-b`).
+  Mobile menu → `.glass-panel` (.95). Home cards → `.material-card`
+  (surface-1 base + lit gradient + brighter top edge, no blur — static
+  background makes blur pure cost); the AGMA-Method panel and closing CTA
+  → `.material-panel` (thicker: deeper gradient + 32px shadow).
+  `.geometric-card` (10 pages) inherits the same material from the root.
+  Stats section divider → `.edge-line-y` (gradient hairline fading at
+  both ends).
+- **Typography**: heading tracking set to 0 for Arabic (connected script
+  — the skill's «negative for display» rule is Latin-only; `:lang(en)`
+  gets -0.02em), leading inverse to size (h1/h2 1.2, h3/h4 1.35, body
+  1.75 kept).
+- **Accessibility signals**: `prefers-reduced-transparency` → solid
+  chrome, no blur; `prefers-contrast: more` → gray-medium raised to
+  #D4D4D4 + 40% borders; `prefers-reduced-motion` → press feedback via
+  opacity instead of scale (MotionConfig reducedMotion="user" already
+  freezes framer motion).
+- **Bugs found by the visual pass** (Playwright 1440×900 + 390×844
+  since the browser pane returned black frames): (1) `.glass-chrome`
+  carried `position: relative` which beat the header's `fixed` — header
+  scrolled away; removed. (2) Chromium paints a backdrop-filtered
+  parent's blurred backdrop *over* an absolutely-positioned child, so
+  hero text bled through the mobile menu even at .99 alpha; fix = glass
+  moved to an `absolute inset-0 -z-10` sibling layer inside the header
+  instead of the header element itself.
+
 ## Signature hero log (2026-09-04) — جرعة Lusion
 
 Owner loved lusion.co; agreed dose over clone (their product is their

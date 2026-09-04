@@ -142,7 +142,7 @@ export default function ServicesClient() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            transition={{ type: "spring", bounce: 0, duration: 0.6 }}
           >
             <div className="inline-block px-4 py-1 mb-6 border border-pulse-orange/30 rounded-full bg-pulse-orange/5">
               <span className="text-pulse-orange text-xs font-bold tracking-widest uppercase font-mono">المنظومة الكاملة</span>
@@ -210,7 +210,7 @@ export default function ServicesClient() {
                             initial: { top: "-10%", opacity: 0 },
                             hover: { top: "110%", opacity: 1 }
                           }}
-                          transition={{ duration: 0.8, ease: "easeOut" }}
+                          transition={{ type: "spring", bounce: 0, duration: 0.6 }}
                           className="absolute left-0 right-0 h-[3px] bg-pulse-orange shadow-[0_0_20px_rgba(244,77,43,1)] z-20"
                         />
                         <motion.div 
@@ -218,7 +218,7 @@ export default function ServicesClient() {
                             initial: { top: "-40%", opacity: 0 },
                             hover: { top: "110%", opacity: 0.4 }
                           }}
-                          transition={{ duration: 0.8, ease: "easeOut" }}
+                          transition={{ type: "spring", bounce: 0, duration: 0.6 }}
                           className="absolute left-0 right-0 h-40 bg-gradient-to-b from-pulse-orange/50 via-pulse-orange/10 to-transparent z-10"
                         />
                       </div>

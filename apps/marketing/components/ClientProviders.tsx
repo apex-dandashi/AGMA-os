@@ -19,7 +19,9 @@ export default function ClientProviders({ children }: { children: React.ReactNod
   return (
     // reducedMotion="user": من فعّل تقليل الحركة في جهازه يرى المحتوى ثابتاً
     // فوراً — إتاحة + مناعة إضافية ضد علوق العناصر المخفية.
-    <MotionConfig reducedMotion="user">
+    // transition الافتراضي (جولة Apple): نابض مخمَّد حرجياً (bounce 0) لكل
+    // حركة لم تحدد نابضها — قابل للمقاطعة ويبدأ من القيمة الحالية لا الهدف.
+    <MotionConfig reducedMotion="user" transition={{ type: 'spring', bounce: 0, duration: 0.45 }}>
       <AICursor />
       <CookieConsent />
       <RevealGuard />

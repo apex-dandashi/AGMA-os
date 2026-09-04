@@ -32,10 +32,16 @@ const Header = () => {
 
   return (
     <header 
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? 'bg-[#0A0A0A]/80 backdrop-blur-md border-b border-snow/5 py-3' : 'bg-transparent py-5'
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-[padding] duration-300 ${scrolled ? 'py-3' : 'py-5'}`}
     >
+      {/* الزجاج طبقة شقيقة للقائمة لا أباً لها: backdrop-filter على الهيدر
+          نفسه يجعل Chromium يرسم الخلفية المشوّشة فوق قائمة الجوال الابنة */}
+      <div
+        aria-hidden
+        className={`pointer-events-none absolute inset-0 -z-10 transition-opacity duration-300 ${
+          scrolled ? 'glass-chrome opacity-100' : 'opacity-0'
+        }`}
+      />
       <div className="container mx-auto px-6 flex items-center justify-between">
         <Magnetic>
           <Link href="/" className="flex items-center">
@@ -98,7 +104,8 @@ const Header = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="lg:hidden absolute top-full left-0 right-0 bg-[#0A0A0A] border-b border-snow/5 px-6 py-8 flex flex-col gap-6"
+            style={{ transformOrigin: 'top center' }}
+            className="lg:hidden absolute top-full left-0 right-0 glass-panel px-6 py-8 flex flex-col gap-6"
           >
             {navLinks.map((link) => (
               <Link 
