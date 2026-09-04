@@ -45,6 +45,20 @@ export default function SiteAssistant() {
     endRef.current?.scrollIntoView({ block: 'end' });
   }, [msgs.length, leadMode, open]);
 
+  // مساعد الهيرو (2026-09-04): سؤال من صندوق الهيرو يفتح البوت ويُسأل فوراً
+  const askRef = useRef<(q: string) => void>(() => {});
+  useEffect(() => {
+    const onAsk = (e: Event) => {
+      const q = (e as CustomEvent<{ question?: string }>).detail?.question;
+      if (!q) return;
+      setOpen(true);
+      setTimeout(() => askRef.current(q), 350);
+    };
+    window.addEventListener('agma:ask', onAsk);
+    return () => window.removeEventListener('agma:ask', onAsk);
+  }, []);
+
+  askRef.current = (q: string) => { void askQuestion(q); };
   async function askQuestion(q: string) {
     if (!q || busy) return;
     setMsgs((m) => [...m, { role: 'user', text: q }]);

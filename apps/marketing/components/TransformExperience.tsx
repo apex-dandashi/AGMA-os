@@ -169,7 +169,7 @@ export default function TransformExperience() {
         {!path && (
           <>
             <h2 className="mb-2 text-center text-3xl font-black">
-              ماذا تريد أن <span className="text-pulse-orange">تحوّل</span>؟
+              ماذا تريد أن <span className="text-pulse-orange">تطوّر</span>؟
             </h2>
             <p className="mb-8 text-center text-sm text-gray-light">
               ثلاث إجابات سريعة — ونريك أين الفرص بالضبط.

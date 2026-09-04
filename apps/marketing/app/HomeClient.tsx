@@ -214,26 +214,24 @@ export default function HomeClient() {
               <br className="hidden sm:block" />
               لا بالإعجابات.
             </h1>
+            {/* نبرة واثقة بلا تبرير (ملاحظة المالك 2026-09-04: «المبرر بزيادة
+                يبان متهم») — جملة تعريف واحدة، والباقي فعل. */}
             <p className="text-gray-light text-base sm:text-lg lg:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-medium px-4">
-              AGMA — وكالة جيل الذكاء الاصطناعي: فريقك التسويقي الكامل من الرياض.
-              نجمع الأتمتة والبيانات والإبداع البشري لنجلب لشركتك عملاء فعليين —
-              وكل ريال تصرفه معنا له رقم يحاسبنا.
+              وكالة جيل الذكاء الاصطناعي — فريقك التسويقي الكامل من الرياض.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 px-6">
               <Magnetic className="w-full sm:w-auto">
                 <Link href="/contact" data-cursor-text="GROW" className="btn-primary w-full sm:w-auto text-base sm:text-lg px-8 sm:px-10 py-4 shadow-lg shadow-pulse-orange/20 block text-center transition-all duration-300">
-                  احجز مكالمة استراتيجية مجانية
+                  احجز مكالمة استراتيجية
                 </Link>
               </Magnetic>
               <Magnetic className="w-full sm:w-auto">
                 <Link href="/pricing" data-cursor-text="PRICING" className="btn-secondary w-full sm:w-auto text-base sm:text-lg px-8 sm:px-10 py-4 block text-center transition-all duration-300">
-                  شاهد الأسعار الإرشادية
+                  تصفح الأسعار الإرشادية
                 </Link>
               </Magnetic>
             </div>
-            <p className="mt-6 text-xs sm:text-sm text-gray-medium">
-              بلا أي التزام · نرد خلال يوم عمل · ٣٧ خدمة تحت سقف واحد
-            </p>
+            <HeroAsk />
           </div>
         </div>
       </section>
@@ -1021,5 +1019,34 @@ export default function HomeClient() {
         }}
       />
     </main>
+  );
+}
+
+/** مساعد الهيرو (طلب المالك 2026-09-04): بدل الشرح الكثير — اشرح تحديك
+ *  بسطر ومساعد AGMA يقترح الحل من خدماتنا فوراً (يفتح البوت بنفس السؤال). */
+function HeroAsk() {
+  const [q, setQ] = React.useState('');
+  function ask(e: React.FormEvent) {
+    e.preventDefault();
+    const question = q.trim();
+    if (question.length < 5) return;
+    window.dispatchEvent(new CustomEvent('agma:ask', { detail: { question } }));
+    setQ('');
+  }
+  return (
+    <form onSubmit={ask} dir="rtl"
+      className="mt-8 mx-auto flex w-full max-w-xl items-center gap-2 rounded-full border border-white/15 bg-[#0d0d0d]/80 p-1.5 pr-5 backdrop-blur">
+      <input
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        placeholder="اشرح تحديك بسطر… ومساعدنا يقترح الحل"
+        aria-label="اشرح تحديك ليقترح المساعد الحل"
+        className="min-w-0 flex-1 bg-transparent text-sm sm:text-base text-snow placeholder:text-gray-medium focus:outline-none py-2"
+      />
+      <button type="submit" disabled={q.trim().length < 5}
+        className="shrink-0 rounded-full bg-pulse-orange px-5 py-2.5 text-sm font-bold text-white transition-opacity disabled:opacity-40">
+        اقترح لي
+      </button>
+    </form>
   );
 }

@@ -4,7 +4,7 @@ import Footer from '@/components/Footer';
 import TransformExperience from '@/components/TransformExperience';
 
 export const metadata: Metadata = {
-  title: 'ماذا تريد أن تحوّل؟ | AGMA',
+  title: 'ماذا تريد أن تطوّر؟ | AGMA',
   description:
     'ثلاث إجابات سريعة ونريك أين فرص التحويل في علامتك أو موقعك أو تسويقك أو أعمالك — تجربة استشارية مصغرة من AGMA.',
 };

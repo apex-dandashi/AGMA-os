@@ -5,7 +5,9 @@
   --color-pure-ink: #0A0A0A;
   --color-snow: #FAFAFA;
   --color-gray-dark: #262626;
-  --color-gray-medium: #737373;
+  /* كان #737373 (تباين ~4.2 — يرسب AA للنص الصغير؛ ملاحظة «الرمادي صعب
+     القراءة» المتكررة). #A6A6A6 يعطي ~7:1 على الخلفية الداكنة. */
+  --color-gray-medium: #A6A6A6;
   --color-gray-light: #D4D4D4;
 }
 
