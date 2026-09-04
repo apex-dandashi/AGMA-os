@@ -976,7 +976,7 @@ export default function HomeClient() {
               </p>
               <div className="flex justify-center w-full">
                 <Magnetic className="w-full sm:w-auto">
-                  <Link href="/contact" className="btn-primary text-lg sm:text-xl px-10 sm:px-12 py-4 sm:py-5 shadow-2xl shadow-pulse-orange/20 inline-block w-full sm:w-auto text-center transition-all duration-300">
+                  <Link data-silk-ignite href="/contact" className="btn-primary text-lg sm:text-xl px-10 sm:px-12 py-4 sm:py-5 shadow-2xl shadow-pulse-orange/20 inline-block w-full sm:w-auto text-center transition-all duration-300">
                     احجز مكالمة استراتيجية الآن
                   </Link>
                 </Magnetic>

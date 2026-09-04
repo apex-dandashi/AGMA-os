@@ -258,9 +258,23 @@ export default function SilkSpace() {
       pointer.speed = Math.min(Math.hypot(pointer.x - pointer.px, pointer.y - pointer.py), 70);
       pointer.active = true;
     }
-    const onMove = (e: MouseEvent) => setPointer(e.clientX, e.clientY);
+    /* بقعة الانعكاس على الزجاج + هدف الاشتعال (زر القرار) */
+    let igniteEl: HTMLElement | null = null;
+    let spotEl: HTMLElement | null = null;
+    const onMove = (e: MouseEvent) => {
+      setPointer(e.clientX, e.clientY);
+      const target = e.target as Element | null;
+      const glass = target?.closest?.('.material-panel, .material-card') as HTMLElement | null;
+      if (glass) {
+        const r = glass.getBoundingClientRect();
+        glass.style.setProperty('--mx', `${e.clientX - r.left}px`);
+        glass.style.setProperty('--my', `${e.clientY - r.top}px`);
+      }
+      spotEl = glass;
+      igniteEl = (target?.closest?.('[data-silk-ignite]') as HTMLElement | null) ?? null;
+    };
     const onTouch = (e: TouchEvent) => { const tp = e.touches[0]; if (tp) setPointer(tp.clientX, tp.clientY); };
-    const onLeave = () => { pointer.active = false; pointer.x = -9999; };
+    const onLeave = () => { pointer.active = false; pointer.x = -9999; igniteEl = null; spotEl = null; };
     window.addEventListener('mousemove', onMove, { passive: true });
     window.addEventListener('touchmove', onTouch, { passive: true });
     window.addEventListener('touchstart', onTouch, { passive: true });
@@ -316,9 +330,19 @@ export default function SilkSpace() {
       /* موضع الحرير: يغوص ويطفو مع عمق الصفحة، وينجذب لمركز القسم الذي
          يحمل data-silk (لوح القرار) كي يمرّ خلف زجاجه لا فوقه */
       let yTarget = H * (0.5 + 0.14 * Math.cos(sy / (H * 1.35)));
+      let inSilk = false;            /* اليد داخل قسم data-silk: الضوء يأتي إليها */
+      let igniteX = -9999, igniteY = -9999;
       if (silkEl) {
         const rc = silkEl.getBoundingClientRect();
-        const c = rc.top + rc.height * 0.5;
+        let c = rc.top + rc.height * 0.5;
+        inSilk = pointer.active && pointer.x >= rc.left && pointer.x <= rc.right
+          && pointer.y >= rc.top && pointer.y <= rc.bottom;
+        if (inSilk) c = c * 0.35 + pointer.y * 0.65;
+        if (igniteEl) {
+          const rb = igniteEl.getBoundingClientRect();
+          igniteX = rb.left + rb.width * 0.5; igniteY = rb.top + rb.height * 0.5;
+          c = igniteY;
+        }
         yTarget = Math.max(H * 0.22, Math.min(H * 0.78, c));
       }
       if (ribbonY === 0) ribbonY = yTarget;
@@ -353,9 +377,32 @@ export default function SilkSpace() {
             if (d2 < R * R && d2 > 0.01) {
               const d = Math.sqrt(d2);
               const f = ((R - d) / R) * push;
-              dvX[k] += (dx / d) * f;
-              dvY[k] += (dy2 / d) * f;
-              segGlow[k] = Math.min(segGlow[k] + f * 0.10, 1.4);
+              if (inSilk) {
+                /* داخل قسم القرار: الحرير ينجذب لليد (ويتوقف قبل أن يلتصق) */
+                const pull = d > 36 ? f * 0.55 : 0;
+                dvX[k] -= (dx / d) * pull;
+                dvY[k] -= (dy2 / d) * pull;
+                segGlow[k] = Math.min(segGlow[k] + f * 0.14, 1.6);
+              } else {
+                dvX[k] += (dx / d) * f;
+                dvY[k] += (dy2 / d) * f;
+                segGlow[k] = Math.min(segGlow[k] + f * 0.10, 1.4);
+              }
+            }
+          }
+          if (igniteX > -9000) {
+            /* اشتعال تحت زر القرار: نواة ساخنة تتجمع تحته */
+            const dx = cx + dispX[k] - igniteX;
+            const dy2 = cy + dispY[k] - igniteY;
+            const RI = 220;
+            const d2 = dx * dx + dy2 * dy2;
+            if (d2 < RI * RI && d2 > 0.01) {
+              const d = Math.sqrt(d2);
+              const f = (RI - d) / RI;
+              const pull = d > 30 ? f * 0.9 : 0;
+              dvX[k] -= (dx / d) * pull;
+              dvY[k] -= (dy2 / d) * pull;
+              segGlow[k] = Math.min(segGlow[k] + f * 0.22, 2.0);
             }
           }
           dvY[k] += drag * (0.35 + 0.65 * Math.sin(pu * Math.PI));

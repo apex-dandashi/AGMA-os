@@ -173,6 +173,29 @@ button:not(:disabled):active {
   border-top-color: rgba(255, 255, 255, 0.22);
   box-shadow: 0 32px 64px -28px rgba(0, 0, 0, 0.85);
 }
+/* بقعة انعكاس: الزجاج يلتقط ضوء اليد حيث تمرّ (متغيرا --mx/--my من SilkSpace) */
+@media (hover: hover) {
+  .material-card, .material-panel { position: relative; }
+  .material-card::before, .material-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 350ms ease-out;
+    background: radial-gradient(360px circle at var(--mx, 50%) var(--my, 50%),
+      rgba(255, 255, 255, 0.075), rgba(244, 77, 43, 0.05) 35%, transparent 65%);
+  }
+  .material-card:hover::before, .material-panel:hover::before { opacity: 1; }
+}
+/* زر القرار يستعير توهج قلب الحرير حين يشتعل تحته */
+[data-silk-ignite] { transition: box-shadow 300ms ease-out, scale 100ms ease-out; }
+[data-silk-ignite]:hover {
+  box-shadow: 0 0 0 1px rgba(255, 200, 170, 0.35), 0 0 40px rgba(244, 77, 43, 0.55), 0 0 110px rgba(255, 150, 110, 0.28);
+}
+
 /* لا زجاج فوق زجاج: كرت داخل لوح لا يرى الصفحة خلفه (جذر الخلفية يقطعه)
    فيصير طبقة خفيفة بلا blur — تراكب الشفافيات يقتل القراءة */
 .material-panel .material-card {

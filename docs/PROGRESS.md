@@ -70,8 +70,18 @@ Step 1 of the agreed 4-step plan shipped:
   Playwright probe after a full scroll: 24 reveal styles, 0 filters left.
   RevealGuard also clears filter. AGMA-Method phase cards moved to
   `.material-card` (+ `.is-active` orange edge) so they refract like the
-  rest. Next: tilt toward pointer, cleanup of legacy glow blobs on inner
-  pages.
+  rest.
+- **Step 4 (owner asked for better hover motion on data-silk; chose
+  «the light comes to you»)**: inside a data-silk section the pointer
+  *attracts* the ribbon (segments pulled toward the hand, stopping 36px
+  short, brighter glow) and the ribbon's y blends 65% toward the hand;
+  hovering `[data-silk-ignite]` (the CTA button) gathers a hot core under
+  the button (radius 220, glow up to 2.0) and the button borrows the
+  silk's glow via box-shadow; `.material-card/.material-panel::before`
+  is a pointer-following radial highlight driven by `--mx/--my` set from
+  SilkSpace's window mousemove (hover:hover only, z -1 inside the
+  backdrop-filter stacking context). Tilt rejected as too common. Next:
+  cleanup of legacy glow blobs on inner pages.
 
 ## Apple-design round log (2026-09-04) — استجابة · مواد · حواف
 
