@@ -146,8 +146,16 @@ Step 1 of the agreed 4-step plan shipped:
   visible step), so the ribbon threads step → step with scroll. Click
   burst refactored into `burst()`. Verified packets and stitching by
   screenshot.
-  Next: inner-page copy trims and CTA hierarchy (comfort list), then
-  the immersive «تجربة AGMA» page.
+- **Step 11 inner-page copy trims (owner: «كمل تقليم نصوص الصفحات
+  الداخلية»)**: measured first — 253 static Arabic paragraphs, 25 at
+  ≥30 words, 11 at ≥40. Rewrote the 21 longest (762 → 399 words, 48%
+  shorter) in about / pricing / services index / process / industries /
+  agma-method and all 8 service pages. Voice rules applied: no «في AGMA،
+  نؤمن بأن…» preambles, no over-justifying, one idea per sentence,
+  «تحوّل» → «تطوّر», dropped absolute claims («الدقة المطلقة»). Trust /
+  privacy / terms / complaints left as-is (legal precision). Next:
+  «تجربة AGMA» immersive page (owner shared a ChatGPT direction «من
+  الفكرة إلى الأثر» to fold in).
 
 ## Apple-design round log (2026-09-04) — استجابة · مواد · حواف
 

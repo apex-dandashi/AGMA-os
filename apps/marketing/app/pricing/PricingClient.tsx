@@ -150,7 +150,7 @@ export default function PricingPage() {
                <div className="space-y-6 text-right">
                   <h2 className="text-3xl lg:text-5xl font-bold text-snow">فلسفة التسعير لدينا</h2>
                   <p className="text-gray-medium text-lg font-medium leading-relaxed">
-                    السعر في AGMA ليس رقماً عشوائياً، بل هو انعكاس للموارد والخبرات والتقنيات التي تُسخر لتحقيق هدفك. نحن نبتعد عن &quot;الباقات الجاهزة&quot; التي قد تدفع فيها مقابل ما لا تحتاجه، ونركز على تخصيص النطاق (Scope) ليكون استثمارك في مكانه الصحيح.
+                    السعر انعكاس للموارد والخبرات التي تُسخَّر لهدفك. لا باقات جاهزة تدفع فيها مقابل ما لا تحتاجه، بل نطاق مخصص يضع استثمارك في مكانه.
                   </p>
                </div>
                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -229,7 +229,7 @@ export default function PricingPage() {
                <div>
                   <h4 className="text-snow font-bold text-lg mb-1">تنبيه مهم</h4>
                   <p className="text-gray-medium text-sm font-medium leading-relaxed">
-                    الأسعار المذكورة أعلاه هي أسعار إرشادية تبدأ من القيم الموضحة، وقد تختلف بالزيادة أو النقصان بناءً على حجم المشروع، عدد المخرجات الفنية، سرعة التنفيذ المطلوبة، ودرجة التخصيص التقني في كل عملية.
+                    الأسعار إرشادية وتبدأ من القيم الموضحة. تتغير مع حجم المشروع وعدد المخرجات وسرعة التنفيذ ودرجة التخصيص.
                   </p>
                </div>
             </div>

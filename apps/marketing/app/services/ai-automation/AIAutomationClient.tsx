@@ -446,7 +446,7 @@ export default function AIAutomationClient() {
               <span className="text-pulse-orange">والأتمتة هي الطريق.</span>
             </h2>
             <p className="text-gray-medium text-xl leading-relaxed font-medium">
-              نحن لا نبيع أدوات، نحن نبني منظومات ذكية. فرق العمل اليوم تغرق في المهام اليدوية التي يسهل على الآلة القيام بها بشكل أدق وأسرع. مهمتنا في AGMA هي تحرير فريقك من &quot;التنفيذ الممل&quot; ليتفرغوا لـ &quot;التفكير الإبداعي&quot;.
+              لا نبيع أدوات بل نبني منظومات ذكية. نحرر فريقك من المهام اليدوية المتكررة ليتفرغ للتفكير الإبداعي.
             </p>
             <div className="flex flex-wrap justify-center gap-4 py-8">
                {['OpenAI', 'Anthropic', 'Google Cloud', 'Zapier', 'Make', 'Pinecone', 'LangChain'].map((tech) => (
