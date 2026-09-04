@@ -653,7 +653,7 @@ export default function HomeClient() {
       <ClientLogos />
 
       {/* INTERACTIVE AI ROI OPTIMIZATION SANDBOX */}
-      <section className="py-24 px-6 relative bg-gradient-to-b from-pure-ink/50 via-[#0d0d0d]/30 to-pure-ink/50 border-t border-b border-white/[0.03]">
+      <section className="py-24 px-6 relative bg-gradient-to-b from-pure-ink/30 via-[#0d0d0d]/15 to-pure-ink/30 border-t border-b border-white/[0.03]">
         <div className="grid-pattern opacity-[0.03]" />
         
         <div className="container mx-auto max-w-7xl relative z-10">

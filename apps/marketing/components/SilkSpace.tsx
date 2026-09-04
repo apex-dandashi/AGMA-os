@@ -63,7 +63,7 @@ void main() {
   float core = pow(smoothstep(0.0, 1.0, across), 1.6);
   float ends = smoothstep(0.0, 0.06, vUV.x) * smoothstep(1.0, 0.94, vUV.x);
 
-  float intensity = filaments * core * ends * (0.85 + vGlow * 1.6) * uInt;
+  float intensity = filaments * core * ends * (0.85 + vGlow * 1.6) * pow(uInt, 0.7);
 
   vec3 deep  = vec3(0.48, 0.10, 0.05);
   vec3 ember = vec3(0.957, 0.302, 0.169);
@@ -99,7 +99,7 @@ void main() {
   if (d > 0.5) discard;
   float glow = pow(smoothstep(0.5, 0.0, d), 2.0);
   vec3 col = mix(vec3(0.957, 0.302, 0.169), vec3(1.0, 0.93, 0.84), glow);
-  float a = glow * vA * 0.8 * uInt;
+  float a = glow * vA * 0.8 * pow(uInt, 0.7);
   gl_FragColor = vec4(col * a, a);
 }`;
 
@@ -140,8 +140,8 @@ void main() {
 
 const SEGS = 140;
 const RIBBONS = 2;
-const MID_INT = 0.22;   /* خلف كروت البيع */
-const END_INT = 0.85;   /* عند القرار */
+const MID_INT = 0.38;   /* خلف كروت البيع (كان 0.22: بدا خافتاً) */
+const END_INT = 0.95;   /* عند القرار */
 
 export default function SilkSpace() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -307,7 +307,8 @@ export default function SilkSpace() {
     });
     mo.observe(document.body, { childList: true, subtree: true });
 
-    const R = isCoarse ? 130 : 170;
+    const R = isCoarse ? 150 : 260;   /* أوسع = انحناءة لا شوكة */
+    const BOOST = isCoarse ? 1.35 : 1.0; /* الجوال بدا خافتاً */
     let t = 0;
     let intensity = 1;
     let lastScroll = window.scrollY;
@@ -355,7 +356,7 @@ export default function SilkSpace() {
       const hero = 1 - smoothstep(0.55, 1.6, s);
       const endRise = 1 - smoothstep(0.2, 1.4, remain);
       const curve = Math.max(MID_INT + (1 - MID_INT) * hero, MID_INT + (END_INT - MID_INT) * endRise);
-      const target = silkOverride ?? curve;
+      const target = Math.min(1, (silkOverride ?? curve) * BOOST);
       intensity += (target - intensity) * 0.05;
 
       pointer.sx += ((pointer.active ? pointer.x / W : 0.5) - pointer.sx) * 0.05;
@@ -376,7 +377,8 @@ export default function SilkSpace() {
             const d2 = dx * dx + dy2 * dy2;
             if (d2 < R * R && d2 > 0.01) {
               const d = Math.sqrt(d2);
-              const f = ((R - d) / R) * push;
+              const fall = 1 - d / R;
+              const f = fall * fall * push;   /* هبوط ناعم بدل الخطي */
               if (inSilk) {
                 /* داخل قسم القرار: الحرير ينجذب لليد (ويتوقف قبل أن يلتصق) */
                 const pull = d > 36 ? f * 0.55 : 0;
@@ -420,6 +422,18 @@ export default function SilkSpace() {
           rUV[vi + 2] = pu; rUV[vi + 3] = 1;
           const gi = r * VERTS + s2 * 2;
           rGlow[gi] = segGlow[k]; rGlow[gi + 1] = segGlow[k];
+        }
+      }
+      /* تنعيم الجيران: الإزاحات تنساب على طول الشريط فلا تتكون شوكة */
+      for (let r = 0; r < RIBBONS; r++) {
+        const base = r * (SEGS + 1);
+        let prevX = dispX[base], prevY = dispY[base];
+        for (let s2 = 1; s2 < SEGS; s2++) {
+          const k = base + s2;
+          const nx2 = (prevX + dispX[k + 1]) * 0.5, ny2 = (prevY + dispY[k + 1]) * 0.5;
+          prevX = dispX[k]; prevY = dispY[k];
+          dispX[k] += (nx2 - dispX[k]) * 0.35;
+          dispY[k] += (ny2 - dispY[k]) * 0.35;
         }
       }
       for (let i = 0; i < SPARKS; i++) {

@@ -80,8 +80,15 @@ Step 1 of the agreed 4-step plan shipped:
   silk's glow via box-shadow; `.material-card/.material-panel::before`
   is a pointer-following radial highlight driven by `--mx/--my` set from
   SilkSpace's window mousemove (hover:hover only, z -1 inside the
-  backdrop-filter stacking context). Tilt rejected as too common. Next:
-  cleanup of legacy glow blobs on inner pages.
+  backdrop-filter stacking context). Tilt rejected as too common.
+- **Step 5 (owner: pointer «tent» spike still visible; silk dim in some
+  sections and on mobile)**: per-frame neighbour smoothing of segment
+  displacements (0.35 Laplacian) so no kink can form; pointer radius
+  170→260 with quadratic falloff; MID_INT 0.22→0.38, END 0.95, ribbon +
+  spark intensity gamma `pow(uInt, 0.7)`; touch devices get ×1.35 boost
+  and card base .66→.52; home mid gradient section 50/30→30/15 alpha.
+  Next: owner picks the general hover effect (options offered), cleanup
+  of legacy glow blobs on inner pages.
 
 ## Apple-design round log (2026-09-04) — استجابة · مواد · حواف
 

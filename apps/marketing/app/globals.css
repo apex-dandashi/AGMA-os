@@ -208,7 +208,7 @@ button:not(:disabled):active {
   .material-card, .geometric-card, .material-panel {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
-    background-color: rgba(18, 18, 22, 0.66);
+    background-color: rgba(18, 18, 22, 0.52); /* كان .66: خنق الضوء على الجوال */
   }
 }
 
