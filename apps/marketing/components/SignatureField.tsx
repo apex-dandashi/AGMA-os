@@ -41,7 +41,7 @@ void main() {
   vec3 hot   = vec3(1.0, 0.94, 0.86);
   vec3 col = mix(deep, ember, vHue);
   col = mix(col, hot, min(vEnergy * 1.3, 1.0));
-  float alpha = glow * (0.10 + vHue * 0.22 + vEnergy * 0.5);
+  float alpha = glow * (0.12 + vHue * 0.26 + vEnergy * 0.5);
   gl_FragColor = vec4(col * alpha, alpha);
 }`;
 
@@ -59,7 +59,7 @@ export default function SignatureField() {
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const isCoarse = window.matchMedia('(pointer: coarse)').matches;
-    const COUNT = isCoarse ? 2600 : 5200;
+    const COUNT = isCoarse ? 3000 : 6800;
 
     function compile(type: number, src: string) {
       const sh = gl!.createShader(type)!;
@@ -118,10 +118,10 @@ export default function SignatureField() {
       const y = H * 0.66
         + Math.sin(pu * Math.PI * 2.0 + tt * 0.35) * H * 0.055
         + Math.sin(pu * Math.PI * 4.7 - tt * 0.22) * H * 0.028
-        + (pu - 0.5) * H * -0.10;
+        + (pu - 0.5) * H * -0.05;
       const dy = Math.cos(pu * Math.PI * 2.0 + tt * 0.35) * Math.PI * 2.0 * H * 0.055 / span
         + Math.cos(pu * Math.PI * 4.7 - tt * 0.22) * Math.PI * 4.7 * H * 0.028 / span
-        - 0.10 * H / span;
+        - 0.05 * H / span;
       const len = Math.hypot(1, dy);
       return [x, y, -dy / len, 1 / len];
     }
