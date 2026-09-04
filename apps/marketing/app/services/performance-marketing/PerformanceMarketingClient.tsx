@@ -466,7 +466,7 @@ export default function PerformanceMarketingClient() {
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-1">
             {metrics.map((metric, i) => (
-              <div key={i} className="geometric-card bg-gray-dark/5 p-8 text-center space-y-4 group">
+              <div key={i} data-silk-pulse className="geometric-card bg-gray-dark/5 p-8 text-center space-y-4 group">
                 <metric.icon className="text-pulse-orange mx-auto transition-transform group-hover:scale-110" size={24} />
                 <h4 className="text-snow font-bold text-sm tracking-tight">{metric.label}</h4>
               </div>

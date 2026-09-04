@@ -133,6 +133,19 @@ Step 1 of the agreed 4-step plan shipped:
   Not done: pricing has no «recommended plan» marker to anchor to; the
   three special behaviours (data packets, counter pulses, step
   stitching) are phase 2. Verified 4 mood pages by screenshot.
+- **Step 10 mood behaviours (owner: «انطلق بالمرحلة الثانية»)**: (1) data
+  packets: in the `ai` mood a bright pulse spawns every 0.5–1.1s and runs
+  along the ribbon (gaussian head + dimmer tail, added to vertex glow at
+  write time, ≤2.2s life); (2) counter pulses: `agma:silk-pulse` window
+  event {x,y,amp} → burst (wave + glow) at the nearest point; home
+  AnimatedCounter fires it on completion, and `[data-silk-pulse]`
+  elements fire once when 60% visible (performance-marketing metric
+  cards); (3) step stitching: process steps carry `data-silk="0.7"` and
+  the anchor now picks, every frame, the visible candidate closest to
+  the viewport centre (the old max-ratio pick stuck on the first fully
+  visible step), so the ribbon threads step → step with scroll. Click
+  burst refactored into `burst()`. Verified packets and stitching by
+  screenshot.
   Next: inner-page copy trims and CTA hierarchy (comfort list), then
   the immersive «تجربة AGMA» page.
 

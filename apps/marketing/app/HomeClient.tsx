@@ -54,6 +54,12 @@ function AnimatedCounter({ target, suffix = "" }: { target: number; suffix?: str
         animationFrameId = requestAnimationFrame(animate);
       } else {
         setCount(end);
+        /* اكتمال العدّاد يومض الحرير تحته (المرحلة الثانية من المزاجات) */
+        const el = ref.current as HTMLElement | null;
+        if (el) {
+          const r = el.getBoundingClientRect();
+          window.dispatchEvent(new CustomEvent('agma:silk-pulse', { detail: { x: r.left + r.width / 2, y: r.top + r.height / 2, amp: 22 } }));
+        }
       }
     }
     animationFrameId = requestAnimationFrame(animate);

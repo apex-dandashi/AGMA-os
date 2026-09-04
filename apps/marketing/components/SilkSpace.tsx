@@ -323,23 +323,48 @@ export default function SilkSpace() {
     let silkOverride: number | null = null;
     let silkEl: HTMLElement | null = null;   /* الحرير ينجذب لمركز هذا القسم */
     const ratios = new Map<Element, number>();
+    /* المرشحون الظاهرون (≥30%)؛ الاختيار بينهم يتم كل إطار بالأقرب لمركز
+       الشاشة — هكذا يخيط الحرير خطوات «آلية العمل» خطوةً خطوة مع التمرير */
+    let candidates: HTMLElement[] = [];
     const io = new IntersectionObserver((entries) => {
       for (const en of entries) ratios.set(en.target, en.isIntersecting ? en.intersectionRatio : 0);
-      let best = null as HTMLElement | null;
-      let bestR = 0.3;
-      ratios.forEach((r, el) => { if (r > bestR) { bestR = r; best = el as HTMLElement; } });
+      candidates = [];
+      ratios.forEach((r, el) => { if (r >= 0.3) candidates.push(el as HTMLElement); });
+    }, { threshold: [0, 0.3, 0.5, 0.7, 1] });
+    function pickSilkEl() {
+      if (!candidates.length) { silkEl = null; silkOverride = null; return; }
+      let best: HTMLElement | null = null, bestD = 1e9;
+      const mid = H * 0.5;
+      for (const el of candidates) {
+        const rc = el.getBoundingClientRect();
+        const d = Math.abs(rc.top + rc.height * 0.5 - mid);
+        if (d < bestD) { bestD = d; best = el; }
+      }
       const v = best ? parseFloat(best.dataset.silk ?? '') : NaN;
       silkOverride = Number.isFinite(v) ? Math.max(0, Math.min(1, v)) : null;
       silkEl = silkOverride !== null ? best : null;
-    }, { threshold: [0, 0.3, 0.5, 0.7, 1] });
+    }
     const P: Mood = { ...MOODS.home };       /* المزاج الحالي (يُلاحق الهدف) */
     let moodTarget: Mood = MOODS.home;
+    let moodName = 'home';
+    const pulsed = new WeakSet<Element>();
+    const pio = new IntersectionObserver((entries) => {
+      for (const en of entries) {
+        if (!en.isIntersecting || en.intersectionRatio < 0.6 || pulsed.has(en.target)) continue;
+        pulsed.add(en.target); pio.unobserve(en.target);
+        const r = en.target.getBoundingClientRect();
+        window.setTimeout(() => burst(r.left + r.width / 2, r.top + r.height / 2, 24), 350);
+      }
+    }, { threshold: [0.6] });
     function scanSilk() {
       ratios.clear();
       io.disconnect();
       document.querySelectorAll<HTMLElement>('[data-silk]').forEach((el) => io.observe(el));
       const m = document.querySelector<HTMLElement>('[data-silk-mood]')?.dataset.silkMood ?? 'home';
       moodTarget = MOODS[m] ?? MOODS.home;
+      moodName = m;
+      /* نبضات العدّادات: عنصر يحمل data-silk-pulse يومض الحرير تحته حين يظهر */
+      document.querySelectorAll<HTMLElement>('[data-silk-pulse]').forEach((el) => { if (!pulsed.has(el)) pio.observe(el); });
     }
     scanSilk();
     let scanTimer = 0;
@@ -372,15 +397,40 @@ export default function SilkSpace() {
       if (waves.length > 10) waves.shift();
       waves.push({ u, t0: wt, amp });
     }
-    const onDown = (e: PointerEvent) => {
-      if (e.pointerType === 'mouse' && e.button !== 0) return;
-      const [u, d] = nearestU(e.clientX, e.clientY);
+    /* ومضة + موجة عند نقطة على الشاشة (النقرة، اكتمال عدّاد، حدث خارجي) */
+    function burst(x: number, y: number, amp: number) {
+      const [u, d] = nearestU(x, y);
       const near = Math.max(0.25, 1 - d / (H * 0.5));
-      emit(u, 30 * near);
+      emit(u, amp * near);
       const k = Math.round(u * SEGS);
       for (let j = -4; j <= 4; j++) { const kk = k + j; if (kk >= 0 && kk <= SEGS) segGlow[kk] = Math.min(segGlow[kk] + 0.9 * near, 2.0); }
+    }
+    const onDown = (e: PointerEvent) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      burst(e.clientX, e.clientY, 30);
     };
     window.addEventListener('pointerdown', onDown, { passive: true });
+    /* أي مكوّن يطلب ومضة: window.dispatchEvent(new CustomEvent('agma:silk-pulse', {detail:{x,y,amp}})) */
+    const onPulse = (e: Event) => {
+      const d = (e as CustomEvent<{ x?: number; y?: number; amp?: number }>).detail ?? {};
+      if (typeof d.x === 'number' && typeof d.y === 'number') burst(d.x, d.y, d.amp ?? 24);
+    };
+    window.addEventListener('agma:silk-pulse', onPulse);
+
+    /* حزم البيانات (مزاج الدقة): ومضات قصيرة تجري على طول الحرير */
+    type Packet = { u: number; t0: number; speed: number; amp: number };
+    const packets: Packet[] = [];
+    let nextPacket = 0;
+    function packetGlow(pu: number): number {
+      let g = 0;
+      for (let i = 0; i < packets.length; i++) {
+        const pk = packets[i];
+        const pos = pk.u + pk.speed * (wt - pk.t0);
+        const x = (pu - pos) / 0.018;
+        if (x > -3 && x < 3) g += pk.amp * Math.exp(-x * x * 0.5) * (pu > pos ? 0.35 : 1); /* ذيل خلف الحزمة */
+      }
+      return g;
+    }
     const BOOST = isCoarse ? 1.35 : 1.0; /* الجوال بدا خافتاً */
     let t = 0;
     let intensity = 1;
@@ -404,6 +454,7 @@ export default function SilkSpace() {
       /* موضع الحرير: يغوص ويطفو مع عمق الصفحة، وينجذب لمركز القسم الذي
          يحمل data-silk (لوح القرار) كي يمرّ خلف زجاجه لا فوقه */
       let yTarget = H * (0.5 + 0.14 * Math.cos(sy / (H * 1.35)));
+      pickSilkEl();
       let inSilk = false;            /* اليد داخل قسم data-silk: الضوء يأتي إليها */
       let igniteX = -9999, igniteY = -9999;
       if (silkEl) {
@@ -452,6 +503,11 @@ export default function SilkSpace() {
       pointer.speed *= 0.82;
       /* تنظيف الموجات المنتهية */
       while (waves.length && wt - waves[0].t0 > 2.8) waves.shift();
+      if (moodName === 'ai' && wt > nextPacket) {
+        packets.push({ u: -0.05, t0: wt, speed: 0.7 + Math.random() * 0.35, amp: 0.9 + Math.random() * 0.5 });
+        nextPacket = wt + 0.5 + Math.random() * 0.6;
+      }
+      while (packets.length && wt - packets[0].t0 > 2.2) packets.shift();
       for (let r = 0; r < RIBBONS; r++) {
         const base = r * (SEGS + 1);
         const halfW = (r === 0 ? H * 0.052 : H * 0.026);
@@ -519,7 +575,8 @@ export default function SilkSpace() {
           rUV[vi] = pu; rUV[vi + 1] = 0;
           rUV[vi + 2] = pu; rUV[vi + 3] = 1;
           const gi = r * VERTS + s2 * 2;
-          rGlow[gi] = segGlow[k]; rGlow[gi + 1] = segGlow[k];
+          const g = segGlow[k] + (r === 0 && packets.length ? packetGlow(pu) : 0);
+          rGlow[gi] = g; rGlow[gi + 1] = g;
         }
       }
       /* الهندسة من خط المنتصف النهائي: تنعيم مرتين ثم عموديات من الجيران */
@@ -665,6 +722,8 @@ export default function SilkSpace() {
       window.removeEventListener('resize', resize);
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('pointerdown', onDown);
+      window.removeEventListener('agma:silk-pulse', onPulse);
+      pio.disconnect();
       window.removeEventListener('touchmove', onTouch);
       window.removeEventListener('touchstart', onTouch);
       document.removeEventListener('mouseleave', onLeave);

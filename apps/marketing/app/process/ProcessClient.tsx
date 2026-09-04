@@ -132,6 +132,7 @@ export default function ProcessPage() {
                {steps.map((step, i) => (
                  <motion.div 
                    key={i}
+                   data-silk="0.7"
                    initial={{ opacity: 0, x: i % 2 === 0 ? 20 : -20 }}
                    whileInView={{ opacity: 1, x: 0 }}
                    viewport={{ once: true }}
