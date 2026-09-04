@@ -24,14 +24,15 @@ export function VoiceTab() {
     queryKey: key,
     queryFn: async () => {
       const s = getSupabase();
-      const [complaints, feedback, clients] = await Promise.all([
+      const [complaints, feedback, clients, testimonials] = await Promise.all([
         s.from('complaints').select('*').order('created_at', { ascending: false }),
         s.from('feedback_entries').select('*').order('created_at', { ascending: false }).limit(50),
         s.from('clients').select('id, company').order('company'),
+        s.from('testimonials').select('*').order('created_at', { ascending: false }),
       ]);
       return {
         complaints: complaints.data ?? [], feedback: feedback.data ?? [],
-        clients: clients.data ?? [],
+        clients: clients.data ?? [], testimonials: testimonials.data ?? [],
       };
     },
   });
@@ -57,6 +58,15 @@ export function VoiceTab() {
   );
   const [resolving, setResolving] = useState<{ id: string; text: string } | null>(null);
 
+  const patchTestimonial = useAppMutation(
+    async ({ id, published }: { id: string; published: boolean }) => {
+      const { error } = await getSupabase().from('testimonials')
+        .update({ published }).eq('id', id);
+      if (error) throw new Error(error.message);
+    },
+    { invalidate: [key], successMessage: 'حُدث — الموقع يعكسه فوراً' }
+  );
+
   if (isLoading || !data) return <SkeletonList rows={4} />;
 
   const open = data.complaints.filter((c) =>
@@ -65,8 +75,38 @@ export function VoiceTab() {
     ? (data.feedback.reduce((s, f) => s + f.rating, 0) / data.feedback.length).toFixed(1)
     : '—';
 
+  const pendingTesti = data.testimonials.filter((t) => !t.published);
+
   return (
     <div className="space-y-5">
+      {data.testimonials.length > 0 && (
+        <Card className={`p-4 ${pendingTesti.length ? 'border-pulse-orange/40' : ''}`}>
+          <p className="mb-2 flex items-center gap-2 text-sm font-bold">
+            شهادات العملاء للموقع ({data.testimonials.length})
+            <Hint text="آراء CSAT بإذن اقتباس موثق — انشر ليظهر في «قالوا عنا» بالموقع فوراً، وألغِ النشر بضغطة. لا تعدل جوهر كلام العميل." />
+          </p>
+          <div className="space-y-2">
+            {data.testimonials.map((t) => (
+              <div key={t.id} className="flex flex-wrap items-start gap-2 rounded-sm border border-gray-dark p-2.5 text-sm">
+                <p className="min-w-0 flex-1 text-gray-light">
+                  «{t.quote}»
+                  <span className="block text-xs text-gray-medium mt-0.5">
+                    — {t.author_company ?? 'عميل'} · {t.source === 'csat' ? 'من CSAT بإذن موثق' : 'يدوي'}
+                  </span>
+                </p>
+                <Badge variant={t.published ? 'accent' : 'outline'}>
+                  {t.published ? 'منشور بالموقع' : 'بانتظار المراجعة'}
+                </Badge>
+                <Button size="xs" variant={t.published ? 'ghost' : 'primary'}
+                  loading={patchTestimonial.isPending}
+                  onClick={() => patchTestimonial.mutate({ id: t.id, published: !t.published })}>
+                  {t.published ? 'ألغِ النشر' : 'انشر'}
+                </Button>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
       <div className="grid gap-3 sm:grid-cols-3">
         {[
           { label: 'شكاوى مفتوحة', v: String(open.length), alarm: open.length > 0 },

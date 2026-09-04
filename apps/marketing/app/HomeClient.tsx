@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import Magnetic from '@/components/ui/Magnetic';
+import Testimonials from '@/components/Testimonials';
 import Tilt from '@/components/ui/Tilt';
 import ClientLogos from '@/components/ClientLogos';
 import ScrollFocus from '@/components/ui/ScrollFocus';
@@ -78,26 +79,10 @@ export default function HomeClient() {
   const [manualHours, setManualHours] = React.useState<number>(120);
   const [openFaqIndex, setOpenFaqIndex] = React.useState<number | null>(null);
   const [activeMethodIndex, setActiveMethodIndex] = React.useState<number>(0);
-  const [riyadhTime, setRiyadhTime] = React.useState<string>('');
   const [mousePosition, setMousePosition] = React.useState({ x: 0, y: 0 });
   const [isHoveredHero, setIsHoveredHero] = React.useState(false);
-
-  React.useEffect(() => {
-    const updateClock = () => {
-      const options: Intl.DateTimeFormatOptions = {
-        timeZone: 'Asia/Riyadh',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false,
-      };
-      const formatter = new Intl.DateTimeFormat('en-US', options);
-      setRiyadhTime(formatter.format(new Date()));
-    };
-    updateClock();
-    const interval = setInterval(updateClock, 1000);
-    return () => clearInterval(interval);
-  }, []);
+  // ساعة الرياض الحية أُزيلت (تدقيق التحويل): حركة تسرق العين بلا قيمة بيعية،
+  // وتعيد الرندر كل ثانية مجاناً.
 
   const getWhatsAppRoiUrl = () => {
     const savedTime = Math.min(300, Math.round(monthlyBudget / 1000 + 30));
@@ -212,64 +197,44 @@ export default function HomeClient() {
         
         <div className="grid-pattern" />
         
+        {/* الهيرو يُرندر مرئياً فوراً — لا أنيميشن دخول على بكسلات البيع
+            (تدقيق التحويل 2026-09-04: opacity:0 المخبوز كان يؤخر/يخفي
+            العنوان والأزرار — LCP وقاتل تحويل). الحركة زينة لما حوله فقط. */}
         <div className="container mx-auto text-center relative z-10">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-          >
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="inline-flex items-center gap-2.5 px-4 py-1.5 mb-8 border border-pulse-orange/20 rounded-full bg-[#0d0d0d]/80 shadow-[0_0_20px_rgba(255,97,0,0.06)] backdrop-blur relative overflow-hidden group"
-            >
+          <div>
+            <div className="inline-flex items-center gap-2.5 px-4 py-1.5 mb-8 border border-pulse-orange/20 rounded-full bg-[#0d0d0d]/80 shadow-[0_0_20px_rgba(255,97,0,0.06)] backdrop-blur relative overflow-hidden group">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pulse-orange/80 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-pulse-orange"></span>
               </span>
-              <span className="text-snow text-xs font-bold tracking-wider font-mono">
-                {riyadhTime ? `${riyadhTime} KSA` : '00:00:00 KSA'}
-              </span>
-              <span className="text-gray-medium/30 text-xs font-semibold">|</span>
-              <span className="text-pulse-orange text-xs font-bold tracking-widest uppercase">من الرياض، قلب المملكة</span>
-            </motion.div>
-            <motion.h1 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1, delay: 0.3 }}
-              className="text-4xl sm:text-6xl lg:text-7xl xl:text-8xl font-black font-black-arabic mb-8 leading-[1.2] text-snow max-w-4xl mx-auto tracking-normal py-4"
-            >
-              وكالتك الكاملة <br className="hidden sm:block" />
-              في عصر <br className="hidden sm:block" />
-              <span className="text-gradient px-4 py-2 sm:py-6 inline-block leading-[1.4]">الذكاء الاصطناعي</span>
-            </motion.h1>
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              className="text-gray-medium text-base sm:text-lg lg:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-medium px-4"
-            >
-              AGMA هي وكالة جيل الذكاء الاصطناعي. نجمع بين الأتمتة المتقدمة والبيانات الدقيقة والإبداع البشري لتحقيق نمو استراتيجي لشركات المملكة الواعدة.
-            </motion.p>
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.5 }}
-              className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 px-6"
-            >
+              <span className="text-pulse-orange text-xs font-bold tracking-widest uppercase">وكالة سعودية · من الرياض، قلب المملكة</span>
+            </div>
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black font-black-arabic mb-6 leading-[1.25] text-snow max-w-4xl mx-auto tracking-normal py-2">
+              نموّ يُقاس <span className="text-gradient px-2 inline-block">بالريال</span>،
+              <br className="hidden sm:block" />
+              لا بالإعجابات.
+            </h1>
+            <p className="text-gray-light text-base sm:text-lg lg:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-medium px-4">
+              AGMA — وكالة جيل الذكاء الاصطناعي: فريقك التسويقي الكامل من الرياض.
+              نجمع الأتمتة والبيانات والإبداع البشري لنجلب لشركتك عملاء فعليين —
+              وكل ريال تصرفه معنا له رقم يحاسبنا.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 px-6">
               <Magnetic className="w-full sm:w-auto">
                 <Link href="/contact" data-cursor-text="GROW" className="btn-primary w-full sm:w-auto text-base sm:text-lg px-8 sm:px-10 py-4 shadow-lg shadow-pulse-orange/20 block text-center transition-all duration-300">
-                  ابدأ رحلة النمو الآن
+                  احجز مكالمة استراتيجية مجانية
                 </Link>
               </Magnetic>
               <Magnetic className="w-full sm:w-auto">
-                <Link href="/services" data-cursor-text="EXPLORE" className="btn-secondary w-full sm:w-auto text-base sm:text-lg px-8 sm:px-10 py-4 block text-center transition-all duration-300">
-                  استعرض خدماتنا
+                <Link href="/pricing" data-cursor-text="PRICING" className="btn-secondary w-full sm:w-auto text-base sm:text-lg px-8 sm:px-10 py-4 block text-center transition-all duration-300">
+                  شاهد الأسعار الإرشادية
                 </Link>
               </Magnetic>
-            </motion.div>
-          </motion.div>
+            </div>
+            <p className="mt-6 text-xs sm:text-sm text-gray-medium">
+              بلا أي التزام · نرد خلال يوم عمل · ٣٧ خدمة تحت سقف واحد
+            </p>
+          </div>
         </div>
       </section>
 
@@ -913,6 +878,8 @@ export default function HomeClient() {
       </section>
 
       {/* FREQUENTLY ASKED QUESTIONS */}
+      <Testimonials />
+
       <section className="py-24 px-6 relative bg-deep-navy/5">
         <div className="container mx-auto max-w-4xl relative z-10">
           <div className="text-center mb-16 space-y-4">

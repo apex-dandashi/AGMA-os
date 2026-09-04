@@ -22,6 +22,34 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 9 | Help Centre / RAG + chatbots | ✅ Done (2026-08-09) — KB+RAG core, then Help Center: 14 seeded articles (نصائح تسويقية + دليل النظام), two-tier brain (grounded/general-advice), /help site page, ops help surface |
 | 10 | Employee portal + Analytics + digests | ✅ Done (2026-08-09) — staff lifecycle (auto onboarding/offboarding checklists, welcome emails, 30/60/90 nudges, equipment log, signature generator), client health weekly → scorecard, Analytics dashboard, digest v2 (rocks+issues, WhatsApp-ready) |
 
+## Conversion round log (2026-09-04) — «خلّ الموقع يبيع»
+
+Owner asked for a performance-marketing conversion audit then full
+execution. Audit findings (with two honest self-corrections: indicative
+prices DID exist — my regex missed «ر.س»; the lead form already had a
+progress bar) and the executed fixes:
+
+- **Visibility bug (sev 4)**: framer-motion bakes opacity:0 into the
+  static HTML across 25 files; stuck/slow JS leaves sales pixels
+  invisible (documented ghost CTAs on mobile probes). Fixes: hero
+  renders visible with NO entrance animation (LCP + conversion);
+  RevealGuard rescues any element still at opacity<0.05 after 2s/4.5s;
+  MotionConfig reducedMotion="user" site-wide.
+- **Hero rewrite (sev 4→)**: outcome headline «نموّ يُقاس بالريال، لا
+  بالإعجابات.», who-for subline, primary CTA «احجز مكالمة استراتيجية
+  مجانية» + secondary to pricing, friction-reducer microline. Live
+  Riyadh clock removed (attention thief + 1s re-renders).
+- **Real social proof**: `20260904100000_testimonials.sql` — CSAT
+  responses with documented consent + written quote auto-captured as
+  UNPUBLISHED testimonials (trigger, proved: capture, anon blindness,
+  publish gating); review/publish UI in IMS صوت العميل; «قالوا عنا»
+  section on home renders only when published quotes exist.
+- **Fabricated proof removed**: footer claimed «+312% ROI» and «45,000
+  ساعة موفرة» — invented numbers deleted, replaced with true facts +
+  CR 1009127528 / VAT 313630147 (Saudi trust signal).
+- Cleanups: 32→37 خدمة / 8→9 فئات (services page + schema.org), lead
+  form step counter + time expectation. KB article shipped.
+
 ## Phase 11 log (2026-09-04) — إقفال الديون: الدورات والإجازات والاستيراد
 
 The 0–10 blueprint is complete; phase 11 closes the honest deferred

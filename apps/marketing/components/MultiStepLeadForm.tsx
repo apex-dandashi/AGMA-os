@@ -352,6 +352,10 @@ export default function MultiStepLeadForm() {
     <div ref={formTopRef} className="w-full max-w-5xl mx-auto scroll-mt-24">
       {/* Progress Bar */}
       <div className="mb-12 max-w-3xl mx-auto">
+        {/* توقع الجهد (تدقيق التحويل): الزائر يكمل أكثر حين يعرف كم بقي */}
+        <p className="mb-3 text-center text-xs text-gray-medium">
+          الخطوة {step} من ٣ — أقل من دقيقة وتوصلك خطتنا الأولية
+        </p>
         <div className="flex justify-between mb-4">
           {[1, 2, 3].map((s) => (
             <div 

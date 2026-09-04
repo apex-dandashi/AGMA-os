@@ -148,7 +148,7 @@ export default function ServicesClient() {
               <span className="text-pulse-orange text-xs font-bold tracking-widest uppercase font-mono">المنظومة الكاملة</span>
             </div>
             <h1 className="text-5xl lg:text-7xl font-bold mb-8 leading-[1.1] text-snow max-w-4xl mx-auto">
-              32 خدمة. 8 فئات. <br />
+              37 خدمة. 9 فئات. <br />
               هدف واحد: <span className="text-pulse-orange">نموك</span>.
             </h1>
             <p className="text-gray-medium text-lg lg:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
@@ -345,7 +345,7 @@ export default function ServicesClient() {
             "@context": "https://schema.org",
             "@type": "CollectionPage",
             "name": "خدمات AGMA | منظومة النمو بالذكاء الاصطناعي",
-            "description": "32 خدمة تسويقية وتقنية مدعومة بالذكاء الاصطناعي تشمل الأتمتة، الإعلانات، السيو، المحتوى، الهوية، والويب.",
+            "description": "37 خدمة تسويقية وتقنية مدعومة بالذكاء الاصطناعي تشمل الأتمتة، الإعلانات، السيو، المحتوى، الهوية، والويب.",
             "url": "https://agma.com.sa/services",
             "hasPart": servicesData.map(s => ({
               "@type": "Service",

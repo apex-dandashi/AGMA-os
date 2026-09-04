@@ -77,20 +77,26 @@ const Footer = () => {
           <div className="flex flex-col gap-1 text-right md:text-left">
             <span className="text-snow font-bold tracking-widest uppercase">AGMA™ 2026</span>
             <span className="text-gray-medium">وكالة جيل الذكاء الاصطناعي — الرياض، المملكة العربية السعودية.</span>
+            {/* وثائق الثقة النظامية (تدقيق التحويل): إشارة مصداقية سعودية أساسية */}
+            <span className="text-gray-medium" dir="rtl">
+              السجل التجاري <span dir="ltr">1009127528</span> · الرقم الضريبي <span dir="ltr">313630147</span>
+            </span>
           </div>
-          
+
+          {/* أرقام الأداء المصطنعة أُزيلت (تدقيق 2026-09-04): الإثبات الحقيقي
+              في «قالوا عنا» من تقييمات CSAT موثقة — لا ادعاءات بلا سند */}
           <div className="flex flex-wrap gap-8 lg:gap-12 justify-center">
             <div className="flex flex-col">
               <span className="text-[10px] text-pulse-orange font-bold uppercase tracking-widest mb-1 font-mono">نظام الوكالة</span>
               <span className="text-xs text-gray-light font-medium">AGMA Method™</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] text-pulse-orange font-bold uppercase tracking-widest mb-1 font-mono">أداء الحملات</span>
-              <span className="text-xs text-gray-light font-medium">+312% عائد الاستثمار</span>
+              <span className="text-[10px] text-pulse-orange font-bold uppercase tracking-widest mb-1 font-mono">منظومة كاملة</span>
+              <span className="text-xs text-gray-light font-medium">37 خدمة · 9 فئات</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] text-pulse-orange font-bold uppercase tracking-widest mb-1 font-mono">أتمتة العمليات</span>
-              <span className="text-xs text-gray-light font-medium">45,000 ساعة موفرة</span>
+              <span className="text-[10px] text-pulse-orange font-bold uppercase tracking-widest mb-1 font-mono">التزامنا</span>
+              <span className="text-xs text-gray-light font-medium">رد خلال يوم عمل</span>
             </div>
           </div>
 

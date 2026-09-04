@@ -6264,6 +6264,44 @@ export type Database = {
           },
         ]
       }
+      testimonials: {
+        Row: {
+          author_company: string | null
+          created_at: string
+          id: string
+          published: boolean
+          quote: string
+          source: string
+          source_response: string | null
+        }
+        Insert: {
+          author_company?: string | null
+          created_at?: string
+          id?: string
+          published?: boolean
+          quote: string
+          source?: string
+          source_response?: string | null
+        }
+        Update: {
+          author_company?: string | null
+          created_at?: string
+          id?: string
+          published?: boolean
+          quote?: string
+          source?: string
+          source_response?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "testimonials_source_response_fkey"
+            columns: ["source_response"]
+            isOneToOne: false
+            referencedRelation: "form_responses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       time_entries: {
         Row: {
           created_at: string
