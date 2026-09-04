@@ -218,7 +218,7 @@ export default function HomeClient() {
               </span>
               <span className="text-pulse-orange text-xs font-bold tracking-widest uppercase">وكالة سعودية · من الرياض، قلب المملكة</span>
             </div>
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black font-black-arabic mb-6 leading-[1.25] text-snow max-w-4xl mx-auto tracking-normal py-2">
+            <h1 className="text-3xl sm:text-6xl lg:text-7xl font-black font-black-arabic mb-6 leading-[1.25] text-snow max-w-4xl mx-auto tracking-normal py-2">
               تسويق، تصميم، أتمتة <br className="hidden sm:block" />
               فريق واحد <br className="hidden sm:block" />
               <span className="text-gradient px-2 inline-block">وعقل اصطناعي</span>
