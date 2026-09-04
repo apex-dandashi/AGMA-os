@@ -48,11 +48,11 @@ export default function LightClient() {
           وكالة سعودية · الرياض
         </p>
         <h1 className="text-4xl font-black leading-[1.3] sm:text-6xl">
-          نموّ يُقاس <span className="text-[#E8542F]">بالريال،</span>
-          <br /> لا بالإعجابات.
+          وكالتك الكاملة في عصر
+          <br /> <span className="text-[#E8542F]">الذكاء الاصطناعي</span>
         </h1>
         <p className="mx-auto mt-6 max-w-xl text-lg leading-9 text-[#4A4238]">
-          وكالة جيل الذكاء الاصطناعي — فريقك التسويقي الكامل من الرياض.
+          AGMA هي وكالة جيل الذكاء الاصطناعي. نجمع بين الأتمتة والبيانات والإبداع البشري لتحقيق نمو استراتيجي لشركات المملكة الواعدة.
         </p>
         <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link href="/contact"
