@@ -307,7 +307,38 @@ export default function SilkSpace() {
     });
     mo.observe(document.body, { childList: true, subtree: true });
 
-    const R = isCoarse ? 150 : 260;   /* أوسع = انحناءة لا شوكة */
+    const R = isCoarse ? 150 : 260;
+    /* تموّج الماء: اليد لا تدفع الحرير بل تُطلق موجة تسافر في الاتجاهين
+       وتتلاشى؛ سرعة اليد تحدد ارتفاعها، والنقرة تُطلق موجة أعمق. */
+    type Wave = { u: number; t0: number; amp: number };
+    const waves: Wave[] = [];
+    let wt = 0;                 /* ساعة الموجات (لا تتأثر بتيار التمرير) */
+    let lastEmit = -1;
+    function nearestU(px: number, py: number): [number, number] {
+      let bestU = 0.5, bestD = 1e9;
+      for (let s2 = 0; s2 <= SEGS; s2 += 2) {
+        const pu = s2 / SEGS;
+        const [cx, cy] = path(pu, t, 0);
+        const k = s2;
+        const dx = cx + dispX[k] - px, dy = cy + dispY[k] - py;
+        const d = dx * dx + dy * dy;
+        if (d < bestD) { bestD = d; bestU = pu; }
+      }
+      return [bestU, Math.sqrt(bestD)];
+    }
+    function emit(u: number, amp: number) {
+      if (waves.length > 28) waves.shift();
+      waves.push({ u, t0: wt, amp });
+    }
+    const onDown = (e: PointerEvent) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      const [u, d] = nearestU(e.clientX, e.clientY);
+      const near = Math.max(0.25, 1 - d / (H * 0.5));
+      emit(u, 46 * near);
+      const k = Math.round(u * SEGS);
+      for (let j = -4; j <= 4; j++) { const kk = k + j; if (kk >= 0 && kk <= SEGS) segGlow[kk] = Math.min(segGlow[kk] + 0.9 * near, 2.0); }
+    };
+    window.addEventListener('pointerdown', onDown, { passive: true });
     const BOOST = isCoarse ? 1.35 : 1.0; /* الجوال بدا خافتاً */
     let t = 0;
     let intensity = 1;
@@ -362,8 +393,21 @@ export default function SilkSpace() {
       pointer.sx += ((pointer.active ? pointer.x / W : 0.5) - pointer.sx) * 0.05;
       pointer.sy += ((pointer.active ? pointer.y / H : 0.5) - pointer.sy) * 0.05;
 
+      wt += 0.016;
       const push = 1.4 + pointer.speed * 0.16;
       const drag = -vel * 0.03;                          /* التمرير يسحب النسيج */
+      /* إطلاق موجة من حركة اليد قرب الحرير (خارج أقسام القرار) */
+      if (pointer.active && !inSilk && pointer.speed > 0.6 && wt - lastEmit > 0.1) {
+        const [u, d] = nearestU(pointer.x, pointer.y);
+        if (d < R * 1.3) {
+          const near = 1 - d / (R * 1.3);
+          emit(u, Math.min(30, 4 + pointer.speed * 0.55) * near);
+          lastEmit = wt;
+        }
+      }
+      pointer.speed *= 0.82;
+      /* تنظيف الموجات المنتهية */
+      while (waves.length && wt - waves[0].t0 > 2.8) waves.shift();
       for (let r = 0; r < RIBBONS; r++) {
         const base = r * (SEGS + 1);
         const halfW = (r === 0 ? H * 0.052 : H * 0.026);
@@ -386,11 +430,24 @@ export default function SilkSpace() {
                 dvY[k] -= (dy2 / d) * pull;
                 segGlow[k] = Math.min(segGlow[k] + f * 0.14, 1.6);
               } else {
-                dvX[k] += (dx / d) * f;
-                dvY[k] += (dy2 / d) * f;
-                segGlow[k] = Math.min(segGlow[k] + f * 0.10, 1.4);
+                /* خارج أقسام القرار: لا دفع — دفء خفيف فقط، والموجة تتكفل بالحركة */
+                segGlow[k] = Math.min(segGlow[k] + f * 0.03, 1.2);
               }
             }
+          }
+          /* موجات الماء: نبضة ريكر تسافر في الاتجاهين وتتسع وتخبو */
+          let wave = 0;
+          for (let w = 0; w < waves.length; w++) {
+            const age = wt - waves[w].t0;
+            const sig = 0.045 + 0.05 * age;
+            const x = (Math.abs(pu - waves[w].u) - 0.42 * age) / sig;
+            if (x > 3 || x < -3) continue;
+            wave += waves[w].amp * Math.exp(-age * 1.15) * (1 - x * x) * Math.exp(-x * x * 0.5);
+          }
+          if (wave !== 0) {
+            const wr = r === 0 ? 1 : 0.55;
+            segGlow[k] = Math.min(segGlow[k] + Math.abs(wave) * 0.004, 1.6);
+            wave *= wr;
           }
           if (igniteX > -9000) {
             /* اشتعال تحت زر القرار: نواة ساخنة تتجمع تحته */
@@ -413,7 +470,7 @@ export default function SilkSpace() {
           dispX[k] += dvX[k]; dispY[k] += dvY[k];
           segGlow[k] *= 0.955;
 
-          const px2 = cx + dispX[k], py2 = cy + dispY[k];
+          const px2 = cx + dispX[k] + nx * wave, py2 = cy + dispY[k] + ny * wave;
           const vi = (r * VERTS + s2 * 2) * 2;
           const wHere = halfW * (0.5 + Math.sin(pu * Math.PI) * 0.8);
           rPos[vi] = px2 + nx * wHere;     rPos[vi + 1] = py2 + ny * wHere;
@@ -535,6 +592,7 @@ export default function SilkSpace() {
       document.removeEventListener('visibilitychange', onVis);
       window.removeEventListener('resize', resize);
       window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('pointerdown', onDown);
       window.removeEventListener('touchmove', onTouch);
       window.removeEventListener('touchstart', onTouch);
       document.removeEventListener('mouseleave', onLeave);

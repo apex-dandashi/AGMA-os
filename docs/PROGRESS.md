@@ -87,8 +87,18 @@ Step 1 of the agreed 4-step plan shipped:
   170→260 with quadratic falloff; MID_INT 0.22→0.38, END 0.95, ribbon +
   spark intensity gamma `pow(uInt, 0.7)`; touch devices get ×1.35 boost
   and card base .66→.52; home mid gradient section 50/30→30/15 alpha.
-  Next: owner picks the general hover effect (options offered), cleanup
-  of legacy glow blobs on inner pages.
+- **Step 6 (owner: «too sharp edges for a silky click or hover», chose
+  the water ripple)**: outside data-silk sections the pointer no longer
+  pushes the ribbon at all. Hand motion near the ribbon emits a wave
+  (every ≥100ms, amplitude 4–30px from hand speed × proximity) and a
+  pointerdown emits a deeper one (46px × proximity, with a local glow
+  burst). Waves are Ricker wavelets travelling both ways along u at
+  0.42/s, widening (σ 0.045+0.05·age) and fading (e^−1.15·age), applied
+  along the segment normal, 0.55× on the companion ribbon, ≤28 alive,
+  pruned after 2.8s. Pointer speed now decays per frame so a resting
+  hand emits nothing. Attraction/ignition inside data-silk unchanged.
+  Verified: sweep and click frames are smooth S-curves, no edges.
+  Next: cleanup of legacy glow blobs on inner pages.
 
 ## Apple-design round log (2026-09-04) — استجابة · مواد · حواف
 
