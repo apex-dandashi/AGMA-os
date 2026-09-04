@@ -22,6 +22,27 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 9 | Help Centre / RAG + chatbots | ✅ Done (2026-08-09) — KB+RAG core, then Help Center: 14 seeded articles (نصائح تسويقية + دليل النظام), two-tier brain (grounded/general-advice), /help site page, ops help surface |
 | 10 | Employee portal + Analytics + digests | ✅ Done (2026-08-09) — staff lifecycle (auto onboarding/offboarding checklists, welcome emails, 30/60/90 nudges, equipment log, signature generator), client health weekly → scorecard, Analytics dashboard, digest v2 (rocks+issues, WhatsApp-ready) |
 
+## Comfort round log (2026-09-04) — جولة الراحة والقراءة + نسخة فاتحة
+
+Owner relayed consistent friend feedback (wordy, gloomy dark, small
+gray text) + voice notes (over-justifying hero reads as guilty; تحوّل
+is a literal transform translation) and asked for both versions.
+
+- **Voice fixes** (prior commit): confident one-line hero sub, تصفح
+  الأسعار, HeroAsk box (describe your challenge → site assistant opens
+  with the question via agma:ask event), تحوّل→تطوّر.
+- **Type floor raised via Tailwind v4 tokens** (globals @theme): xs
+  12→13px, sm 14→15px, base 16→17px with taller Arabic line-heights —
+  lifts the 324 tiny-text spots without touching call sites. gray
+  contrast fixed earlier (#737373→#A6A6A6, 438 spots, ~4.2→~7:1).
+- Surface tokens added (surface-1/2) for layered dark breathing.
+- **Copy cut**: the four wordiest visible section intros on home
+  compressed to single sentences (49/41/29/26-word paras → one line).
+- **/light comparison page** (noindex): warm-paper light version of
+  the selling skeleton — same hero copy, 6 category cards that ask the
+  assistant on click, method, closing CTA, trust footer; 18px body,
+  minimal words. For 5-second preference testing vs the dark home.
+
 ## Conversion round log (2026-09-04) — «خلّ الموقع يبيع»
 
 Owner asked for a performance-marketing conversion audit then full

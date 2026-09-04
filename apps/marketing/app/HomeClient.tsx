@@ -664,7 +664,7 @@ export default function HomeClient() {
               كم توفّر لشركتك هجرتك لـ AI-Native؟
             </h2>
             <p className="text-gray-medium text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-              الوكالات التقليدية تبدد عوائدك في الأيدي العاملة البطيئة والخطوات اليدوية المكررة. حرك المؤشرات أدناه واكتشف التأثير الحقيقي والمالي الفوري لأتمتة تسويقك وعملياتك بدعم جيل الذكاء الاصطناعي.
+              حرّك المؤشرات وشاهد كم توفر الأتمتة لشركتك — بالريال والساعات.
             </p>
           </div>
 
@@ -734,7 +734,7 @@ export default function HomeClient() {
               <div className="p-4 rounded-xl bg-white/[0.01] border border-white/[0.03] flex gap-2.5 items-start">
                 <HelpCircle size={15} className="text-pulse-orange mt-0.5 shrink-0" />
                 <p className="text-[11px] text-gray-medium leading-relaxed">
-                  هذه المعادلة مبنية على رصد حقيقي للتوفير الذي تسجله الأنظمة المؤتمتة وبرامج فرز وتحليل البيانات وحقن الـ GenAI في عمليات صياغة وإطلاق الحملات الرقمية لعملائنا في الخليج.
+                  أرقام تقديرية من نتائج أتمتة فعلية لعملاء في الخليج.
                 </p>
               </div>
             </div>
@@ -850,7 +850,7 @@ export default function HomeClient() {
                 لنمو <span className="text-pulse-orange">علامتك</span>.
               </h2>
               <p className="text-gray-medium text-lg leading-relaxed font-medium">
-                في AGMA، نعتقد أن عصر التسويق التقليدي قد انتهى. نحن لا نصب الذكاء الاصطناعي فوق عمليات قديمة، بل أعدنا بناء مفهوم &quot;الوكالة&quot; من الصفر ليعمل بالبيانات والأتمتة كقلب نابض.
+                في AGMA أعدنا بناء الوكالة من الصفر — البيانات والأتمتة قلبها النابض.
               </p>
               <ul className="space-y-4">
                 {[
@@ -889,7 +889,7 @@ export default function HomeClient() {
               الأسئلة الأكثر تداولاً
             </h2>
             <p className="text-gray-medium text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-              إضاءات وتفاصيل سريعة تجيب على تساؤلات النخبة من شركائنا حول كيفية دمج الذكاء الاصطناعي بمقاييس الأمان والسرعة الفائقة.
+              أجوبة مختصرة عن الأمان والسرعة ودمج الذكاء في تسويقك.
             </p>
           </div>
 
