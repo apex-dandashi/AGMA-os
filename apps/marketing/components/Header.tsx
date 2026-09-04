@@ -21,6 +21,7 @@ const Header = () => {
 
   const navLinks = [
     { name: 'الرئيسية', href: '/' },
+    { name: 'تجربة AGMA', href: '/experience' },
     { name: 'من نحن', href: '/about' },
     { name: 'منهجيتنا', href: '/agma-method' },
     { name: 'آلية العمل', href: '/process' },
@@ -57,12 +58,12 @@ const Header = () => {
           </Link>
         </Magnetic>
 
-        <nav className="hidden lg:flex items-center gap-8">
+        <nav className="hidden lg:flex items-center gap-6">
           {navLinks.map((link) => (
             <Magnetic key={link.href}>
               <Link 
                 href={link.href}
-                className={`text-sm font-medium transition-colors duration-200 ${link.name === 'الرئيسية' ? 'text-pulse-orange' : 'text-gray-light hover:text-snow'}`}
+                className={`whitespace-nowrap text-sm font-medium transition-colors duration-200 ${link.name === 'الرئيسية' ? 'text-pulse-orange' : 'text-gray-light hover:text-snow'}`}
               >
                 {link.name}
               </Link>

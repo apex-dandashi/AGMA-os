@@ -153,9 +153,25 @@ Step 1 of the agreed 4-step plan shipped:
   agma-method and all 8 service pages. Voice rules applied: no «في AGMA،
   نؤمن بأن…» preambles, no over-justifying, one idea per sentence,
   «تحوّل» → «تطوّر», dropped absolute claims («الدقة المطلقة»). Trust /
-  privacy / terms / complaints left as-is (legal precision). Next:
-  «تجربة AGMA» immersive page (owner shared a ChatGPT direction «من
-  الفكرة إلى الأثر» to fold in).
+  privacy / terms / complaints left as-is (legal precision). - **Step 12 «تجربة AGMA» (owner: «ابنِ تجربة AGMA» + package of the five
+  services at 9,500 SAR/month for 12 months, previous price 15,000)**:
+  new `/experience` page (in the header nav). Journey: idea (two-stage
+  headline) → proof (consented Testimonials only, explicitly no
+  unauthorised case stories) → service stage (5 services list + one
+  stage whose CSS/framer visual changes per service: desktop↔mobile
+  morph, logo→applications, before/after wipe, posts→campaign grid,
+  request moving through 5 stages; picking a service pulses the silk at
+  the button then the stage) → package card (15,000 struck → 9,500/mo,
+  12 months, «وفّر 5,500 شهرياً · 66,000 في السنة», VAT-exclusive note,
+  L12 free «أضف خدمة أخرى» chips) → «كيف نبدأ» 3 stations each
+  `data-silk="0.7"` (stitching) → request form (L2 dial-left, L11 phone
+  required, honeypot, posts to lead-intake with `services` = package
+  summary + extras; submit button is `data-silk-ignite`). Silk: hero 1.0,
+  proof .45, stage .6, contact .9. Header nav gap 8→6 + nowrap (the new
+  link had wrapped labels). Verified desktop 4 shots + mobile.
+  Owner-side: the «previous price 15,000» must have been genuinely
+  charged for a period to comply with MoC discount rules; VAT wording
+  «غير شامل ضريبة القيمة المضافة» is my assumption to confirm.
 
 ## Apple-design round log (2026-09-04) — استجابة · مواد · حواف
 
