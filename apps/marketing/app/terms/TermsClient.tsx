@@ -201,7 +201,7 @@ export default function TermsClient() {
   ];
 
   return (
-    <main className="min-h-screen relative overflow-hidden font-sans">
+    <main data-silk-mood="silence" className="min-h-screen relative overflow-hidden font-sans">
       <Header />
 
       {/* Hero Section */}

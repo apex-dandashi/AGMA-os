@@ -213,7 +213,7 @@ export default function CareersClient() {
   return (
     <div dir="rtl" className="min-h-screen bg-void text-snow">
       <Header />
-      <main className="mx-auto max-w-3xl px-4 pb-24 pt-32">
+      <main data-silk-mood="silence" className="mx-auto max-w-3xl px-4 pb-24 pt-32">
         <h1 className="mb-3 text-3xl font-black">ابنِ معنا وكالة جيل الذكاء الاصطناعي.</h1>
         <p className="mb-8 text-sm leading-relaxed text-gray-light">
           نبحث عن أشخاص يجمعون بين الفضول والحِرفة والبيانات والإبداع. في AGMA

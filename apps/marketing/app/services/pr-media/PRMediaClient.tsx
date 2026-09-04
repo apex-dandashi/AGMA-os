@@ -155,7 +155,7 @@ export default function PRMediaPage() {
   ];
 
   return (
-    <main className="min-h-screen relative overflow-hidden">
+    <main data-silk-mood="social" className="min-h-screen relative overflow-hidden">
       <Header />
       
       {/* Hero Section */}

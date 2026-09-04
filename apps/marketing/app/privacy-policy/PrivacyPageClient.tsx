@@ -35,7 +35,7 @@ export default function PrivacyPageClient() {
   });
 
   return (
-    <main className="min-h-screen relative overflow-hidden">
+    <main data-silk-mood="silence" className="min-h-screen relative overflow-hidden">
       <Header />
 
       {/* Hero Section */}

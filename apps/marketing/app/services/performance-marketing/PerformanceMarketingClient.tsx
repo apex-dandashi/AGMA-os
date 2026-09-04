@@ -146,7 +146,7 @@ export default function PerformanceMarketingClient() {
   };
 
   return (
-    <main className="min-h-screen relative overflow-hidden">
+    <main data-silk-mood="growth" className="min-h-screen relative overflow-hidden">
       <Header />
 
       {/* Hero Section */}

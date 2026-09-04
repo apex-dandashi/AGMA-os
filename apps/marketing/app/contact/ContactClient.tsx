@@ -24,7 +24,7 @@ const processSteps = [
 
 export default function ContactClient() {
   return (
-    <main className="min-h-screen relative overflow-hidden">
+    <main data-silk-mood="ready" className="min-h-screen relative overflow-hidden">
       <Header />
 
       {/* Hero Section */}

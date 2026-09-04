@@ -35,6 +35,8 @@ varying vec2 vUV;
 varying float vGlow;
 uniform float uTime;
 uniform float uInt;
+uniform float uHot;   /* حرارة القلب: 0.6 عنبري هادئ … 1.6 أبيض ساخن */
+uniform float uFil;   /* تباين خيوط اللهب */
 
 float hash(vec2 p) {
   return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
@@ -57,7 +59,7 @@ void main() {
   vec2 flow = vec2(vUV.x * 6.0 - uTime * 0.55, vUV.y * 2.2);
   float n = fbm(flow);
   float n2 = fbm(flow * 1.7 + vec2(uTime * 0.13, 4.2));
-  float filaments = pow(n * 0.65 + n2 * 0.55, 2.4);
+  float filaments = pow(n * 0.65 + n2 * 0.55, 2.4 * uFil);
 
   float across = 1.0 - abs(vUV.y * 2.0 - 1.0);
   float core = pow(smoothstep(0.0, 1.0, across), 1.6);
@@ -69,7 +71,7 @@ void main() {
   vec3 ember = vec3(0.957, 0.302, 0.169);
   vec3 hot   = vec3(1.0, 0.92, 0.80);
   vec3 col = mix(deep, ember, clamp(intensity * 2.2, 0.0, 1.0));
-  col = mix(col, hot, clamp(pow(intensity, 2.0) * 2.6 * core, 0.0, 1.0));
+  col = mix(col, hot, clamp(pow(intensity, 2.0) * 2.6 * core * uHot, 0.0, 1.0));
 
   gl_FragColor = vec4(col * intensity, intensity);
 }`;
@@ -93,13 +95,14 @@ const SPARK_FRAG = `
 precision mediump float;
 varying float vA;
 uniform float uInt;
+uniform float uSpark;
 void main() {
   vec2 c = gl_PointCoord - 0.5;
   float d = length(c);
   if (d > 0.5) discard;
   float glow = pow(smoothstep(0.5, 0.0, d), 2.0);
   vec3 col = mix(vec3(0.957, 0.302, 0.169), vec3(1.0, 0.93, 0.84), glow);
-  float a = glow * vA * 0.8 * pow(uInt, 0.7);
+  float a = glow * vA * 0.8 * pow(uInt, 0.7) * uSpark;
   gl_FragColor = vec4(col * a, a);
 }`;
 
@@ -137,6 +140,34 @@ void main() {
   float a = glow * vA * 0.42;
   gl_FragColor = vec4(col * a, a);
 }`;
+
+/* مزاجات الحرير (2026-09-05): الحرير واحد، ومزاجه يتبدل بحسب موضوع الصفحة.
+   الصفحة تعلنه بـ data-silk-mood على غلافها؛ الانتقال بين المزاجات ناعم. */
+type Mood = { int: number; flow: number; width: number; hot: number; fil: number; sway: number; spark: number; slope: number; breathe: number };
+const MOODS: Record<string, Mood> = {
+  /* الاستقبال (الرئيسية) */
+  home:    { int: 1,    flow: 1,    width: 1,    hot: 1,    fil: 1,    sway: 1,    spark: 1,   slope: 0,    breathe: 0 },
+  /* الدقة: أسرع وأنحف وقلب أبيض ساخن */
+  ai:      { int: 1,    flow: 1.6,  width: 0.72, hot: 1.5,  fil: 1.25, sway: 0.8,  spark: 1.2, slope: 0,    breathe: 0 },
+  /* النمو: يصعد عبر الشاشة كمنحنى */
+  growth:  { int: 1.05, flow: 1.1,  width: 1,    hot: 1.1,  fil: 1,    sway: 0.9,  spark: 1.1, slope: 0.22, breathe: 0 },
+  /* الهدوء: عريض بطيء خافت، لا يزاحم القراءة */
+  calm:    { int: 0.6,  flow: 0.55, width: 1.35, hot: 0.7,  fil: 0.8,  sway: 0.7,  spark: 0.5, slope: 0,    breathe: 0 },
+  /* الحيوية: شرر أكثر وتمايل أسرع */
+  social:  { int: 1.05, flow: 1.35, width: 1,    hot: 1.15, fil: 1,    sway: 1.4,  spark: 1.8, slope: 0,    breathe: 0 },
+  /* الحِرفة: عرضه يتنفس */
+  craft:   { int: 1,    flow: 0.9,  width: 1.2,  hot: 1,    fil: 0.9,  sway: 1,    spark: 0.9, slope: 0,    breathe: 0.25 },
+  /* الانضباط: أكثر استقامة وحدّة */
+  web:     { int: 1,    flow: 1,    width: 0.85, hot: 1.2,  fil: 1.1,  sway: 0.35, spark: 0.8, slope: 0,    breathe: 0 },
+  /* القرار (التسعير): هادئ حتى يرسو خلف الختام */
+  pricing: { int: 0.75, flow: 0.8,  width: 1,    hot: 1,    fil: 1,    sway: 0.8,  spark: 0.8, slope: 0,    breathe: 0 },
+  /* الإنسان: أعرض وأنعم بخيوط أقل */
+  human:   { int: 0.9,  flow: 0.7,  width: 1.4,  hot: 0.75, fil: 0.6,  sway: 0.9,  spark: 0.7, slope: 0,    breathe: 0 },
+  /* الاستعداد (تواصل): ساطع وثابت */
+  ready:   { int: 1,    flow: 0.8,  width: 1,    hot: 1.2,  fil: 1,    sway: 0.6,  spark: 0.9, slope: 0,    breathe: 0 },
+  /* الصمت (المدونة والقانوني): يكاد يختفي وتبقى النجوم */
+  silence: { int: 0.15, flow: 0.6,  width: 1,    hot: 0.7,  fil: 0.8,  sway: 0.6,  spark: 0.2, slope: 0,    breathe: 0 },
+};
 
 const SEGS = 140;
 const RIBBONS = 2;
@@ -245,11 +276,14 @@ export default function SilkSpace() {
       const span = W + 260;
       const x = pu * span - 130;
       const lift = ribbon === 0 ? 0 : H * 0.045;
+      const a1 = H * 0.050 * P.sway, a2 = H * 0.022 * P.sway;
       const y = ribbonY - lift
-        + Math.sin(pu * Math.PI * 1.7 + tt * 0.30 + ribbon * 1.7) * H * 0.050
-        + Math.sin(pu * Math.PI * 3.9 - tt * 0.19 + ribbon * 0.8) * H * 0.022;
-      const dy = Math.cos(pu * Math.PI * 1.7 + tt * 0.30 + ribbon * 1.7) * Math.PI * 1.7 * H * 0.050 / span
-        + Math.cos(pu * Math.PI * 3.9 - tt * 0.19 + ribbon * 0.8) * Math.PI * 3.9 * H * 0.022 / span;
+        + (pu - 0.5) * P.slope * H                         /* منحنى النمو */
+        + Math.sin(pu * Math.PI * 1.7 + tt * 0.30 + ribbon * 1.7) * a1
+        + Math.sin(pu * Math.PI * 3.9 - tt * 0.19 + ribbon * 0.8) * a2;
+      const dy = P.slope * H / span
+        + Math.cos(pu * Math.PI * 1.7 + tt * 0.30 + ribbon * 1.7) * Math.PI * 1.7 * a1 / span
+        + Math.cos(pu * Math.PI * 3.9 - tt * 0.19 + ribbon * 0.8) * Math.PI * 3.9 * a2 / span;
       const len = Math.hypot(1, dy);
       return [x, y, -dy / len, 1 / len];
     }
@@ -298,10 +332,14 @@ export default function SilkSpace() {
       silkOverride = Number.isFinite(v) ? Math.max(0, Math.min(1, v)) : null;
       silkEl = silkOverride !== null ? best : null;
     }, { threshold: [0, 0.3, 0.5, 0.7, 1] });
+    const P: Mood = { ...MOODS.home };       /* المزاج الحالي (يُلاحق الهدف) */
+    let moodTarget: Mood = MOODS.home;
     function scanSilk() {
       ratios.clear();
       io.disconnect();
       document.querySelectorAll<HTMLElement>('[data-silk]').forEach((el) => io.observe(el));
+      const m = document.querySelector<HTMLElement>('[data-silk-mood]')?.dataset.silkMood ?? 'home';
+      moodTarget = MOODS[m] ?? MOODS.home;
     }
     scanSilk();
     let scanTimer = 0;
@@ -361,7 +399,7 @@ export default function SilkSpace() {
       lastScroll = sy;
       vel += (raw - vel) * 0.18;                       /* تيار ممهّد */
       const flow = 1 + Math.min(Math.abs(vel), 60) * 0.02;
-      t += 0.016 * flow;
+      t += 0.016 * flow * P.flow;
 
       /* موضع الحرير: يغوص ويطفو مع عمق الصفحة، وينجذب لمركز القسم الذي
          يحمل data-silk (لوح القرار) كي يمرّ خلف زجاجه لا فوقه */
@@ -391,13 +429,15 @@ export default function SilkSpace() {
       const hero = 1 - smoothstep(0.55, 1.6, s);
       const endRise = 1 - smoothstep(0.2, 1.4, remain);
       const curve = Math.max(MID_INT + (1 - MID_INT) * hero, MID_INT + (END_INT - MID_INT) * endRise);
-      const target = Math.min(1, (silkOverride ?? curve) * BOOST);
+      const target = Math.min(1, (silkOverride ?? curve * P.int) * BOOST);
       intensity += (target - intensity) * 0.05;
 
       pointer.sx += ((pointer.active ? pointer.x / W : 0.5) - pointer.sx) * 0.05;
       pointer.sy += ((pointer.active ? pointer.y / H : 0.5) - pointer.sy) * 0.05;
 
       wt += 0.016;
+      /* ملاحقة المزاج المستهدف بنعومة (انتقال بين الصفحات ≈ ثانيتان) */
+      for (const key of Object.keys(P) as (keyof Mood)[]) P[key] += (moodTarget[key] - P[key]) * 0.03;
       const push = 1.4 + pointer.speed * 0.16;
       const drag = -vel * 0.03;                          /* التمرير يسحب النسيج */
       /* إطلاق موجة من حركة اليد قرب الحرير (خارج أقسام القرار) */
@@ -485,7 +525,8 @@ export default function SilkSpace() {
       /* الهندسة من خط المنتصف النهائي: تنعيم مرتين ثم عموديات من الجيران */
       for (let r = 0; r < RIBBONS; r++) {
         const base = r * (SEGS + 1);
-        const halfW = (r === 0 ? H * 0.052 : H * 0.026);
+        const breathe = 1 + P.breathe * Math.sin(wt * 0.9);
+        const halfW = (r === 0 ? H * 0.052 : H * 0.026) * P.width * breathe;
         for (let pass = 0; pass < 2; pass++) {
           let pX = cX[base], pY = cY[base];
           for (let s2 = 1; s2 < SEGS; s2++) {
@@ -570,6 +611,8 @@ export default function SilkSpace() {
       gl!.uniform2f(u(ribbonProg, 'uRes'), W, H);
       gl!.uniform1f(u(ribbonProg, 'uTime'), t);
       gl!.uniform1f(u(ribbonProg, 'uInt'), intensity);
+      gl!.uniform1f(u(ribbonProg, 'uHot'), P.hot);
+      gl!.uniform1f(u(ribbonProg, 'uFil'), P.fil);
       for (let r = RIBBONS - 1; r >= 0; r--) {
         const start = r * VERTS;
         attrib(ribbonProg, 'aPos', bufs.rPos, rPos.subarray(start * 2, (start + VERTS) * 2), 2, true);
@@ -584,6 +627,7 @@ export default function SilkSpace() {
       gl!.uniform1f(u(sparkProg, 'uTime'), t);
       gl!.uniform1f(u(sparkProg, 'uDpr'), dpr);
       gl!.uniform1f(u(sparkProg, 'uInt'), intensity);
+      gl!.uniform1f(u(sparkProg, 'uSpark'), P.spark);
       attrib(sparkProg, 'aPos', bufs.sPos, spPos, 2, true);
       attrib(sparkProg, 'aSize', bufs.sSize, spSize, 1);
       attrib(sparkProg, 'aTw', bufs.sTw, spTw, 1);

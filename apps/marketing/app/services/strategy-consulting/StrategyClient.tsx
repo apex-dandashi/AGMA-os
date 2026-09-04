@@ -184,7 +184,7 @@ ${goal.benefits.map((b, idx) => `  ${idx + 1}. [${b.label}]: ${b.desc}`).join('\
   ];
 
   return (
-    <main className="min-h-screen relative overflow-hidden">
+    <main data-silk-mood="human" className="min-h-screen relative overflow-hidden">
       <Header />
       
       {/* Hero Section */}

@@ -206,7 +206,7 @@ export default function BrandingCreativeClient() {
   };
 
   return (
-    <main className="min-h-screen relative overflow-hidden">
+    <main data-silk-mood="craft" className="min-h-screen relative overflow-hidden">
       <Header />
 
       {/* Hero Section */}

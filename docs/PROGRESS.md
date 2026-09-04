@@ -118,7 +118,22 @@ Step 1 of the agreed 4-step plan shipped:
   patterns → `.material-card`; final CTA sections of about / pricing /
   services / process / industries / agma-method get `data-silk="0.85"`,
   contact hero 0.7 with its opaque bg dropped; about's opaque section →
-  40%. Next: inner-page copy trims and CTA hierarchy (comfort list), then
+  40%.
+- **Step 9 silk moods (owner: «ابدأ بالمزاجات»)**: one silk, twelve moods.
+  Each page wrapper declares `data-silk-mood`; SilkSpace reads it on
+  scan (MutationObserver covers route changes) and eases nine
+  parameters toward the preset (0.03/frame ≈ 2s): intensity, flow
+  speed, ribbon width (+ optional breathing), core heat `uHot`, filament
+  contrast `uFil`, sway, sparks `uSpark`, slope (growth curve). Presets:
+  home · ai (fast, thin, white-hot) · growth (rises across the screen)
+  · calm (wide, slow, dim; SEO) · social (sparks, sway) · craft
+  (breathing width; branding) · web (straight, crisp) · pricing (quiet
+  until the CTA anchor) · human (about, strategy) · ready (contact) ·
+  silence (blog, legal, help, tools: 15%, stars remain). 23 pages tagged.
+  Not done: pricing has no «recommended plan» marker to anchor to; the
+  three special behaviours (data packets, counter pulses, step
+  stitching) are phase 2. Verified 4 mood pages by screenshot.
+  Next: inner-page copy trims and CTA hierarchy (comfort list), then
   the immersive «تجربة AGMA» page.
 
 ## Apple-design round log (2026-09-04) — استجابة · مواد · حواف

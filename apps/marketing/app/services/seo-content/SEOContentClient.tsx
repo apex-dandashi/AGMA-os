@@ -240,7 +240,7 @@ export default function SEOContentClient() {
   });
 
   return (
-    <main className="min-h-screen relative overflow-hidden">
+    <main data-silk-mood="calm" className="min-h-screen relative overflow-hidden">
       <Header />
 
       {/* Hero Section */}

@@ -46,7 +46,7 @@ export default function AboutPage() {
   ];
 
   return (
-    <main className="min-h-screen relative overflow-hidden">
+    <main data-silk-mood="human" className="min-h-screen relative overflow-hidden">
       <Header />
       
       {/* Meta Title/Description set in layout if using Server Components, 

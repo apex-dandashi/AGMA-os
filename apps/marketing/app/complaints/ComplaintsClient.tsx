@@ -115,7 +115,7 @@ export default function ComplaintsClient() {
   return (
     <div dir="rtl" className="min-h-screen bg-void text-snow">
       <Header />
-      <main className="mx-auto max-w-3xl px-4 pb-24 pt-32">
+      <main data-silk-mood="silence" className="mx-auto max-w-3xl px-4 pb-24 pt-32">
         <h1 className="mb-2 text-3xl font-black">نحن نستمع، ونتعامل مع كل شكوى بجدية.</h1>
         <p className="mb-8 text-sm leading-relaxed text-gray-light">
           في AGMA نعتبر الشكوى فرصة لتصحيح المشكلة وتحسين نظام العمل. بعد

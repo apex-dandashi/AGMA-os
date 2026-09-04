@@ -62,7 +62,7 @@ export default function FeedbackClient() {
   return (
     <div dir="rtl" className="min-h-screen bg-void text-snow">
       <Header />
-      <main className="mx-auto max-w-2xl px-4 pb-24 pt-32">
+      <main data-silk-mood="silence" className="mx-auto max-w-2xl px-4 pb-24 pt-32">
         {done ? (
           <div className="rounded-xl border border-pulse-orange/40 bg-white/5 p-8 text-center">
             <CheckCircle2 className="mx-auto mb-3 h-10 w-10 text-pulse-orange" aria-hidden />

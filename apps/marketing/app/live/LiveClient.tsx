@@ -39,7 +39,7 @@ export default function LiveClient() {
   return (
     <div dir="rtl" className="min-h-screen bg-void text-snow">
       <Header />
-      <main className="mx-auto max-w-3xl px-4 pb-24 pt-32">
+      <main data-silk-mood="silence" className="mx-auto max-w-3xl px-4 pb-24 pt-32">
         <h1 className="mb-2 flex items-center gap-3 text-3xl font-black">
           <Radio className="h-8 w-8 text-pulse-orange" aria-hidden />
           AGMA Live

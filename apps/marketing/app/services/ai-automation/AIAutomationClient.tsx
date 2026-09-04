@@ -122,7 +122,7 @@ export default function AIAutomationClient() {
   };
 
   return (
-    <main className="min-h-screen relative overflow-hidden">
+    <main data-silk-mood="ai" className="min-h-screen relative overflow-hidden">
       <Header />
 
       {/* Hero Section */}

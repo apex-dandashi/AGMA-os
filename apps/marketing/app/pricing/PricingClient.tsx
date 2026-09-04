@@ -104,7 +104,7 @@ export default function PricingPage() {
   ];
 
   return (
-    <main className="min-h-screen relative overflow-hidden">
+    <main data-silk-mood="pricing" className="min-h-screen relative overflow-hidden">
       <Header />
       
       {/* Hero Section */}

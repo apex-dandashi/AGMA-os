@@ -17,7 +17,7 @@ export default async function BlogIndex() {
   const bakedSlugs = articles.map((a) => a.slug);
 
   return (
-    <main className="min-h-screen relative">
+    <main data-silk-mood="silence" className="min-h-screen relative">
       <Header />
       <div dir="rtl" className="mx-auto max-w-3xl px-4 pb-20 pt-32 lg:pt-40">
       <h1 className="mb-2 text-3xl font-black text-snow">آخر الأخبار</h1>

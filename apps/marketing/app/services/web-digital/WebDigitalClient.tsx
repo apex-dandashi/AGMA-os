@@ -260,7 +260,7 @@ ${baseMsg}
   };
 
   return (
-    <main className="min-h-screen relative overflow-hidden">
+    <main data-silk-mood="web" className="min-h-screen relative overflow-hidden">
       <Header />
       
       {/* Hero Section */}
