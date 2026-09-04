@@ -219,9 +219,9 @@ export default function HomeClient() {
               <span className="text-pulse-orange text-xs font-bold tracking-widest uppercase">وكالة سعودية · من الرياض، قلب المملكة</span>
             </div>
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black font-black-arabic mb-6 leading-[1.25] text-snow max-w-4xl mx-auto tracking-normal py-2">
-              وكالتك الكاملة <br className="hidden sm:block" />
-              في عصر <br className="hidden sm:block" />
-              <span className="text-gradient px-2 inline-block">الذكاء الاصطناعي</span>
+              تسويق، تصميم، أتمتة <br className="hidden sm:block" />
+              فريق واحد <br className="hidden sm:block" />
+              <span className="text-gradient px-2 inline-block">وعقل اصطناعي</span>
             </h1>
             {/* وصف AGMA الأصلي بقرار المالك (2026-09-04) — بلا جمل تبرير بعده */}
             <p className="text-gray-light text-base sm:text-lg lg:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-medium px-4">

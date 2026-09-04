@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     template: '%s | AGMA',
     default: 'AGMA.com.sa | وكالة جيل الذكاء الاصطناعي',
   },
-  description: 'وكالتك الكاملة في عصر الذكاء الاصطناعي. AGMA هي وكالة سعودية Native-AI مبنية بالذكاء الاصطناعي من الداخل لخدمة العلامات الطموحة والمستقبلية.',
+  description: 'تسويق، تصميم، أتمتة: فريق واحد وعقل اصطناعي. AGMA هي وكالة سعودية Native-AI مبنية بالذكاء الاصطناعي من الداخل لخدمة العلامات الطموحة والمستقبلية.',
   icons: {
     icon: '/favicon-agma.webp',
     apple: '/apple-touch-icon.png',
