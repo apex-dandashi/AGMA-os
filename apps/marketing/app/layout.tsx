@@ -42,7 +42,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ar" dir="rtl" className={`${tajawal.variable} ${ibmPlexSansArabic.variable}`} suppressHydrationWarning>
-      <body className="antialiased bg-[#0A0A0A] text-[#FAFAFA]" suppressHydrationWarning>
+      {/* لا خلفية على body: الفضاء (SilkSpace، z -10) يرسم فوق خلفية html
+          وتحت المحتوى — خلفية body كانت ستغطيه */}
+      <body className="antialiased text-[#FAFAFA]" suppressHydrationWarning>
         <ClientProviders>
           {children}
         </ClientProviders>

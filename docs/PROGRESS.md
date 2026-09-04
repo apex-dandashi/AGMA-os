@@ -22,6 +22,37 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
 | 9 | Help Centre / RAG + chatbots | ✅ Done (2026-08-09) — KB+RAG core, then Help Center: 14 seeded articles (نصائح تسويقية + دليل النظام), two-tier brain (grounded/general-advice), /help site page, ops help surface |
 | 10 | Employee portal + Analytics + digests | ✅ Done (2026-08-09) — staff lifecycle (auto onboarding/offboarding checklists, welcome emails, 30/60/90 nudges, equipment log, signature generator), client health weekly → scorecard, Analytics dashboard, digest v2 (rocks+issues, WhatsApp-ready) |
 
+## Silk space log (2026-09-04) — «ضوء حيّ واحد يسكن خلف الزجاج»
+
+Owner: glass deserves the hero's motion; asked for a more coherent, alive
+site soul, starting with «a feeling of space with the silk's fluidity».
+Step 1 of the agreed 4-step plan shipped:
+
+- **SilkSpace.tsx** (replaces SignatureField, which is deleted): the
+  v3 ribbon shader promoted from a hero-only canvas to a fixed
+  full-viewport layer mounted once in ClientProviders at `-z-10`.
+  body background made transparent (html keeps #0A0A0A) so the layer
+  paints between root background and content.
+- **Space depth**: 520/220 stars on three depth bands, parallax from
+  scroll and pointer computed in the vertex shader (static buffers),
+  twinkle, plus a radial edge veil that deepens the dark around the
+  light.
+- **Fluid with scroll**: ribbon y drifts with page depth
+  (`0.5 + 0.14·cos(scrollY/1.35H)`) so it never leaves the viewport;
+  smoothed scroll velocity speeds the flame flow and drags the fabric
+  (per-segment spring push, bowed at the centre).
+- **Section-aware intensity**: `uInt` uniform on ribbon + sparks. Curve:
+  1.0 in hero → 0.22 behind selling cards → 0.85 in the last ~1.4
+  viewports; any element can override with `data-silk="0.x"` (IO-driven,
+  MutationObserver rescans on route changes). Home CTA carries 0.85.
+- Pointer listeners moved to window (layer is pointer-events:none), DPR
+  capped at 1.5 for an always-on layer, sparks 320/160.
+- Hero keeps only its readability veil; the mid gradient section went
+  from opaque to 50/30/50 alpha so the light passes.
+- Verified with Playwright (desktop 4 positions + mobile 2). Next steps:
+  cards refract (desktop blur), unified materialize reveal + tilt, then
+  cleanup of legacy glow blobs.
+
 ## Apple-design round log (2026-09-04) — استجابة · مواد · حواف
 
 Owner approved applying the apple-design skill to agma.com.sa

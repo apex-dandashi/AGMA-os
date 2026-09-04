@@ -5,6 +5,7 @@ import AICursor from './AICursor';
 import SmoothScroll from './SmoothScroll';
 import CookieConsent from './CookieConsent';
 import RevealGuard from './RevealGuard';
+import SilkSpace from './SilkSpace';
 
 export default function ClientProviders({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
@@ -22,6 +23,8 @@ export default function ClientProviders({ children }: { children: React.ReactNod
     // transition الافتراضي (جولة Apple): نابض مخمَّد حرجياً (bounce 0) لكل
     // حركة لم تحدد نابضها — قابل للمقاطعة ويبدأ من القيمة الحالية لا الهدف.
     <MotionConfig reducedMotion="user" transition={{ type: 'spring', bounce: 0, duration: 0.45 }}>
+      {/* ضوء الموقع الحيّ: طبقة ثابتة خلف كل الصفحات (body شفاف فوقها) */}
+      <SilkSpace />
       <AICursor />
       <CookieConsent />
       <RevealGuard />

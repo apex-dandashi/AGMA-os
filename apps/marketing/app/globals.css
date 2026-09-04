@@ -25,8 +25,11 @@
 }
 
 /* Base resets as global styles */
-html, body {
+/* الخلفية على html فقط: body شفاف كي يظهر فضاء الحرير (طبقة z -10) */
+html {
   background-color: #0A0A0A;
+}
+html, body {
   color: #FAFAFA;
   margin: 0;
   padding: 0;
@@ -47,7 +50,8 @@ body {
 
 @layer base {
   body {
-    @apply antialiased bg-pure-ink text-snow;
+    @apply antialiased text-snow;
+    background: transparent;
   }
   
   /* تايبوغرافي بحسب الحجم (جولة Apple 2026-09-04): التتبع صفر — العربية خط

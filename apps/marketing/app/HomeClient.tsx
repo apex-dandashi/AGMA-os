@@ -3,7 +3,6 @@
 import React from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import SignatureField from '@/components/SignatureField';
 import { motion, AnimatePresence, useScroll, useTransform, useInView } from 'framer-motion';
 import { 
   Zap, 
@@ -160,8 +159,8 @@ export default function HomeClient() {
         onMouseEnter={() => setIsHoveredHero(true)}
         onMouseLeave={() => setIsHoveredHero(false)}
       >
+        {/* الحرير صار طبقة الموقع (SilkSpace) — هنا بقي حجاب القراءة فقط */}
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-          <SignatureField />
           <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0A]/70 via-transparent to-[#0A0A0A]/70 opacity-35" />
           
           {/* Interactive Glowing Cursor Follower in the background */}
@@ -650,7 +649,7 @@ export default function HomeClient() {
       <ClientLogos />
 
       {/* INTERACTIVE AI ROI OPTIMIZATION SANDBOX */}
-      <section className="py-24 px-6 relative bg-gradient-to-b from-pure-ink via-[#0d0d0d] to-pure-ink border-t border-b border-white/[0.03]">
+      <section className="py-24 px-6 relative bg-gradient-to-b from-pure-ink/50 via-[#0d0d0d]/30 to-pure-ink/50 border-t border-b border-white/[0.03]">
         <div className="grid-pattern opacity-[0.03]" />
         
         <div className="container mx-auto max-w-7xl relative z-10">
@@ -953,7 +952,8 @@ export default function HomeClient() {
         </div>
       </section>
 
-      <section className="py-24 px-6 mb-20">
+      {/* data-silk: الحرير يعود مشتعلاً عند القرار */}
+      <section className="py-24 px-6 mb-20" data-silk="0.85">
         <div className="container mx-auto">
           <motion.div 
             initial="initial"
