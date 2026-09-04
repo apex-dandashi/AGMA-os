@@ -44,9 +44,10 @@ export default function LabClient() {
 
       {/* طبقة الفيديو */}
       <div className="absolute inset-0 z-0 overflow-hidden">
+        {/* عنصر واحد لا يُعاد تركيبه عند التبديل (كان key يعيد تنزيل ١٤MB) */}
         <video
-          key={v}
           src={VIDEO}
+          poster="/lab-poster.jpg"
           autoPlay muted loop playsInline preload="auto"
           className="h-full w-full object-cover"
           style={{ filter: FILTERS[v], objectPosition: '50% 35%' }}
