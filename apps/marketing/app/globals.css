@@ -100,13 +100,10 @@ body {
   background-size: 200% auto;
 }
 
+/* شبكة المربعات أُطفئت (قرار المالك 2026-09-04: «قبيحة») — الكلاس باقٍ في
+   ١٠ صفحات فنطفئه من الجذر؛ الأسود النقي يترك الحرير المضيء بطلاً وحيداً. */
 .grid-pattern {
-  position: absolute;
-  inset: 0;
-  opacity: 0.03;
-  pointer-events: none;
-  background-image: linear-gradient(#FAFAFA 1px, transparent 1px), linear-gradient(90deg, #FAFAFA 1px, transparent 1px);
-  background-size: 40px 40px;
+  display: none;
 }
 
 .orange-glow {
