@@ -303,7 +303,8 @@ export default function SilkSpace() {
 
     function step() {
       const sy = window.scrollY;
-      const raw = sy - lastScroll;
+      /* سقف للقفزات (روابط المراسي) كي لا يُقذف النسيج خارج الشاشة */
+      const raw = Math.max(-80, Math.min(80, sy - lastScroll));
       lastScroll = sy;
       vel += (raw - vel) * 0.18;                       /* تيار ممهّد */
       const flow = 1 + Math.min(Math.abs(vel), 60) * 0.02;

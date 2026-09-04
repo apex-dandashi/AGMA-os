@@ -961,17 +961,7 @@ export default function HomeClient() {
             data-cursor-text="CONTACT" 
             className="material-panel p-12 lg:p-20 text-center relative overflow-hidden rounded-[40px]"
           >
-            {/* Digital Scan Line Effect for CTA */}
-            <motion.div 
-              variants={{
-                initial: { left: "-10%", opacity: 0 },
-                hover: { left: "110%", opacity: 1 }
-              }}
-              transition={{ duration: 1.5, ease: "easeInOut", repeat: Infinity }}
-              className="absolute top-0 bottom-0 w-[2px] bg-pulse-orange shadow-[0_0_20px_rgba(244,77,43,1)] z-20 pointer-events-none"
-            />
-
-            <div className="grid-pattern opacity-[0.03]" />
+            {/* خط المسح القديم أُزيل: مصدر ضوء واحد هو الحرير خلف الزجاج */}
             <div className="relative z-10 px-4">
               <h2 className="text-4xl sm:text-5xl lg:text-7xl font-bold mb-8 text-snow leading-tight">
                 جاهز لجيل <br />

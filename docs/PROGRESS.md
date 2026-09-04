@@ -49,9 +49,17 @@ Step 1 of the agreed 4-step plan shipped:
   capped at 1.5 for an always-on layer, sparks 320/160.
 - Hero keeps only its readability veil; the mid gradient section went
   from opaque to 50/30/50 alpha so the light passes.
-- Verified with Playwright (desktop 4 positions + mobile 2). Next steps:
-  cards refract (desktop blur), unified materialize reveal + tilt, then
-  cleanup of legacy glow blobs.
+- Verified with Playwright (desktop 4 positions + mobile 2).
+- **Step 2 (same day, owner: «it's not glass»)**: `.material-card` /
+  `.geometric-card` / `.material-panel` became real glass: translucent
+  base (rgba 18,18,22 @ .42/.38) + backdrop blur 14/24px so the ribbon
+  passes through. No glass on glass: cards inside a panel drop the blur
+  (backdrop root cuts them off). Touch screens: translucency without
+  blur (.66). reduced-transparency / contrast:more → solid surface-1.
+  Legacy orange scan line in the CTA removed (one light source).
+  Scroll-velocity input clamped to ±80px/frame so anchor jumps don't
+  fling the fabric off-screen. Next: unified materialize reveal + tilt,
+  cleanup of remaining glow blobs.
 
 ## Apple-design round log (2026-09-04) — استجابة · مواد · حواف
 
