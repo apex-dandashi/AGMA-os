@@ -216,6 +216,25 @@ Step 1 of the agreed 4-step plan shipped:
   form, sticky bar shows the selected package. New stage kinds: bars,
   rank, chat. Nav label → «الباقات السنوية».
 
+- **Step 15 benchmark quick wins (2026-09-05; owner: «نفذ توصيات هذا
+  الأسبوع على صفحة الباقات»)**: from docs/benchmarks/global-competition-
+  2026-09.md. (1) Explicit quantities per tier via item `by` overrides:
+  social 2 platforms 12 posts + 4 reels → 3/20/8 → 4/30/12; landing pages
+  4 → 8 (Leader); brand assets 8 → 16/mo; automations 2 → 4/yr (Leader);
+  ads 2 campaigns on 2 platforms → 4 on 4; Leader content 4 articles +
+  20 descriptions/mo. Value tables recomputed (Launch ~4,900 / 20%,
+  Accelerator ~14,800 / 36%, Leader ~31,300 / 44%). (2) Client-portal
+  section moved directly under the hero with a real screenshot of the
+  live demo portal (`public/portal-demo.jpg`, 1600px, captured from
+  ops.agma.com.sa/portal/demo) linking to it. (3) One documented result:
+  NOT possible — the consented testimonials table is empty on prod (the
+  «الدليل» section rendered only its heading), so the empty proof
+  section was removed from this page until a consented testimonial
+  exists; nothing invented. (4) FAQ gained «وماذا لو أردت الخروج قبل
+  نهاية السنة؟» with an honest answer (clause is written in the contract
+  before payment; delivered work stays the client's) — the concrete
+  notice period is still the owner's to set.
+
 ## Apple-design round log (2026-09-04) — استجابة · مواد · حواف
 
 Owner approved applying the apple-design skill to agma.com.sa

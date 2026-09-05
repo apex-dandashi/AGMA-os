@@ -6,7 +6,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { DIAL_CODES } from '@agma/ui';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import Testimonials from '@/components/Testimonials';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../../lib/publicConfig';
 
 /**
@@ -23,7 +22,7 @@ type Tier = 'launch' | 'accelerator' | 'leader';
 const TIERS: Tier[] = ['launch', 'accelerator', 'leader'];
 const fmt = (n: number) => n.toLocaleString('en-US');
 
-type Item = { text: string; tiers: Tier[]; yearly: number; basis: string; est?: boolean };
+type Item = { text: string; tiers: Tier[]; yearly: number; basis: string; est?: boolean; by?: Partial<Record<Tier, { text?: string; yearly?: number; basis?: string }>> };
 type Kind = 'web' | 'brand' | 'social' | 'flow' | 'bars' | 'rank' | 'chat';
 type Svc = { id: string; name: string; promise: string; kind: Kind; items: Item[] };
 
@@ -35,32 +34,32 @@ const TOP: Tier[] = ['leader'];
 const SERVICES: Svc[] = [
   { id: 'web', name: 'الموقع والمنصة', promise: 'موقع يبيع ٢٤/٧ ويتكامل مع حملاتك.', kind: 'web', items: [
     { text: 'موقع كامل يُطلق خلال أول ٤–٨ أسابيع: جوال أولاً وسيو من اليوم الأول، ولوحة إدارة محتوى بيدك', tiers: ALL, yearly: 7500, basis: 'موقع من 7,500' },
-    { text: 'صفحة هبوط لكل حملة (٤ في السنة على الأقل) بتتبع تحويل مثبت', tiers: PLUS, yearly: 10000, basis: '٤ صفحات هبوط من 2,500' },
+    { text: '٤ صفحات هبوط في السنة (واحدة لكل ربع) بتتبع تحويل مثبت', tiers: PLUS, yearly: 10000, basis: '٤ صفحات هبوط من 2,500', by: { leader: { text: '٨ صفحات هبوط في السنة (لكل حملة رئيسية) بتتبع تحويل مثبت', yearly: 20000, basis: '٨ صفحات هبوط من 2,500' } } },
     { text: 'الدومين والاستضافة باسمك دائماً، ودعم فني مستمر', tiers: ALL, yearly: 0, basis: '' },
   ] },
   { id: 'brand', name: 'الهوية البصرية', promise: 'شعار يتحوّل إلى نظام كامل.', kind: 'brand', items: [
     { text: '٣ اتجاهات تصميم ثم هوية كاملة بكل الصيغ خلال ٣–٥ أسابيع، وحقوقها لك', tiers: ALL, yearly: 6000, basis: 'هوية من 6,000' },
     { text: 'دليل هوية: قواعد الشعار والألوان والخطوط ونبرة الصوت', tiers: ALL, yearly: 4400, basis: 'دليل هوية من 4,400' },
-    { text: 'أصول شهرية بهويتك: تصاميم إعلانية وأغلفة وقوالب محتوى', tiers: PLUS, yearly: 12000, basis: 'أصول شهرية ~1,000', est: true },
+    { text: '٨ تصاميم شهرياً بهويتك: إعلانات وأغلفة وقوالب محتوى', tiers: PLUS, yearly: 12000, basis: '٨ أصول شهرياً ~1,000', est: true, by: { leader: { text: '١٦ تصميماً شهرياً بهويتك: إعلانات وأغلفة وقوالب ومطبوعات', yearly: 20000, basis: '١٦ أصلاً شهرياً ~1,650' } } },
   ] },
   { id: 'social', name: 'السوشال ميديا', promise: 'حضور يومي يبني مجتمعاً لا متابعين فقط.', kind: 'social', items: [
-    { text: 'تقويم شهري تعتمده، ثم تصميم ونشر منشورات وقصص وريلز، وتقرير شهري يفرّق النمو الحقيقي عن الأرقام الفارغة', tiers: ALL, yearly: 33600, basis: 'إدارة من 2,800/شهر' },
+    { text: 'منصتان · ١٢ منشوراً و٤ ريلز شهرياً بتقويم تعتمده، وتقرير شهري يفرّق النمو الحقيقي عن الأرقام الفارغة', tiers: ALL, yearly: 33600, basis: 'إدارة من 2,800/شهر', by: { accelerator: { text: '٣ منصات · ٢٠ منشوراً و٨ ريلز شهرياً بتقويم تعتمده، وتقرير شهري يفرّق النمو الحقيقي عن الأرقام الفارغة', yearly: 42000, basis: 'إدارة ٣ منصات ~3,500/شهر' }, leader: { text: '٤ منصات · ٣٠ منشوراً و١٢ ريلز شهرياً بتقويم تعتمده، وتقرير شهري يفرّق النمو الحقيقي عن الأرقام الفارغة', yearly: 54000, basis: 'إدارة ٤ منصات ~4,500/شهر' } } },
     { text: 'استراتيجية حساب لكل منصة: دور وجمهور ونبرة وأعمدة محتوى', tiers: PLUS, yearly: 5000, basis: 'استراتيجية من 5,000' },
     { text: 'إدارة مجتمع يومية: ردود بلهجة علامتك واحتواء الشكاوى قبل انتشارها', tiers: PLUS, yearly: 26400, basis: 'مجتمع من 2,200/شهر' },
   ] },
   { id: 'systems', name: 'الأنظمة والأتمتة', promise: 'طلباتك تمشي وحدها من الاستقبال إلى التسليم.', kind: 'flow', items: [
     { text: 'روبوت محادثة على واتساب وموقعك يجيب من معرفة منشأتك المعتمدة فقط ويسلّم البشري ما لا يعرفه', tiers: ALL, yearly: 7500, basis: 'روبوت من 7,500' },
-    { text: 'أتمتة عمليتين على الأقل في السنة من وصول الطلب إلى إقفاله، بتنبيهات لما يتعثر', tiers: PLUS, yearly: 9000, basis: 'مساران من 4,500' },
+    { text: 'أتمتة عمليتين في السنة من وصول الطلب إلى إقفاله، بتنبيهات لما يتعثر', tiers: PLUS, yearly: 9000, basis: 'مساران من 4,500', by: { leader: { text: 'أتمتة ٤ عمليات في السنة من وصول الطلب إلى إقفاله، بتنبيهات لما يتعثر', yearly: 18000, basis: '٤ مسارات من 4,500' } } },
     { text: 'تحديث شهري لقاعدة المعرفة وصيانة الأتمتة', tiers: PLUS, yearly: 18000, basis: 'صيانة ~1,500/شهر', est: true },
   ] },
   { id: 'ads', name: 'الإعلانات المدفوعة', promise: 'ميزانيتك محمية بسقوف وقياس صادق.', kind: 'bars', items: [
-    { text: 'إدارة حملات سناب وتيك توك وإنستغرام وإكس: ٣ زوايا رسائل تُختبر أول أسبوعين ثم تصاميم شهرية وتقرير بلغة عمل', tiers: PLUS, yearly: 30000, basis: 'إدارة من 2,500/شهر' },
+    { text: 'حملتان نشطتان شهرياً على منصتين (سناب/تيك توك/إنستغرام/إكس): ٣ زوايا رسائل تُختبر أول أسبوعين ثم تصاميم شهرية وتقرير بلغة عمل', tiers: PLUS, yearly: 30000, basis: 'إدارة من 2,500/شهر', by: { leader: { text: '٤ حملات نشطة شهرياً على ٤ منصات: زوايا رسائل تُختبر ثم تصاميم شهرية وتقرير بلغة عمل', yearly: 42000, basis: 'إدارة ٤ منصات ~3,500/شهر' } } },
     { text: 'إعلانات جوجل (بحث وعرض) بحسابات باسمك وتتبع تحويل', tiers: TOP, yearly: 30000, basis: 'جوجل من 2,500/شهر' },
     { text: 'ميزانية الإعلانات نفسها تُدفع للمنصات مباشرة وليست ضمن الباقة', tiers: PLUS, yearly: 0, basis: '' },
   ] },
   { id: 'seo', name: 'السيو والمحتوى', promise: 'تصدّر بحث جوجل ومحركات الذكاء.', kind: 'rank', items: [
     { text: 'سيو عربي متخصص: نوايا البحث واللهجة وسلوك المستخدم السعودي والخليجي', tiers: TOP, yearly: 36000, basis: 'سيو عربي من 3,000/شهر' },
-    { text: 'محتوى شهري بخط إنتاج ذكاء اصطناعي يراجعه محررونا قبل أي نشر', tiers: TOP, yearly: 26400, basis: 'محتوى من 2,200/شهر' },
+    { text: '٤ مقالات و٢٠ وصفاً/منشوراً شهرياً بخط إنتاج ذكاء اصطناعي يراجعه محررونا قبل أي نشر', tiers: TOP, yearly: 26400, basis: 'محتوى من 2,200/شهر' },
     { text: 'تحسين الظهور في محركات الذكاء الاصطناعي (GEO)', tiers: TOP, yearly: 36000, basis: 'GEO من 3,000/شهر' },
   ] },
   { id: 'agent', name: 'وكيل ذكاء اصطناعي', promise: 'عملية واحدة تُدار بذكاء اصطناعي مخصص لك.', kind: 'chat', items: [
@@ -78,7 +77,8 @@ const PACKAGES: Pkg[] = [
 const MONTHS = 12;
 const WHATSAPP = 'https://wa.me/966581195387';
 
-const includedItems = (t: Tier) => SERVICES.flatMap((s) => s.items.filter((i) => i.tiers.includes(t)));
+const forTier = (i: Item, t: Tier): Item => ({ ...i, ...(i.by?.[t] ?? {}) });
+const includedItems = (t: Tier) => SERVICES.flatMap((s) => s.items.filter((i) => i.tiers.includes(t)).map((i) => forTier(i, t)));
 const includedServices = (t: Tier) => SERVICES.filter((s) => s.items.some((i) => i.tiers.includes(t)));
 const yearlyValue = (t: Tier) => includedItems(t).reduce((a, i) => a + i.yearly, 0);
 const monthlyValue = (t: Tier) => Math.round(yearlyValue(t) / MONTHS / 100) * 100;
@@ -92,7 +92,8 @@ const ROADMAP = [
 const SECTORS = ['التجزئة والمتاجر', 'العقار', 'المطاعم والضيافة', 'الصحة والعيادات', 'التعليم', 'التقنية والتطبيقات', 'الخدمات المهنية', 'أخرى'];
 const FAQ = [
   { q: 'ما الفرق بين الباقات الثلاث؟', a: 'انطلاقة تبني الأساس: موقع وهوية وسوشال وروبوت محادثة. مسرّع الأعمال يضيف الإعلانات المدفوعة وإدارة المجتمع والأتمتة والأصول الشهرية. قيادة السوق تضيف السيو والمحتوى وإعلانات جوجل ووكيل ذكاء اصطناعي مخصصاً.' },
-  { q: 'لماذا الالتزام سنة كاملة؟', a: 'لأن الهوية والموقع والأتمتة تُبنى في أول ربع وتُثمر في بقية السنة. مدة العقد وشروط الإنهاء تُثبَّت كتابةً قبل أي دفعة.' },
+  { q: 'لماذا الالتزام سنة كاملة؟', a: 'لأن الهوية والموقع والأتمتة تُبنى في أول ربع وتُثمر في بقية السنة. المدة وشروطها تُثبَّت كتابةً قبل أي دفعة.' },
+  { q: 'وماذا لو أردت الخروج قبل نهاية السنة؟', a: 'نقطة الخروج وإشعارها مكتوبان في العقد قبل أن تدفع ريالاً، ونشرحهما لك في المكالمة الاستكشافية. وكل ما سُلّم لك حتى تاريخ الخروج يبقى ملكك.' },
   { q: 'هل ميزانية الإعلانات ضمن السعر؟', a: 'لا. سعر الباقة يغطي إدارة الحملات وتصاميمها وتقاريرها، أما ما يُدفع للمنصات فيُدفع من حسابك مباشرة وبسقوف تحددها أنت.' },
   { q: 'من يملك الموقع والهوية والحسابات؟', a: 'أنت. الدومين والاستضافة والحسابات الإعلانية باسمك من اليوم الأول، وحقوق الهوية كاملة لك بعد سداد قيمتها.' },
   { q: 'أحتاج خدمة غير الموجودة في الباقة؟', a: 'أضفها من الحقل أسفل الباقات. لدينا ٣٧ خدمة في ٩ فئات، ويُسعَّر الإضافي في عرضك.' },
@@ -247,14 +248,23 @@ export default function AcceleratorClient() {
         </form>
       </section>
 
-      {/* ٢) الدليل */}
-      <section data-silk="0.45" className="scroll-mt-28 px-6 py-16">
-        <motion.div {...reveal} className="container mx-auto mb-4 text-center">
-          <h2 className="text-3xl font-black text-snow sm:text-4xl">الدليل قبل الكلام</h2>
-          <p className="mt-3 text-gray-medium">آراء عملاء وافقوا على نشرها من استبيان الرضا. لا نعرض قصصاً بلا إذن أصحابها.</p>
+      {/* ٢) بوابة العميل: التميّز الذي لا يعرضه أحد — فوق الطية */}
+      <section data-silk="0.5" className="scroll-mt-28 px-6 pb-4 pt-2">
+        <motion.div {...reveal} className="material-card container mx-auto grid max-w-6xl items-center gap-8 rounded-3xl p-6 lg:grid-cols-5 lg:p-10">
+          <div className="lg:col-span-2">
+            <p className="text-sm font-bold text-pulse-orange">AGMA OS · بوابة العميل</p>
+            <h2 className="mt-2 text-3xl font-black text-snow">تتابع كل شيء من بوابتك</h2>
+            <p className="mt-4 leading-relaxed text-gray-light">تقدّم كل خدمة بنسبة ومهلة، اعتمادات من جوالك، تقارير بلغة عمل، وفواتير في سجل واحد. هذه لقطة حقيقية من البوابة التجريبية، افتحها الآن بلا تسجيل.</p>
+            <a href="https://ops.agma.com.sa/portal/demo/" target="_blank" rel="noreferrer" className="btn-primary mt-6 inline-flex px-6 py-3">جرّب البوابة الآن</a>
+          </div>
+          <a href="https://ops.agma.com.sa/portal/demo/" target="_blank" rel="noreferrer" className="block overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-black/50 lg:col-span-3" aria-label="افتح البوابة التجريبية">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/portal-demo.jpg" alt="لقطة من بوابة عملاء AGMA OS: تقدم المشروع، القرارات المنتظرة، والنشاط الحي" width={1600} height={1000} loading="eager" className="h-auto w-full" />
+          </a>
         </motion.div>
-        <Testimonials />
       </section>
+
+      {/* قسم «الدليل» يعود حين تتوفر آراء عملاء موافَق على نشرها (الجدول فارغ اليوم — لا نعرض قسماً فارغاً ولا قصصاً بلا إذن) */}
 
       {/* ٣) الباقات الثلاث */}
       <section id="packages" data-silk="0.85" className="scroll-mt-28 px-6 py-20">
@@ -309,7 +319,7 @@ export default function AcceleratorClient() {
               <div className="mt-4 border-t border-white/[0.06] pt-5">
                 <h3 className="text-xl font-bold text-snow">{active.name}</h3>
                 <ul className="mt-3 grid gap-2 text-gray-light">
-                  {active.items.filter((i) => i.tiers.includes(tier)).map((i) => (<li key={i.text} className="flex items-start gap-2 text-sm leading-relaxed"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-pulse-orange" />{i.text}</li>))}
+                  {active.items.filter((i) => i.tiers.includes(tier)).map((i) => forTier(i, tier)).map((i) => (<li key={i.text} className="flex items-start gap-2 text-sm leading-relaxed"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-pulse-orange" />{i.text}</li>))}
                 </ul>
               </div>
             </div>
@@ -348,21 +358,6 @@ export default function AcceleratorClient() {
             </div>
           </motion.div>
         </div>
-      </section>
-
-      {/* ٥) بوابة العميل */}
-      <section data-silk="0.5" className="scroll-mt-28 px-6 py-16">
-        <motion.div {...reveal} className="material-card container mx-auto grid max-w-5xl gap-8 rounded-3xl p-8 lg:grid-cols-2 lg:p-12">
-          <div>
-            <p className="text-sm font-bold text-pulse-orange">AGMA OS · بوابة العميل</p>
-            <h2 className="mt-2 text-3xl font-black text-snow">تتابع كل شيء من بوابتك</h2>
-            <p className="mt-4 leading-relaxed text-gray-light">المهام والتسليمات والاعتمادات والتقارير والفواتير في مكان واحد. تعرف ماذا يحدث اليوم وماذا يأتي غداً بلا رسائل متفرقة.</p>
-            <a href="https://ops.agma.com.sa/portal/demo/" target="_blank" rel="noreferrer" className="btn-secondary mt-6 inline-flex px-6 py-3">جرّب البوابة الآن</a>
-          </div>
-          <ul className="grid gap-3 text-gray-light">
-            {['تقدّم كل خدمة بنسبة ومهلة', 'اعتماد التصاميم والتقويم من جوالك', 'تقارير شهرية بلغة عمل لا مصطلحات', 'الفواتير والمدفوعات في سجل واحد'].map((t) => (<li key={t} className="flex items-start gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 text-sm"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-pulse-orange" />{t}</li>))}
-          </ul>
-        </motion.div>
       </section>
 
       {/* ٦) خريطة السنة */}
