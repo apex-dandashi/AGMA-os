@@ -339,7 +339,7 @@ export default function AcceleratorClient() {
               {extras.map((x) => (<button key={x} type="button" onClick={() => setExtras((e) => e.filter((v) => v !== x))} className="rounded-full border border-pulse-orange/60 bg-pulse-orange/10 px-3 py-1 text-sm text-pulse-orange" title="إزالة">{x} ✕</button>))}
             </div>
             <form onSubmit={(e) => { e.preventDefault(); addExtra(); }} className="mx-auto mt-5 flex max-w-md gap-2">
-              <input value={extraDraft} onChange={(e) => setExtraDraft(e.target.value)} placeholder="أضف خدمة أخرى تحتاجها… (تصوير، مونتاج، فعاليات)" className="min-w-0 flex-1 rounded-full border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-snow placeholder:text-gray-medium focus:border-pulse-orange focus:outline-none" />
+              <input value={extraDraft} onChange={(e) => setExtraDraft(e.target.value)} placeholder="أضف خدمة أخرى تحتاجها… (مونتاج، فعاليات، علاقات عامة)" className="min-w-0 flex-1 rounded-full border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-snow placeholder:text-gray-medium focus:border-pulse-orange focus:outline-none" />
               <button type="submit" className="btn-secondary rounded-full px-5 py-2.5 text-sm">أضف</button>
             </form>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">

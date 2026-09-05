@@ -205,8 +205,9 @@ Step 1 of the agreed 4-step plan shipped:
   pages, monthly brand assets, social strategy + community, 2 workflow
   automations + upkeep, paid-social management; ~14,100, 33%), قيادة
   السوق Market Leader 17,500 (+ Google Ads, Arabic SEO, AI content, GEO,
-  custom AI agent, CRO; ~26,400, 34%). Launch/Leader prices are my
-  proposals pending owner sign-off; 9,500 is the owner's. Photography
+  custom AI agent, CRO; ~26,400, 34%). Owner approved the proposed
+  tiers and prices («امشي باقتراحك») and confirmed: no photography in any
+  package. Photography
   removed; all VAT wording removed (JSON-LD too). Items carry tier flags
   so stage, deliverables and value table recompute per package; ad media
   budgets stated as paid to platforms directly. Mobile: horizontal
