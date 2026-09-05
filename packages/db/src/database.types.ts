@@ -235,6 +235,54 @@ export type Database = {
           },
         ]
       }
+      ai_visibility_checks: {
+        Row: {
+          brand: string
+          caller_hash: string | null
+          city: string
+          competitors: Json
+          created_at: string
+          id: string
+          mentions: number
+          model: string | null
+          questions: Json
+          score: number
+          sector: string
+          total: number
+          website: string | null
+        }
+        Insert: {
+          brand: string
+          caller_hash?: string | null
+          city: string
+          competitors?: Json
+          created_at?: string
+          id?: string
+          mentions?: number
+          model?: string | null
+          questions?: Json
+          score?: number
+          sector: string
+          total?: number
+          website?: string | null
+        }
+        Update: {
+          brand?: string
+          caller_hash?: string | null
+          city?: string
+          competitors?: Json
+          created_at?: string
+          id?: string
+          mentions?: number
+          model?: string | null
+          questions?: Json
+          score?: number
+          sector?: string
+          total?: number
+          website?: string | null
+        }
+        Relationships: []
+      }
       allocation_rules: {
         Row: {
           bucket: string

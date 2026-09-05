@@ -235,6 +235,28 @@ Step 1 of the agreed 4-step plan shipped:
   before payment; delivered work stays the client's) — the concrete
   notice period is still the owner's to set.
 
+- **Step 16 «حصة الذكاء» + 30-day exit (2026-09-05; owner: «خلها ٣٠ يوماً بعد
+  الربع الأول وكمل خطة الشهر»)**: FAQ now states exit after the first
+  quarter with 30 days' notice. Month-plan item 5 shipped: the Arabic
+  GEO product is named «حصة الذكاء» with a free measuring tool at
+  `/ai-visibility`. Edge function `ai-visibility` (public, no JWT, rate
+  limit 6/hour via check_rate_limit, honeypot, allowed origins) asks the
+  shared LLM layer six buyer-style questions templated from sector +
+  city, returns per-question mention (normalised Arabic match incl.
+  brands list), competitors ranked by mentions, score 0–100 and the
+  model label; every check is stored in `ai_visibility_checks` (RLS:
+  team reads; service role writes) — migration
+  20260905090000_ai_visibility.sql with a دليل النظام KB article
+  (docs-with-ship; kb-reindex still to run in the next batch). Page:
+  form → score card (silk pulse) → six questions with ✓ → competitors →
+  «التقرير الكامل: ٣ نماذج × ٣٠ سؤالاً» lead form posting to lead-intake
+  with the check summary in `services`. Honesty copy: single-model,
+  point-in-time measurement stated on the page. Packages page links the
+  tool from the hero and the Leader GEO item now reads «حصة الذكاء: قياس
+  شهري…». Item 6 (anonymised results page) blocked: no consented data.
+  Gauntlet: db reset + DO-block proofs + gen types + build/typecheck (5
+  tasks) + rls-check passed; db push + functions deploy done.
+
 ## Apple-design round log (2026-09-04) — استجابة · مواد · حواف
 
 Owner approved applying the apple-design skill to agma.com.sa

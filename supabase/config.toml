@@ -70,3 +70,6 @@ verify_jwt = false
 # مساعد RAG — يخدم بوت الموقع العام (حد معدل + فخ روبوتات + معرفة معتمدة فقط، L9).
 [functions.assistant-ask]
 verify_jwt = false
+
+[functions.ai-visibility]
+verify_jwt = false
