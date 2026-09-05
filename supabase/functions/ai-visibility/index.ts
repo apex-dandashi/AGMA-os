@@ -50,6 +50,14 @@ function norm(s: string): string {
     .replace(/[^\p{L}\p{N}]+/gu, '');
 }
 
+/* أسماء عامة ومنصات ليست منافسين (تظهر في أجوبة النماذج كثيراً) */
+const GENERIC = ['google','maps','clutch','whatsapp','snapchat','instagram','tiktok','linkedin','twitter','facebook','youtube','chatgpt','gemini','perplexity','trustpilot','yelp',
+  'جوجل','خرائط','واتساب','سناب','انستقرام','تيكتوك','لينكدان','تويتر','فيسبوك','يوتيوب','وكالهاعلانيه','وكالاتاعلانيه','شركهتسويق','شركاتتسويق','وكالهتسويق','عياده','مطعم','متجر'];
+function isGeneric(b: string): boolean {
+  const n = norm(b);
+  return n.length < 3 || GENERIC.some((g) => n === norm(g) || n.includes(norm(g)));
+}
+
 function modelLabel(): string {
   if (Deno.env.get('ANTHROPIC_API_KEY')) return 'Claude';
   if (Deno.env.get('GEMINI_API_KEY')) return 'Gemini';
@@ -97,7 +105,7 @@ Deno.serve(async (req) => {
     const counts = new Map<string, number>();
     const results = qs.map((q, i) => {
       const a = answers[i];
-      const brands = (a.brands ?? []).map((b) => String(b).trim()).filter((b) => b.length > 1).slice(0, 8);
+      const brands = (a.brands ?? []).map((b) => String(b).trim()).filter((b) => b.length > 1 && !isGeneric(b)).slice(0, 8);
       const mentioned = norm(a.answer ?? '').includes(target) || brands.some((b) => norm(b).includes(target) || target.includes(norm(b)));
       for (const b of brands) { if (!norm(b).includes(target)) counts.set(b, (counts.get(b) ?? 0) + 1); }
       return { q, mentioned, brands };
