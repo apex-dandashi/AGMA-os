@@ -6,6 +6,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { DIAL_CODES } from '@agma/ui';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import ToolsCloud from '@/components/ToolsCloud';
+import { TOOLS, TOOL_GROUPS, type ToolGroup } from '@/lib/tools';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../../lib/publicConfig';
 
 /**
@@ -82,6 +84,14 @@ const includedItems = (t: Tier) => SERVICES.flatMap((s) => s.items.filter((i) =>
 const includedServices = (t: Tier) => SERVICES.filter((s) => s.items.some((i) => i.tiers.includes(t)));
 const yearlyValue = (t: Tier) => includedItems(t).reduce((a, i) => a + i.yearly, 0);
 const monthlyValue = (t: Tier) => Math.round(yearlyValue(t) / MONTHS / 100) * 100;
+
+/* ما نرفعه عن كاهل العميل: صياغة «وجع رأس نريحك منه» لا محاسبة بالريال */
+const RELIEF = [
+  { t: 'لا رخصة تشتريها', d: 'التصميم والمونتاج ونماذج الذكاء الاصطناعي تعمل بأدواتنا وحساباتنا، لا بفواتير على اسمك.' },
+  { t: 'لا حساباً تتابعه', d: 'التوثيق والصلاحيات والنسخ الاحتياطي والتحديثات الأمنية علينا، والملكية تبقى باسمك.' },
+  { t: 'لا تكاملاً تركّبه', d: 'الموقع والواتساب والإعلانات والتحليلات مربوطة ببعضها من اليوم الأول.' },
+  { t: 'شيء واحد تفتحه', d: 'بوابتك، وفيها كل ما يحدث: ما سُلّم، وما يجري، وما ينتظر كلمتك.' },
+];
 
 const ROADMAP = [
   { when: 'الشهر ١', title: 'التأسيس', items: ['استراتيجيات السوشال ومُوجّه الهوية وهيكل الموقع معتمدة منك', 'خريطة عملياتك الحالية والمقترحة', 'حسابات إعلانية وتتبع باسمك (في الباقات الأوسع)'] },
@@ -184,6 +194,7 @@ export default function AcceleratorClient() {
   const [extras, setExtras] = useState<string[]>([]);
   const [extraDraft, setExtraDraft] = useState('');
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [toolGroup, setToolGroup] = useState<ToolGroup | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [lead, setLead] = useState({ name: '', company: '', sector: '', dial: '+966', phone: '', when: '', message: '' });
   const [status, setStatus] = useState<'idle' | 'busy' | 'ok' | 'err'>('idle');
@@ -358,6 +369,36 @@ export default function AcceleratorClient() {
               <a href={`${WHATSAPP}?text=${waText}`} target="_blank" rel="noreferrer" className="btn-secondary px-8 py-4 text-lg">اسأل على واتساب</a>
             </div>
           </motion.div>
+        </div>
+      </section>
+
+      {/* ٥ب) الأدوات التي تعمل لك: كرة أيقونات + ما نرفعه عن كاهل العميل */}
+      <section id="tools" data-silk="0.55" className="scroll-mt-28 px-6 pb-24">
+        <div className="container mx-auto grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
+          <motion.div {...reveal}>
+            <h2 className="text-2xl font-black text-snow sm:text-4xl">{TOOLS.length} أداة تعمل لك، ولا تدير واحدة منها</h2>
+            <p className="mt-3 leading-relaxed text-gray-medium">اشتراكات وحسابات وتحديثات وتكاملات: كل ما خلف الستارة على فريقنا. اختر مجموعة أو المس أداة في الكرة.</p>
+            <div className="mt-6 flex flex-wrap gap-2">
+              {(Object.keys(TOOL_GROUPS) as ToolGroup[]).map((g) => {
+                const on = toolGroup === g;
+                return (
+                  <button key={g} type="button" aria-pressed={on} onClick={(e) => { setToolGroup(on ? null : g); pulseAt(e.currentTarget, 14); }}
+                    className={`material-card rounded-full px-3.5 py-2 text-xs font-bold transition-opacity sm:text-sm ${on ? 'is-active text-snow' : 'text-gray-light'}`}>
+                    {TOOL_GROUPS[g]} <span className="text-gray-medium">· {TOOLS.filter((t) => t.group === g).length}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <ul className="mt-8 grid gap-3 sm:grid-cols-2">
+              {RELIEF.map((r) => (
+                <li key={r.t} className="material-card rounded-2xl p-5">
+                  <p className="font-bold text-snow">{r.t}</p>
+                  <p className="mt-1 text-sm leading-relaxed text-gray-light">{r.d}</p>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+          <motion.div {...reveal} className="order-first lg:order-none"><ToolsCloud activeGroup={toolGroup} /></motion.div>
         </div>
       </section>
 
