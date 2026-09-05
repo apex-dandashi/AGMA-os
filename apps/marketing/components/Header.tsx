@@ -21,7 +21,7 @@ const Header = () => {
 
   const navLinks = [
     { name: 'الرئيسية', href: '/' },
-    { name: 'مسرّع الأعمال', href: '/business-accelerator' },
+    { name: 'الباقات السنوية', href: '/business-accelerator' },
     { name: 'من نحن', href: '/about' },
     { name: 'منهجيتنا', href: '/agma-method' },
     { name: 'آلية العمل', href: '/process' },
