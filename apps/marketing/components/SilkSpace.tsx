@@ -462,7 +462,7 @@ export default function SilkSpace() {
         let c = rc.top + rc.height * 0.5;
         inSilk = pointer.active && pointer.x >= rc.left && pointer.x <= rc.right
           && pointer.y >= rc.top && pointer.y <= rc.bottom;
-        if (inSilk) c = c * 0.35 + pointer.y * 0.65;
+        /* المالك (2026-09-05): الحرير أفقي ولا يلحق الماوس عمودياً؛ مركزه يبقى مركز القسم */
         if (igniteEl) {
           const rb = igniteEl.getBoundingClientRect();
           igniteX = rb.left + rb.width * 0.5; igniteY = rb.top + rb.height * 0.5;
@@ -524,10 +524,7 @@ export default function SilkSpace() {
               const fall = 1 - d / R;
               const f = fall * fall * push;   /* هبوط ناعم بدل الخطي */
               if (inSilk) {
-                /* داخل قسم القرار: الحرير ينجذب لليد (ويتوقف قبل أن يلتصق) */
-                const pull = d > 36 ? f * 0.55 : 0;
-                dvX[k] -= (dx / d) * pull;
-                dvY[k] -= (dy2 / d) * pull;
+                /* داخل قسم القرار: لا انجذاب لليد (قرار المالك: الحرير لا يلحق الماوس)؛ يسخن تحتها فقط */
                 segGlow[k] = Math.min(segGlow[k] + f * 0.14, 1.6);
               } else {
                 /* خارج أقسام القرار: لا دفع — دفء خفيف فقط، والموجة تتكفل بالحركة */

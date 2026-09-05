@@ -42,6 +42,20 @@ Update after every session (CLAUDE.md). Phase specs: docs/05 §C2.
   the three-layer «وجع رأس» voice and demoting the value table; KB
   article for the tools inventory in the next kb-reindex batch.
 
+- **Step 18 three-layer items + silk stops chasing the mouse (2026-09-05;
+  owner: «انطلق» on the «وجع رأس» voice; mid-turn: «الحرير ما ابيه يلحق
+  الماوس هو افقي ما ابيه يتحرك عاموديا»).** Every package item now carries
+  `text` (the name) → `behind` (what it practically involves: the headache)
+  → `relief` (what we lift off the client), rendered as cards in the services
+  stage. Value table removed from the sales surface: package cards lose the
+  «منفردة/توفّر» line, the summary panel keeps price + services + L12 adder +
+  CTAs, and the computed value lives only in a FAQ question «كيف أعرف أن
+  السعر عادل؟» (tier-aware, also in FAQPage JSON-LD). SilkSpace: removed the
+  ribbon-centre blend toward pointer.y inside data-silk and the per-vertex
+  pull toward the hand; hover now only warms the silk (ripples outside
+  data-silk unchanged). Verified locally: stage desktop/mobile, summary,
+  FAQ; no console errors.
+
 ## Silk space log (2026-09-04) — «ضوء حيّ واحد يسكن خلف الزجاج»
 
 Owner: glass deserves the hero's motion; asked for a more coherent, alive

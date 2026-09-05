@@ -13,8 +13,8 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../../lib/publicConfig';
 /**
  * الباقات السنوية — «من الفكرة إلى الأثر» (المالك 2026-09-05: ثلاث باقات من
  * خدماتنا كلها على سنة، لا الخمس فقط، بلا تصوير وبلا ذكر للضريبة).
- * القواعد: كل تسليم من دلائل الخدمات، وكل «قيمة منفردة» محسوبة من الحدود
- * الدنيا في صفحة التسعير (البنود غير المسعّرة موسومة تقديري). L12: أضف
+ * القواعد: كل تسليم من دلائل الخدمات بثلاث طبقات (المسمّى، ما خلفه عملياً،
+ * الراحة). «القيمة منفردة» سؤال في الأسئلة الشائعة فقط. L12: أضف
  * خدمة أخرى دائماً. L2/L11 في النموذج. الحرير يخيط خريطة السنة ويشتعل عند
  * الطلب. الجوال: شرائح خدمات أفقية فوق المسرح، والعناوين لا تختفي تحت
  * الهيدر (scroll-mt).
@@ -24,7 +24,9 @@ type Tier = 'launch' | 'accelerator' | 'leader';
 const TIERS: Tier[] = ['launch', 'accelerator', 'leader'];
 const fmt = (n: number) => n.toLocaleString('en-US');
 
-type Item = { text: string; tiers: Tier[]; yearly: number; basis: string; est?: boolean; by?: Partial<Record<Tier, { text?: string; yearly?: number; basis?: string }>> };
+/* كل بند بثلاث طبقات: المسمّى (text) → ما خلفه عملياً وهو وجع الرأس (behind) → الراحة التي نمنحها (relief).
+   yearly/basis تبقى لحساب «القيمة منفردة» في الأسئلة الشائعة فقط، لا في واجهة البيع. */
+type Item = { text: string; behind?: string; relief?: string; tiers: Tier[]; yearly: number; basis: string; est?: boolean; by?: Partial<Record<Tier, { text?: string; yearly?: number; basis?: string }>> };
 type Kind = 'web' | 'brand' | 'social' | 'flow' | 'bars' | 'rank' | 'chat';
 type Svc = { id: string; name: string; promise: string; kind: Kind; items: Item[] };
 
@@ -35,38 +37,58 @@ const TOP: Tier[] = ['leader'];
 /* الخدمات: التسليمات من دلائل الخدمات، والقيم من صفحة التسعير الإرشادية */
 const SERVICES: Svc[] = [
   { id: 'web', name: 'الموقع والمنصة', promise: 'موقع يبيع ٢٤/٧ ويتكامل مع حملاتك.', kind: 'web', items: [
-    { text: 'موقع كامل يُطلق خلال أول ٤–٨ أسابيع: جوال أولاً وسيو من اليوم الأول، ولوحة إدارة محتوى بيدك', tiers: ALL, yearly: 7500, basis: 'موقع من 7,500' },
-    { text: '٤ صفحات هبوط في السنة (واحدة لكل ربع) بتتبع تحويل مثبت', tiers: PLUS, yearly: 10000, basis: '٤ صفحات هبوط من 2,500', by: { leader: { text: '٨ صفحات هبوط في السنة (لكل حملة رئيسية) بتتبع تحويل مثبت', yearly: 20000, basis: '٨ صفحات هبوط من 2,500' } } },
-    { text: 'الدومين والاستضافة باسمك دائماً، ودعم فني مستمر', tiers: ALL, yearly: 0, basis: '' },
+    { text: 'موقع كامل يُطلق خلال أول ٤–٨ أسابيع، ولوحة محتوى بيدك',
+      behind: 'هيكل وصفحات وكتابة وتصميم وبرمجة، جوال أولاً وسيو من اليوم الأول، ثم الدومين والاستضافة وشهادة الأمان والنسخ الاحتياطي والتحديثات وسرعة الصفحات وفهرسة جوجل.',
+      relief: 'ثمانية أشياء تتعطّل وحدها إن لم يتابعها أحد. نتابعها نحن.', tiers: ALL, yearly: 7500, basis: 'موقع من 7,500' },
+    { text: '٤ صفحات هبوط في السنة، واحدة لكل ربع', behind: 'لكل صفحة: زاوية رسالة، كتابة، تصميم، نموذج، ربط بالتتبع والواتساب، واختبار قبل الحملة.',
+      relief: 'تصلك صفحة تعمل، لا ملف تصميم.', tiers: PLUS, yearly: 10000, basis: '٤ صفحات هبوط من 2,500', by: { leader: { text: '٨ صفحات هبوط في السنة، واحدة لكل حملة رئيسية', yearly: 20000, basis: '٨ صفحات هبوط من 2,500' } } },
+    { text: 'الدومين والاستضافة باسمك دائماً، ودعم فني مستمر', behind: 'التجديد والشهادات والنسخ الاحتياطي والتحديثات الأمنية ومراقبة التوقف.',
+      relief: 'الملكية لك، والسهر علينا.', tiers: ALL, yearly: 0, basis: '' },
   ] },
   { id: 'brand', name: 'الهوية البصرية', promise: 'شعار يتحوّل إلى نظام كامل.', kind: 'brand', items: [
-    { text: '٣ اتجاهات تصميم ثم هوية كاملة بكل الصيغ خلال ٣–٥ أسابيع، وحقوقها لك', tiers: ALL, yearly: 6000, basis: 'هوية من 6,000' },
-    { text: 'دليل هوية: قواعد الشعار والألوان والخطوط ونبرة الصوت', tiers: ALL, yearly: 4400, basis: 'دليل هوية من 4,400' },
-    { text: '٨ تصاميم شهرياً بهويتك: إعلانات وأغلفة وقوالب محتوى', tiers: PLUS, yearly: 12000, basis: '٨ أصول شهرياً ~1,000', est: true, by: { leader: { text: '١٦ تصميماً شهرياً بهويتك: إعلانات وأغلفة وقوالب ومطبوعات', yearly: 20000, basis: '١٦ أصلاً شهرياً ~1,650' } } },
+    { text: '٣ اتجاهات ثم هوية كاملة خلال ٣–٥ أسابيع، وحقوقها لك', behind: 'جلسة اكتشاف، ثلاثة اتجاهات، تطوير المختار، الشعار بكل الصيغ والخلفيات، ملفات الطباعة والشاشة، وحقوق كاملة.',
+      relief: 'لا تشتري رخصة خط ولا تطارد ملفاً مفقوداً.', tiers: ALL, yearly: 6000, basis: 'هوية من 6,000' },
+    { text: 'دليل هوية يعمل منه أي مصمم بعدنا', behind: 'قواعد الشعار ومساحاته، الألوان بأكوادها، الخطوط وبدائلها، نبرة الصوت وأمثلة الاستخدام.',
+      relief: 'هويتك لا تعتمد على ذاكرة شخص.', tiers: ALL, yearly: 4400, basis: 'دليل هوية من 4,400' },
+    { text: '٨ تصاميم شهرياً بهويتك: إعلانات وأغلفة وقوالب', behind: 'طلب في بوابتك، تصميم بهويتك، جولتا تعديل، وتصدير بمقاسات كل منصة.',
+      relief: 'لا اشتراك تصميم ولا مصمم حر تنتظره.', tiers: PLUS, yearly: 12000, basis: '٨ أصول شهرياً ~1,000', est: true, by: { leader: { text: '١٦ تصميماً شهرياً بهويتك: إعلانات وأغلفة وقوالب ومطبوعات', yearly: 20000, basis: '١٦ أصلاً شهرياً ~1,650' } } },
   ] },
   { id: 'social', name: 'السوشال ميديا', promise: 'حضور يومي يبني مجتمعاً لا متابعين فقط.', kind: 'social', items: [
-    { text: 'منصتان · ١٢ منشوراً و٤ ريلز شهرياً بتقويم تعتمده، وتقرير شهري يفرّق النمو الحقيقي عن الأرقام الفارغة', tiers: ALL, yearly: 33600, basis: 'إدارة من 2,800/شهر', by: { accelerator: { text: '٣ منصات · ٢٠ منشوراً و٨ ريلز شهرياً بتقويم تعتمده، وتقرير شهري يفرّق النمو الحقيقي عن الأرقام الفارغة', yearly: 42000, basis: 'إدارة ٣ منصات ~3,500/شهر' }, leader: { text: '٤ منصات · ٣٠ منشوراً و١٢ ريلز شهرياً بتقويم تعتمده، وتقرير شهري يفرّق النمو الحقيقي عن الأرقام الفارغة', yearly: 54000, basis: 'إدارة ٤ منصات ~4,500/شهر' } } },
-    { text: 'استراتيجية حساب لكل منصة: دور وجمهور ونبرة وأعمدة محتوى', tiers: PLUS, yearly: 5000, basis: 'استراتيجية من 5,000' },
-    { text: 'إدارة مجتمع يومية: ردود بلهجة علامتك واحتواء الشكاوى قبل انتشارها', tiers: PLUS, yearly: 26400, basis: 'مجتمع من 2,200/شهر' },
+    { text: 'منصتان · ١٢ منشوراً و٤ ريلز شهرياً', behind: 'تقويم تعتمده، أفكار وكتابة بلهجتك، تصميم ومونتاج وترجمة، جدولة ونشر، مراجعة بعد النشر، وتقرير شهري يفرّق النمو الحقيقي عن الأرقام الفارغة.',
+      relief: 'أربع مهن وست أدوات، ترى منها المنشور فقط.', tiers: ALL, yearly: 33600, basis: 'إدارة من 2,800/شهر', by: { accelerator: { text: '٣ منصات · ٢٠ منشوراً و٨ ريلز شهرياً', yearly: 42000, basis: 'إدارة ٣ منصات ~3,500/شهر' }, leader: { text: '٤ منصات · ٣٠ منشوراً و١٢ ريلز شهرياً', yearly: 54000, basis: 'إدارة ٤ منصات ~4,500/شهر' } } },
+    { text: 'استراتيجية حساب لكل منصة', behind: 'لكل منصة: دورها، جمهورها، نبرتها، أعمدة محتواها، وإيقاع نشرها.',
+      relief: 'لا يُنشر شيء لأن «لازم ننشر».', tiers: PLUS, yearly: 5000, basis: 'استراتيجية من 5,000' },
+    { text: 'إدارة مجتمع يومية بلهجة علامتك', behind: 'ردود على التعليقات والرسائل، احتواء الشكاوى قبل انتشارها، وتصعيد ما يحتاج كلمتك في دقائق.',
+      relief: 'هاتفك لا يرنّ على كل تعليق.', tiers: PLUS, yearly: 26400, basis: 'مجتمع من 2,200/شهر' },
   ] },
   { id: 'systems', name: 'الأنظمة والأتمتة', promise: 'طلباتك تمشي وحدها من الاستقبال إلى التسليم.', kind: 'flow', items: [
-    { text: 'روبوت محادثة على واتساب وموقعك يجيب من معرفة منشأتك المعتمدة فقط ويسلّم البشري ما لا يعرفه', tiers: ALL, yearly: 7500, basis: 'روبوت من 7,500' },
-    { text: 'أتمتة عمليتين في السنة من وصول الطلب إلى إقفاله، بتنبيهات لما يتعثر', tiers: PLUS, yearly: 9000, basis: 'مساران من 4,500', by: { leader: { text: 'أتمتة ٤ عمليات في السنة من وصول الطلب إلى إقفاله، بتنبيهات لما يتعثر', yearly: 18000, basis: '٤ مسارات من 4,500' } } },
-    { text: 'تحديث شهري لقاعدة المعرفة وصيانة الأتمتة', tiers: PLUS, yearly: 18000, basis: 'صيانة ~1,500/شهر', est: true },
+    { text: 'روبوت محادثة على واتساب وموقعك يجيب من معرفتك المعتمدة فقط', behind: 'بناء قاعدة معرفة من موادك، تدريب، ربط بالواتساب والموقع، تسليم البشري ما لا يعرفه، وسجل المحادثات في بوابتك.',
+      relief: 'لا تعيد شرح خدماتك للمرة المئة.', tiers: ALL, yearly: 7500, basis: 'روبوت من 7,500' },
+    { text: 'أتمتة عمليتين في السنة من وصول الطلب إلى إقفاله', behind: 'رسم العملية كما هي، ثم أتمتتها: تأكيدات، تنبيهات، متابعات، وتقرير عمّا يتعثر.',
+      relief: 'العملية تمشي ولو نام الفريق.', tiers: PLUS, yearly: 9000, basis: 'مساران من 4,500', by: { leader: { text: 'أتمتة ٤ عمليات في السنة من وصول الطلب إلى إقفاله', yearly: 18000, basis: '٤ مسارات من 4,500' } } },
+    { text: 'تحديث شهري لقاعدة المعرفة وصيانة الأتمتة', behind: 'تحديث المعرفة بما تغيّر عندك، إصلاح ما تعطّل بتغيّر المنصات، ومراجعة المحادثات التي فشلت.',
+      relief: 'الروبوت لا يشيخ.', tiers: PLUS, yearly: 18000, basis: 'صيانة ~1,500/شهر', est: true },
   ] },
   { id: 'ads', name: 'الإعلانات المدفوعة', promise: 'ميزانيتك محمية بسقوف وقياس صادق.', kind: 'bars', items: [
-    { text: 'حملتان نشطتان شهرياً على منصتين (سناب/تيك توك/إنستغرام/إكس): ٣ زوايا رسائل تُختبر أول أسبوعين ثم تصاميم شهرية وتقرير بلغة عمل', tiers: PLUS, yearly: 30000, basis: 'إدارة من 2,500/شهر', by: { leader: { text: '٤ حملات نشطة شهرياً على ٤ منصات: زوايا رسائل تُختبر ثم تصاميم شهرية وتقرير بلغة عمل', yearly: 42000, basis: 'إدارة ٤ منصات ~3,500/شهر' } } },
-    { text: 'إعلانات جوجل (بحث وعرض) بحسابات باسمك وتتبع تحويل', tiers: TOP, yearly: 30000, basis: 'جوجل من 2,500/شهر' },
+    { text: 'حملتان نشطتان شهرياً على منصتين', behind: 'حسابات إعلانية باسمك، تتبع تحويل، ٣ زوايا رسائل تُختبر أول أسبوعين، تصاميم شهرية، سقوف إنفاق، وتقرير بلغة عمل. المنصات: سناب، تيك توك، إنستغرام، إكس.',
+      relief: 'ميزانيتك لا تُدار من الذاكرة.', tiers: PLUS, yearly: 30000, basis: 'إدارة من 2,500/شهر', by: { leader: { text: '٤ حملات نشطة شهرياً على ٤ منصات', yearly: 42000, basis: 'إدارة ٤ منصات ~3,500/شهر' } } },
+    { text: 'إعلانات جوجل بحثاً وعرضاً، بحسابات باسمك', behind: 'كلمات ونوايا بحث، حملات بحث وعرض، صفحات هبوط مطابقة، وتتبع تحويل.',
+      relief: 'من يبحث عنك يجدك، لا منافسك.', tiers: TOP, yearly: 30000, basis: 'جوجل من 2,500/شهر' },
     { text: 'ميزانية الإعلانات نفسها تُدفع للمنصات مباشرة وليست ضمن الباقة', tiers: PLUS, yearly: 0, basis: '' },
   ] },
   { id: 'seo', name: 'السيو والمحتوى', promise: 'تصدّر بحث جوجل ومحركات الذكاء.', kind: 'rank', items: [
-    { text: 'سيو عربي متخصص: نوايا البحث واللهجة وسلوك المستخدم السعودي والخليجي', tiers: TOP, yearly: 36000, basis: 'سيو عربي من 3,000/شهر' },
-    { text: '٤ مقالات و٢٠ وصفاً/منشوراً شهرياً بخط إنتاج ذكاء اصطناعي يراجعه محررونا قبل أي نشر', tiers: TOP, yearly: 26400, basis: 'محتوى من 2,200/شهر' },
-    { text: 'حصة الذكاء: قياس شهري لذكر علامتك في ChatGPT وGemini وPerplexity (٣ نماذج × ٣٠ سؤالاً) وتحسين الظهور فيها (GEO)', tiers: TOP, yearly: 36000, basis: 'GEO من 3,000/شهر' },
+    { text: 'سيو عربي متخصص بنوايا البحث السعودية والخليجية', behind: 'فحص تقني، كلمات ونوايا بحث، بنية صفحات، روابط، وتقرير شهري بمواقعك في النتائج.',
+      relief: 'عمل شهري صامت لا تراه إلا في الأرقام.', tiers: TOP, yearly: 36000, basis: 'سيو عربي من 3,000/شهر' },
+    { text: '٤ مقالات و٢٠ وصفاً شهرياً يراجعها محرر بشري', behind: 'خطة مواضيع، إنتاج بذكاء اصطناعي، مراجعة محرر قبل أي نشر، نشر وربط داخلي.',
+      relief: 'لا تكتب سطراً.', tiers: TOP, yearly: 26400, basis: 'محتوى من 2,200/شهر' },
+    { text: 'حصة الذكاء: ظهورك في ChatGPT وGemini وPerplexity', behind: '٣ نماذج × ٣٠ سؤال شراء شهرياً: من ذُكر ومن غاب، ثم تحسين المحتوى والذكر حتى تظهر (GEO).',
+      relief: 'حين يسأل عميلك الذكاء الاصطناعي، يسمع اسمك.', tiers: TOP, yearly: 36000, basis: 'GEO من 3,000/شهر' },
   ] },
   { id: 'agent', name: 'وكيل ذكاء اصطناعي', promise: 'عملية واحدة تُدار بذكاء اصطناعي مخصص لك.', kind: 'chat', items: [
-    { text: 'وكيل ذكاء اصطناعي مخصص لعملية واحدة من عملياتك (تأهيل، متابعة، أو خدمة عملاء) مع مراجعة بشرية', tiers: TOP, yearly: 15000, basis: 'وكيل من 15,000' },
-    { text: 'تحسين معدل التحويل: اختبارات على صفحاتك الأعلى زيارة', tiers: TOP, yearly: 3800, basis: 'CRO من 3,800' },
+    { text: 'وكيل ذكاء اصطناعي لعملية واحدة: تأهيل أو متابعة أو خدمة عملاء', behind: 'تصميم العملية، بناء الوكيل على معرفتك، ربط بأنظمتك، مراجعة بشرية، وتحسين شهري.',
+      relief: 'موظف يعمل ٢٤/٧ ولا يستقيل.', tiers: TOP, yearly: 15000, basis: 'وكيل من 15,000' },
+    { text: 'تحسين معدل التحويل على صفحاتك الأعلى زيارة', behind: 'تحليل السلوك، فرضيات، اختبارات، وتطبيق الفائز.',
+      relief: 'نفس الزوار، طلبات أكثر.', tiers: TOP, yearly: 3800, basis: 'CRO من 3,800' },
   ] },
 ];
 
@@ -229,11 +251,15 @@ export default function AcceleratorClient() {
 
   const reveal = { initial: { opacity: 0, y: 18, filter: 'blur(8px)' }, whileInView: { opacity: 1, y: 0, filter: 'blur(0px)', transitionEnd: { filter: 'none' } }, viewport: { once: true, margin: '-80px' } };
   const waText = encodeURIComponent(`أهلاً فريق AGMA، أريد الاستفسار عن باقة ${pkg.name} (${fmt(pkg.price)} ر.س شهرياً لمدة سنة).`);
+  /* «القيمة منفردة» نزلت من واجهة البيع إلى سؤال في الأسئلة الشائعة (قرار المالك: لا تموضع محاسبة بالريال) */
+  const faq = useMemo(() => {
+    const valueQ = { q: 'كيف أعرف أن السعر عادل؟', a: `لو اشتريت خدمات باقة ${pkg.name} منفردة بأسعارنا الإرشادية لبلغت نحو ${fmt(monthlyValue(tier))} ر.س شهرياً، مقابل ${fmt(pkg.price)} في الباقة. الأرقام من صفحة التسعير ودلائل الخدمات، وما نرفعه عنك من أدوات ومتابعة ليس فيها.` };
+    return [...FAQ.slice(0, 2), valueQ, ...FAQ.slice(2)];
+  }, [tier, pkg]);
   const jsonLd = { '@context': 'https://schema.org', '@graph': [
     ...PACKAGES.map((p) => ({ '@type': 'Product', name: `باقة ${p.name} ${p.en}`, brand: { '@type': 'Brand', name: 'AGMA' }, description: p.tagline, offers: { '@type': 'Offer', price: String(p.price), priceCurrency: 'SAR', availability: 'https://schema.org/InStock', url: 'https://agma.com.sa/business-accelerator/', priceSpecification: { '@type': 'UnitPriceSpecification', price: String(p.price), priceCurrency: 'SAR', unitText: 'MONTH' } } })),
-    { '@type': 'FAQPage', mainEntity: FAQ.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+    { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
   ] };
-  const rows = includedItems(tier).filter((i) => i.yearly > 0);
 
   return (
     <main data-silk-mood="home" className="min-h-screen relative overflow-hidden pb-20 lg:pb-0" suppressHydrationWarning>
@@ -283,11 +309,11 @@ export default function AcceleratorClient() {
         <div className="container mx-auto">
           <motion.div {...reveal} className="mb-10 text-center">
             <h2 className="text-3xl font-black text-snow sm:text-4xl">ثلاث باقات، فريق واحد</h2>
-            <p className="mt-3 text-gray-medium">كل باقة سنة كاملة بسعر شهري ثابت. اختر باقة لترى خدماتها وقيمتها منفردة.</p>
+            <p className="mt-3 text-gray-medium">كل باقة سنة كاملة بسعر شهري ثابت. اختر باقة لترى ما تسلّمه كل شهر، وما نرفعه عن كاهلك.</p>
           </motion.div>
           <div className="grid gap-4 lg:grid-cols-3 lg:gap-6">
             {PACKAGES.map((p) => {
-              const on = p.id === tier; const mv = monthlyValue(p.id); const save = mv - p.price;
+              const on = p.id === tier;
               return (
                 <button key={p.id} type="button" onClick={(e) => choose(p, e.currentTarget)} aria-pressed={on}
                   className={`material-panel relative rounded-3xl p-6 text-right transition-opacity lg:p-8 ${on ? 'is-active ring-1 ring-pulse-orange/70' : 'opacity-85 hover:opacity-100'}`}>
@@ -296,7 +322,6 @@ export default function AcceleratorClient() {
                   <h3 className="mt-1 text-2xl font-black text-snow">{p.name}</h3>
                   <p className="mt-1 text-sm text-gray-light">{p.tagline}</p>
                   <div className="mt-5 flex items-baseline gap-2"><span className="text-4xl font-black text-snow" dir="ltr">{fmt(p.price)}</span><span className="text-sm text-gray-light">ر.س شهرياً · ١٢ شهراً</span></div>
-                  <p className="mt-1 text-xs text-gray-medium">منفردة ~{fmt(mv)} · توفّر ~{fmt(save)} شهرياً ({Math.round((save / mv) * 100)}٪)</p>
                   <ul className="mt-5 space-y-1.5 text-sm text-gray-light">
                     {includedServices(p.id).map((s) => <li key={s.id} className="flex items-center gap-2"><span className="h-1.5 w-1.5 shrink-0 rounded-full bg-pulse-orange" />{s.name}</li>)}
                   </ul>
@@ -313,7 +338,7 @@ export default function AcceleratorClient() {
         <div className="container mx-auto">
           <motion.div {...reveal} className="mb-6 text-center">
             <h2 className="text-2xl font-black text-snow sm:text-4xl">ماذا تسلّم كل خدمة في باقة {pkg.name}؟</h2>
-            <p className="mt-2 text-gray-medium">اختر خدمة لترى تسليماتها.</p>
+            <p className="mt-2 text-gray-medium">اختر خدمة لترى ما تسلّمه، وما نرفعه عنك خلفه.</p>
           </motion.div>
           {/* شرائح أفقية (الجوال) / قائمة جانبية (الكمبيوتر) */}
           <div className="grid gap-4 lg:grid-cols-12 lg:gap-6">
@@ -330,31 +355,26 @@ export default function AcceleratorClient() {
               <Stage kind={active.kind} />
               <div className="mt-4 border-t border-white/[0.06] pt-5">
                 <h3 className="text-xl font-bold text-snow">{active.name}</h3>
-                <ul className="mt-3 grid gap-2 text-gray-light">
-                  {active.items.filter((i) => i.tiers.includes(tier)).map((i) => forTier(i, tier)).map((i) => (<li key={i.text} className="flex items-start gap-2 text-sm leading-relaxed"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-pulse-orange" />{i.text}</li>))}
+                <ul className="mt-4 grid gap-3">
+                  {active.items.filter((i) => i.tiers.includes(tier)).map((i) => forTier(i, tier)).map((i) => (
+                    <li key={i.text} className={`rounded-2xl border border-white/[0.06] p-4 ${i.behind ? '' : 'text-sm text-gray-medium'}`}>
+                      <p className={`flex items-start gap-2 leading-relaxed ${i.behind ? 'font-bold text-snow' : ''}`}><span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-pulse-orange" />{i.text}</p>
+                      {i.behind && <p className="mt-1.5 pr-3.5 text-sm leading-relaxed text-gray-light">{i.behind}</p>}
+                      {i.relief && <p className="mt-2 pr-3.5 text-sm font-bold text-pulse-orange">{i.relief}</p>}
+                    </li>
+                  ))}
                 </ul>
               </div>
             </div>
           </div>
 
-          {/* قيمة الخدمات منفردة للباقة المختارة */}
+          {/* ملخص الباقة المختارة + المُضيف الحر (L12) + الدعوة */}
           <motion.div {...reveal} className="material-panel mx-auto mt-10 max-w-4xl rounded-[32px] p-6 lg:p-12">
             <div className="text-center">
               <p className="text-sm font-bold text-pulse-orange">باقة {pkg.name} · {pkg.en}</p>
               <div className="mt-3 flex flex-wrap items-baseline justify-center gap-2"><span className="text-5xl font-black text-snow sm:text-6xl" dir="ltr">{fmt(pkg.price)}</span><span className="text-xl text-gray-light">ر.س شهرياً</span></div>
               <p className="mt-2 text-gray-medium">التزام {MONTHS} شهراً · نطاق شهري يُثبَّت في العقد</p>
-              <p className="mt-3 text-base font-bold text-pulse-orange">قيمة الخدمات منفردة ~{fmt(monthlyValue(tier))} ر.س شهرياً · توفّر ~{fmt(monthlyValue(tier) - pkg.price)} شهرياً</p>
-            </div>
-            <div className="mt-6 overflow-x-auto">
-              <table className="w-full min-w-[520px] text-sm">
-                <thead><tr className="text-gray-medium"><th className="pb-2 text-right font-medium">البند</th><th className="pb-2 text-right font-medium">أساس الحساب (أسعارنا الإرشادية)</th><th className="pb-2 text-left font-medium">السنة</th></tr></thead>
-                <tbody className="text-gray-light">
-                  {rows.map((r) => (<tr key={r.text} className="border-t border-white/[0.06]"><td className="max-w-[260px] py-2.5 text-snow">{r.text.split('،')[0].split(':')[0]}</td><td className="py-2.5 text-gray-medium">{r.basis}{r.est ? ' (تقديري)' : ''}</td><td className="py-2.5 text-left" dir="ltr">{fmt(r.yearly)}</td></tr>))}
-                  <tr className="border-t border-white/15 font-bold text-snow"><td className="py-3">منفردة</td><td className="py-3 text-gray-medium">{fmt(yearlyValue(tier))} ÷ 12</td><td className="py-3 text-left" dir="ltr">{fmt(yearlyValue(tier))}</td></tr>
-                  <tr className="font-bold text-pulse-orange"><td className="py-2">الباقة</td><td className="py-2 text-gray-medium">{fmt(pkg.price)} × 12</td><td className="py-2 text-left" dir="ltr">{fmt(pkg.price * MONTHS)}</td></tr>
-                </tbody>
-              </table>
-              <p className="mt-3 text-xs text-gray-medium">الحساب من الحدود الدنيا في <Link href="/pricing" className="underline">صفحة التسعير الإرشادية</Link> ودلائل خدماتنا. البنود الموسومة «تقديري» غير مسعّرة هناك فقيمها تقدير معلن. ميزانيات الإعلانات تُدفع للمنصات مباشرة.</p>
+              <p className="mt-3 text-base text-gray-light">{includedServices(tier).length} خدمات وفريق واحد، وكل ما خلفها من أدوات وحسابات ومتابعة علينا. ميزانيات الإعلانات تُدفع للمنصات مباشرة.</p>
             </div>
             <div className="mt-6 flex flex-wrap justify-center gap-2">
               {svcs.map((s) => (<span key={s.id} className="rounded-full border border-white/10 px-3 py-1 text-sm text-gray-light">{s.name}</span>))}
@@ -420,7 +440,7 @@ export default function AcceleratorClient() {
         <div className="container mx-auto max-w-3xl">
           <motion.h2 {...reveal} className="mb-8 text-center text-3xl font-black text-snow">قبل أن تقرر</motion.h2>
           <div className="space-y-3">
-            {FAQ.map((f, i) => (
+            {faq.map((f, i) => (
               <div key={f.q} className="material-card rounded-2xl">
                 <button type="button" onClick={() => setOpenFaq(openFaq === i ? null : i)} aria-expanded={openFaq === i} className="flex w-full items-center justify-between gap-4 p-5 text-right"><span className="text-base font-bold text-snow">{f.q}</span><span className={`shrink-0 text-pulse-orange transition-transform ${openFaq === i ? 'rotate-45' : ''}`}>+</span></button>
                 <AnimatePresence initial={false}>{openFaq === i && (<motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ type: 'spring', bounce: 0, duration: 0.4 }} className="overflow-hidden"><p className="px-5 pb-5 text-sm leading-relaxed text-gray-light">{f.a}</p></motion.div>)}</AnimatePresence>
