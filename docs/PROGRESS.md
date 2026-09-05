@@ -169,9 +169,32 @@ Step 1 of the agreed 4-step plan shipped:
   summary + extras; submit button is `data-silk-ignite`). Silk: hero 1.0,
   proof .45, stage .6, contact .9. Header nav gap 8→6 + nowrap (the new
   link had wrapped labels). Verified desktop 4 shots + mobile.
-  Owner-side: the «previous price 15,000» must have been genuinely
-  charged for a period to comply with MoC discount rules; VAT wording
-  «غير شامل ضريبة القيمة المضافة» is my assumption to confirm.
+  Owner-side: VAT wording «غير شامل ضريبة القيمة المضافة» is my assumption
+  to confirm.
+- **Step 13 → «باقة مسرّع الأعمال Business Accelerator»** (owner renamed
+  it; then «انطلق واعتمد أرقام دلائل الخدمات وحوّل ١٥,٠٠٠ إلى قيمة الخدمات
+  منفردة»): route moved to `/business-accelerator` with 301s from
+  /experience in `.htaccess`. Page rebuilt: (1) deliverables per service
+  now quote service_guides (websites 4–8 wks, landing page per campaign,
+  logo-identity 3 directions in 3–5 wks + guidelines, monthly photo
+  session with full rights, social-management calendar/posting/daily
+  engagement/report, chatbot answering only from approved knowledge +
+  ≥2 workflow automations/yr); (2) struck «15,000» replaced by a computed
+  «قيمة الخدمات منفردة» table from the pricing page minimums (website
+  7,500 + 4×2,500 LP; identity 6,000 + guidelines 4,400 + ~1,000/mo
+  assets; photo 12×~2,500 est.; social 2,800+2,200/mo + 5,000 strategy;
+  chatbot 7,500 + 2×4,500 workflows + ~1,500/mo upkeep) = 169,400/yr →
+  ~14,100/mo vs 9,500 (save ~4,600, 33%), estimates labelled «تقديري»
+  and linked to /pricing; (3) 12-month roadmap in 4 silk-stitched
+  stations; (4) AGMA OS client-portal section with demo link; (5) FAQ
+  (6 Q, answers grounded: domain/hosting in client's name, rights after
+  payment, monthly invoicing, 37 services adder) + FAQPage/Product/Offer
+  JSON-LD (VAT excluded); (6) form gained sector + best-call-time,
+  WhatsApp secondary CTA, hero assistant box (agma:ask with sector
+  context), mobile sticky price bar (button right, bubble clearance);
+  stage shows first on mobile. Skipped: in-house salary comparison (no
+  sourced figures) and capacity/scarcity (unknown). SEO title now
+  «باقة تسويق شاملة شهرية».
 
 ## Apple-design round log (2026-09-04) — استجابة · مواد · حواف
 
