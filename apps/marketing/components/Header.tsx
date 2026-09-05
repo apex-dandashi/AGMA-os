@@ -21,7 +21,7 @@ const Header = () => {
 
   const navLinks = [
     { name: 'الرئيسية', href: '/' },
-    { name: 'تجربة AGMA', href: '/experience' },
+    { name: 'مسرّع الأعمال', href: '/business-accelerator' },
     { name: 'من نحن', href: '/about' },
     { name: 'منهجيتنا', href: '/agma-method' },
     { name: 'آلية العمل', href: '/process' },

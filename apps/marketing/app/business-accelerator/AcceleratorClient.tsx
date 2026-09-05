@@ -10,7 +10,7 @@ import Testimonials from '@/components/Testimonials';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../../lib/publicConfig';
 
 /**
- * تجربة AGMA — «من الفكرة إلى الأثر».
+ * باقة مسرّع الأعمال Business Accelerator — «من الفكرة إلى الأثر».
  * ثلاث لحظات بارزة فقط (دخول الدليل، تبديل الخدمة، الوصول للتواصل) وبقية
  * الحركة هادئة. الحرير هو الخط الذي يرافق الرحلة: مشتعل في البداية، يهدأ
  * خلف الدليل، يرسو خلف مسرح الخدمات، يخيط محطات البداية، ويشتعل عند الطلب.
@@ -116,7 +116,7 @@ function Stage({ id }: { id: string }) {
   );
 }
 
-export default function ExperienceClient() {
+export default function AcceleratorClient() {
   const [active, setActive] = useState<Svc>(SERVICES[0]);
   const [extras, setExtras] = useState<string[]>([]);
   const [extraDraft, setExtraDraft] = useState('');
@@ -125,7 +125,7 @@ export default function ExperienceClient() {
   const [lead, setLead] = useState({ name: '', company: '', dial: '+966', phone: '', message: '' });
   const [status, setStatus] = useState<'idle' | 'busy' | 'ok' | 'err'>('idle');
   const summary = useMemo(() => {
-    const base = `باقة تجربة AGMA المتكاملة (${PRICE} ر.س/شهر بدلاً من ${WAS_PRICE} × ${MONTHS} شهراً): ` + SERVICES.map((s) => s.name).join('، ');
+    const base = `باقة مسرّع الأعمال Business Accelerator (${PRICE} ر.س/شهر بدلاً من ${WAS_PRICE} × ${MONTHS} شهراً): ` + SERVICES.map((s) => s.name).join('، ');
     return extras.length ? `${base} + إضافات: ${extras.join('، ')}` : base;
   }, [extras]);
 
@@ -151,7 +151,7 @@ export default function ExperienceClient() {
         body: JSON.stringify({
           name: lead.name.trim(), company: lead.company.trim() || undefined,
           phone: lead.dial + lead.phone.trim().replace(/^0+/, ''),
-          services: summary, message: lead.message.trim() || `اهتمام من صفحة تجربة AGMA — الخدمة المعروضة عند الطلب: ${active.name}`,
+          services: summary, message: lead.message.trim() || `اهتمام من صفحة مسرّع الأعمال — الخدمة المعروضة عند الطلب: ${active.name}`,
           source: 'site', website: '',
         }),
       });
@@ -173,10 +173,10 @@ export default function ExperienceClient() {
       {/* ١) الفكرة */}
       <section data-silk="1" className="relative px-6 pb-24 pt-40 text-center lg:pt-52">
         <div className="absolute inset-0 -z-[1] bg-gradient-to-b from-[#0A0A0A]/60 via-transparent to-[#0A0A0A]/60 opacity-40" />
-        <p className="mx-auto mb-6 inline-block rounded-full border border-pulse-orange/40 bg-pulse-orange/10 px-4 py-1.5 text-sm font-bold text-pulse-orange">تجربة AGMA</p>
-        <h1 className="mx-auto max-w-4xl text-4xl font-black leading-[1.25] text-snow sm:text-6xl lg:text-7xl">
-          <motion.span className="block" initial={{ opacity: 0, y: 20, filter: 'blur(10px)' }} animate={{ opacity: 1, y: 0, filter: 'blur(0px)', transitionEnd: { filter: 'none' } }} transition={{ type: 'spring', bounce: 0, duration: 0.8 }}>من الفكرة</motion.span>
-          <motion.span className="block text-gradient" initial={{ opacity: 0, y: 20, filter: 'blur(10px)' }} animate={{ opacity: 1, y: 0, filter: 'blur(0px)', transitionEnd: { filter: 'none' } }} transition={{ type: 'spring', bounce: 0, duration: 0.8, delay: 0.35 }}>إلى الأثر</motion.span>
+        <p className="mx-auto mb-6 inline-block rounded-full border border-pulse-orange/40 bg-pulse-orange/10 px-4 py-1.5 text-sm font-bold text-pulse-orange">Business Accelerator</p>
+        <h1 className="mx-auto max-w-4xl text-3xl font-black leading-[1.25] text-snow sm:text-6xl lg:text-7xl">
+          <motion.span className="block" initial={{ opacity: 0, y: 20, filter: 'blur(10px)' }} animate={{ opacity: 1, y: 0, filter: 'blur(0px)', transitionEnd: { filter: 'none' } }} transition={{ type: 'spring', bounce: 0, duration: 0.8 }}>باقة مسرّع الأعمال</motion.span>
+          <motion.span className="block text-gradient" initial={{ opacity: 0, y: 20, filter: 'blur(10px)' }} animate={{ opacity: 1, y: 0, filter: 'blur(0px)', transitionEnd: { filter: 'none' } }} transition={{ type: 'spring', bounce: 0, duration: 0.8, delay: 0.35 }}>من الفكرة إلى الأثر</motion.span>
         </h1>
         <motion.p {...reveal} className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-gray-light">
           خمس خدمات تعمل كفريق واحد على علامتك، بباقة واحدة وسعر واحد، لمدة سنة. تابع الضوء.
@@ -232,7 +232,7 @@ export default function ExperienceClient() {
 
           {/* كرت الباقة */}
           <motion.div {...reveal} className="material-panel mx-auto mt-12 max-w-4xl rounded-[32px] p-8 text-center lg:p-12">
-            <p className="text-sm font-bold text-pulse-orange">باقة تجربة AGMA المتكاملة</p>
+            <p className="text-sm font-bold text-pulse-orange">باقة مسرّع الأعمال · Business Accelerator</p>
             <div className="mt-4 flex flex-wrap items-baseline justify-center gap-3">
               <span className="text-2xl text-gray-medium line-through decoration-pulse-orange/70" dir="ltr">{WAS_PRICE}</span>
               <span className="text-5xl font-black text-snow sm:text-6xl" dir="ltr">{PRICE}</span>

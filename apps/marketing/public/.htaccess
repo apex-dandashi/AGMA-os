@@ -13,3 +13,7 @@ ErrorDocument 404 /404.html
   # CSP: self + Supabase (REST/functions/realtime) + inline styles (Next), data/blob images
   Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://gjaheqlgheizvebvakfd.supabase.co wss://gjaheqlgheizvebvakfd.supabase.co; frame-ancestors 'self'"
 </IfModule>
+
+# 2026-09-05: «تجربة AGMA» صارت «باقة مسرّع الأعمال»
+Redirect 301 /experience/ /business-accelerator/
+Redirect 301 /experience /business-accelerator/
