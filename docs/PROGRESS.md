@@ -196,6 +196,25 @@ Step 1 of the agreed 4-step plan shipped:
   sourced figures) and capacity/scarcity (unknown). SEO title now
   «باقة تسويق شاملة شهرية».
 
+- **Step 14 three annual packages (2026-09-05; owner: no photography, no
+  tax mention, «نقدر ندمج باقة شاملة من خدماتنا على مدة سنة … ونسوي ٣ باقات
+  منها», services section had mobile issues)**: page rebuilt around three
+  tiers from the 37 services: انطلاقة Launch 3,900 (website,
+  identity+guidelines, social management, chatbot; separately ~4,900,
+  20%), مسرّع الأعمال Business Accelerator 9,500 recommended (+ landing
+  pages, monthly brand assets, social strategy + community, 2 workflow
+  automations + upkeep, paid-social management; ~14,100, 33%), قيادة
+  السوق Market Leader 17,500 (+ Google Ads, Arabic SEO, AI content, GEO,
+  custom AI agent, CRO; ~26,400, 34%). Launch/Leader prices are my
+  proposals pending owner sign-off; 9,500 is the owner's. Photography
+  removed; all VAT wording removed (JSON-LD too). Items carry tier flags
+  so stage, deliverables and value table recompute per package; ad media
+  budgets stated as paid to platforms directly. Mobile: horizontal
+  snap-scroll chip switcher above the stage, relative-unit visuals (no
+  overflow at 390px), `scroll-mt-28` sections, package picker inside the
+  form, sticky bar shows the selected package. New stage kinds: bars,
+  rank, chat. Nav label → «الباقات السنوية».
+
 ## Apple-design round log (2026-09-04) — استجابة · مواد · حواف
 
 Owner approved applying the apple-design skill to agma.com.sa
